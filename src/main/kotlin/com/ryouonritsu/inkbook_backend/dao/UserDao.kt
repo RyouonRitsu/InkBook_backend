@@ -5,8 +5,8 @@ import org.apache.ibatis.annotations.Mapper
 
 @Mapper
 interface UserDao {
-    fun selectUserByUserId(userId: Long): Map<String, String>?
-    fun selectUserByEmail(email: String): Map<String, String>?
-    fun selectUserByUsername(username: String): Map<String, String>?
+    fun selectUserByUserId(userId: Long): User?
+    fun selectUserByEmail(email: String): User?
+    fun selectUserByUsername(username: String): User?
     fun registerNewUser(user: User)
 }

@@ -38,6 +38,11 @@ class UserController {
             "success" to false,
             "message" to "邮箱不能为空"
         )
+        val t = userService.selectUserByEmail(email)
+        if (t != null) return mapOf(
+            "success" to false,
+            "message" to "该邮箱已被注册"
+        )
         val account = "inkbook_ritsu@163.com"
         val password = "OQOEIDABXODMNBVB"
         val nick = "InkBook Official"
@@ -47,8 +52,8 @@ class UserController {
             "mail.smtp.port" to "25"
         )
         val subject = "InkBook邮箱注册验证码"
-        val verificationCode = (1..6).joinToString("") { "${(0..9).random()}" }
-        val html = "<h4>您的验证码是:</h4>\n<h1>$verificationCode</h1>\n<h4>请在5分钟内使用</h4>"
+        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
+        val html = "<h4>您的验证码是:</h4>\n<h1>$verification_code</h1>\n<h4>请在5分钟内使用</h4>"
         val properties = Properties().apply { putAll(props) }
         val authenticator = object : Authenticator() {
             override fun getPasswordAuthentication(): PasswordAuthentication {
@@ -64,7 +69,7 @@ class UserController {
         }
         val success = runCatching { Transport.send(htmlMessage) }.isSuccess
         return if (success) {
-            request.session.setAttribute("verificationCode", verificationCode)
+            request.session.setAttribute("verification_code", verification_code)
             request.session.setAttribute(
                 "invalidTime",
                 DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalTime.now().plusMinutes(5))
@@ -83,11 +88,11 @@ class UserController {
     @ApiOperation(value = "用户注册", notes = "除了真实姓名其余必填")
     fun register(
         @RequestParam("email") @ApiParam("邮箱") email: String?,
-        @RequestParam("verificationCode") @ApiParam("验证码") verificationCode: String?,
+        @RequestParam("verification_code") @ApiParam("验证码") verificationCode: String?,
         @RequestParam("username") @ApiParam("用户名") username: String?,
         @RequestParam("password1") @ApiParam("密码") password1: String?,
         @RequestParam("password2") @ApiParam("确认密码") password2: String?,
-        @RequestParam(value = "realName", required = false, defaultValue = "") @ApiParam("真实姓名") realName: String,
+        @RequestParam(value = "real_name", required = false, defaultValue = "") @ApiParam("真实姓名") real_name: String,
         request: HttpServletRequest
     ): Map<String, Any> {
         if (email.isNullOrBlank()) return mapOf(
@@ -116,7 +121,7 @@ class UserController {
             "message" to "确认密码不能为空"
         )
         return runCatching {
-            val vc = request.session.getAttribute("verificationCode") as? String
+            val vc = request.session.getAttribute("verification_code") as? String
             val invalidTime = request.session.getAttribute("invalidTime") as? String
             if (vc.isNullOrBlank() || invalidTime.isNullOrBlank()) return let {
                 request.session.invalidate()
@@ -148,7 +153,7 @@ class UserController {
                 "success" to false,
                 "message" to "两次输入的密码不一致"
             )
-            userService.registerNewUser(User(email, username, password1, realName))
+            userService.registerNewUser(User(email, username, password1, real_name))
             mapOf(
                 "success" to true,
                 "message" to "注册成功"
@@ -168,7 +173,7 @@ class UserController {
         @RequestParam("password") @ApiParam("密码") password: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        if (request.session.getAttribute("userId") != null) return mapOf(
+        if (request.session.getAttribute("user_id") != null) return mapOf(
             "success" to false,
             "message" to "请勿重复登录"
         )
@@ -181,15 +186,15 @@ class UserController {
             "message" to "密码不能为空"
         )
         return runCatching {
-            val userMap = userService.selectUserByUsername(username) ?: return mapOf(
+            val user = userService.selectUserByUsername(username) ?: return mapOf(
                 "success" to false,
                 "message" to "用户不存在"
             )
-            if (userMap["password"] != password) return mapOf(
+            if (user.password != password) return mapOf(
                 "success" to false,
                 "message" to "密码错误"
             )
-            request.session.setAttribute("userId", userMap["user_id"])
+            request.session.setAttribute("user_id", user.user_id)
             mapOf(
                 "success" to true,
                 "message" to "登录成功"
@@ -205,7 +210,7 @@ class UserController {
     @PostMapping("/logout")
     @ApiOperation(value = "用户登出")
     fun logout(request: HttpServletRequest): Map<String, Any> {
-        if (request.session.getAttribute("userId") == null) return mapOf(
+        if (request.session.getAttribute("user_id") == null) return mapOf(
             "success" to false,
             "message" to "用户未登录"
         )
@@ -219,12 +224,12 @@ class UserController {
     @PostMapping("/showInfo")
     @ApiOperation(value = "返回已登陆用户的信息", notes = "需要用户登陆才能查询成功")
     fun showInfo(request: HttpServletRequest): Map<String, Any> {
-        val userId = request.session.getAttribute("userId") as? Long ?: return mapOf(
+        val user_id = request.session.getAttribute("user_id") as? Long ?: return mapOf(
             "success" to false,
             "message" to "请先登录"
         )
         return runCatching {
-            val userMap = userService.selectUserByUserId(userId) ?: let {
+            val user = userService.selectUserByUserId(user_id) ?: let {
                 request.session.invalidate()
                 return mapOf(
                     "success" to false,
@@ -234,7 +239,7 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to userMap
+                "data" to user.toDict()
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
