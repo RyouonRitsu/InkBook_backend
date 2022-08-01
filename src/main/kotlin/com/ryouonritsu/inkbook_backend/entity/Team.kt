@@ -12,11 +12,11 @@ import javax.persistence.Id
 @Entity
 class Team (
     var teamName: String,
-    var teamInfo: String
+    var teamInfo: String?,
         ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var teamId = 0L
+    var teamId = 0
 
     constructor() : this("", "")
 }

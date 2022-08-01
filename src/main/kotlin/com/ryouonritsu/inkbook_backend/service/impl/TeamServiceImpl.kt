@@ -16,4 +16,14 @@ class TeamServiceImpl : TeamService {
     lateinit var teamDao : TeamDao
 
     override fun createNewTeam(team: Team) = teamDao.createNewTeam(team)
+
+    override fun addMemberIntoTeam(
+        userId: String,
+        teamId: String,
+        userPerm: String
+    ) = teamDao.addMemberIntoTeam(userId, teamId, userPerm)
+
+    override fun checkPerm(userId: String, teamId: String) = teamDao.checkPerm(userId, teamId)
+
+    override fun deleteTeam(teamId: String) = teamDao.deleteTeam(teamId)
 }
