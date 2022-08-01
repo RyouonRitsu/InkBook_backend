@@ -6,7 +6,10 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -91,6 +94,11 @@ class UserController {
             "success" to false,
             "message" to "邮箱不能为空"
         )
+        val t = userService.selectUserByEmail(email)
+        if (t != null) return mapOf(
+            "success" to false,
+            "message" to "该邮箱已被注册"
+        )
         if (verificationCode.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "验证码不能为空"
@@ -154,73 +162,84 @@ class UserController {
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody body: Map<String, String>, request: HttpServletRequest): Map<String, Any> {
-        val username = body["username"].let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "username is required"
-            )
-            else it
-        }
-        val password = body["password"].let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "password is required"
-            )
-            else it
-        }
+    @ApiOperation(value = "用户登录", notes = "均为必填项")
+    fun login(
+        @RequestParam("username") @ApiParam("用户名") username: String?,
+        @RequestParam("password") @ApiParam("密码") password: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        if (request.session.getAttribute("userId") != null) return mapOf(
+            "success" to false,
+            "message" to "请勿重复登录"
+        )
+        if (username.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "用户名不能为空"
+        )
+        if (password.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "密码不能为空"
+        )
         return runCatching {
-            val user = userService.selectUserByUsername(username) ?: return mapOf(
+            val userMap = userService.selectUserByUsername(username) ?: return mapOf(
                 "success" to false,
-                "message" to "user does not exist"
+                "message" to "用户不存在"
             )
-            if (user.password != password) return mapOf(
+            if (userMap["password"] != password) return mapOf(
                 "success" to false,
-                "message" to "password is incorrect"
+                "message" to "密码错误"
             )
-            request.session.setAttribute("username", username)
+            request.session.setAttribute("userId", userMap["user_id"])
             mapOf(
                 "success" to true,
-                "message" to "login success"
+                "message" to "登录成功"
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "login failed"
+                "message" to "登录失败, 发生未知错误"
             )
         )
     }
 
     @PostMapping("/logout")
+    @ApiOperation(value = "用户登出")
     fun logout(request: HttpServletRequest): Map<String, Any> {
+        if (request.session.getAttribute("userId") == null) return mapOf(
+            "success" to false,
+            "message" to "用户未登录"
+        )
         request.session.invalidate()
         return mapOf(
             "success" to true,
-            "message" to "logout success"
+            "message" to "登出成功"
         )
     }
 
     @PostMapping("/showInfo")
+    @ApiOperation(value = "返回已登陆用户的信息", notes = "需要用户登陆才能查询成功")
     fun showInfo(request: HttpServletRequest): Map<String, Any> {
-        val username = request.session.getAttribute("username") as? String ?: return mapOf(
+        val userId = request.session.getAttribute("userId") as? Long ?: return mapOf(
             "success" to false,
-            "message" to "please login first"
+            "message" to "请先登录"
         )
         return runCatching {
-            val user = userService.selectUserByUsername(username) ?: return mapOf(
-                "success" to false,
-                "message" to "user does not exist in database"
-            )
+            val userMap = userService.selectUserByUserId(userId) ?: let {
+                request.session.invalidate()
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户, 此会话已失效"
+                )
+            }
             mapOf(
                 "success" to true,
-                "message" to "success",
-                "username" to user.username,
-                "password" to user.password
+                "message" to "获取成功",
+                "data" to userMap
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "failed"
+                "message" to "获取失败, 发生未知错误"
             )
         )
     }
