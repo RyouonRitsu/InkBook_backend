@@ -2,16 +2,25 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ryouonritsu.inkbook_backend.dao.TeamDao">
     <insert id="createNewTeam" parameterType="Team" useGeneratedKeys="true" keyProperty="teamId">
-        INSERT INTO `team`(`team_name`, `team_info`) VALUES (#{teamName}, #{teamInfo})
+        INSERT INTO `team`(`team_name`, `team_info`)
+        VALUES (#{teamName}, #{teamInfo})
     </insert>
     <insert id="addMemberIntoTeam" parameterType="String">
-        INSERT INTO `team_member`(`user_id`, `team_id`, `user_perm`) VALUES (#{userId}, #{teamId}, #{userPerm})
+        INSERT INTO `team_member`(`user_id`, `team_id`, `user_perm`)
+        VALUES (#{userId}, #{teamId}, #{userPerm})
     </insert>
     <select id="checkPerm" resultType="String">
-        SELECT user_perm FROM `team_member` WHERE user_id = #{userId} AND team_id = #{teamId}
+        SELECT user_perm
+        FROM `team_member`
+        WHERE user_id = #{userId}
+          AND team_id = #{teamId}
     </select>
     <delete id="deleteTeam">
-        DELETE FROM `team` WHERE team_id = #{team_id};
-        DELETE FROM `team_member` WHERE team_id = #{team_id};
+        DELETE
+        FROM `team`
+        WHERE team_id = #{team_id};
+        DELETE
+        FROM `team_member`
+        WHERE team_id = #{team_id};
     </delete>
 </mapper>
