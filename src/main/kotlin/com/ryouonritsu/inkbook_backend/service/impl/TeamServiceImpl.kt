@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class TeamServiceImpl : TeamService {
     @Autowired
-    lateinit var teamDao : TeamDao
+    lateinit var teamDao: TeamDao
 
     override fun createNewTeam(team: Team) = teamDao.createNewTeam(team)
 

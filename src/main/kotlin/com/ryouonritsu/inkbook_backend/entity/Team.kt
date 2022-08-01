@@ -10,10 +10,10 @@ import javax.persistence.Id
  * @author WuKunchao
  */
 @Entity
-class Team (
+class Team(
     var teamName: String,
     var teamInfo: String?,
-        ) {
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var teamId = 0
