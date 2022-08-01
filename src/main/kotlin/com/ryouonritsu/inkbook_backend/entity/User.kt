@@ -6,13 +6,21 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 
 @Entity
-class User(
-    var username: String,
-    var password: String
-) {
-    constructor() : this("", "")
-
+class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var userId = 0L
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    var userId: Long? = null
+    var email: String? = null
+    var username: String? = null
+    var password: String? = null
+    var realName: String? = null
+
+    constructor(email: String?, username: String?, password: String?, realName: String?) {
+        this.email = email
+        this.username = username
+        this.password = password
+        this.realName = realName
+    }
+
+    constructor()
 }
