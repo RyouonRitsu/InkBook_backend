@@ -5,6 +5,6 @@
         SELECT * FROM user WHERE username = #{username}
     </select>
     <insert id="registerNewUser" parameterType="User">
-        INSERT INTO `user`(`username`, `password`) VALUES (#{username}, #{password})
+        INSERT INTO `user`(`email`, `username`, `password`, `real_name`) VALUES (#{email}, #{username}, #{password}, #{realName})
     </insert>
 </mapper>

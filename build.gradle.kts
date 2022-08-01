@@ -34,6 +34,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2")
     implementation("io.springfox:springfox-boot-starter:3.0.0")
+    implementation("org.projectlombok:lombok:1.18.24")
+    implementation("javax.mail:mail:1.5.0-b01")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
