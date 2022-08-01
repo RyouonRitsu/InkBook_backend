@@ -1,6 +1,6 @@
-package com.ryouonritsu.demo.service
+package com.ryouonritsu.inkbook_backend.service
 
-import com.ryouonritsu.demo.entity.User
+import com.ryouonritsu.inkbook_backend.entity.User
 
 interface UserService {
     fun selectUserByUsername(username: String): User?

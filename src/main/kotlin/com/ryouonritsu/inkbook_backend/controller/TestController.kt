@@ -1,4 +1,4 @@
-package com.ryouonritsu.demo.controller
+package com.ryouonritsu.inkbook_backend.controller
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController

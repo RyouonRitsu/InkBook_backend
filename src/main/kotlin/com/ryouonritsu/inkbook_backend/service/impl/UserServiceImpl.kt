@@ -1,8 +1,8 @@
-package com.ryouonritsu.demo.service.impl
+package com.ryouonritsu.inkbook_backend.service.impl
 
-import com.ryouonritsu.demo.dao.UserDao
-import com.ryouonritsu.demo.entity.User
-import com.ryouonritsu.demo.service.UserService
+import com.ryouonritsu.inkbook_backend.dao.UserDao
+import com.ryouonritsu.inkbook_backend.entity.User
+import com.ryouonritsu.inkbook_backend.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

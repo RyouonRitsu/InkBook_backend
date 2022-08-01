@@ -1,4 +1,4 @@
-package com.ryouonritsu.demo.entity
+package com.ryouonritsu.inkbook_backend.entity
 
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue

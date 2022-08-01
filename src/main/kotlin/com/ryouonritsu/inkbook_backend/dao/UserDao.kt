@@ -1,6 +1,6 @@
-package com.ryouonritsu.demo.dao
+package com.ryouonritsu.inkbook_backend.dao
 
-import com.ryouonritsu.demo.entity.User
+import com.ryouonritsu.inkbook_backend.entity.User
 import org.apache.ibatis.annotations.Mapper
 
 @Mapper

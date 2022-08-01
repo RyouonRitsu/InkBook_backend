@@ -1,7 +1,7 @@
-package com.ryouonritsu.demo.controller
+package com.ryouonritsu.inkbook_backend.controller
 
-import com.ryouonritsu.demo.entity.User
-import com.ryouonritsu.demo.service.UserService
+import com.ryouonritsu.inkbook_backend.entity.User
+import com.ryouonritsu.inkbook_backend.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -13,7 +13,7 @@ class UserController {
     @Autowired
     lateinit var userService: UserService
 
-    @PostMapping("/register")
+    @PostMapping("/user/register")
     fun register(@RequestBody body: Map<String, String>): Map<String, Any> {
         val username = body["username"].let {
             if (it.isNullOrBlank()) return mapOf(
@@ -59,7 +59,7 @@ class UserController {
         )
     }
 
-    @PostMapping("/login")
+    @PostMapping("/user/login")
     fun login(@RequestBody body: Map<String, String>, request: HttpServletRequest): Map<String, Any> {
         val username = body["username"].let {
             if (it.isNullOrBlank()) return mapOf(
@@ -97,7 +97,7 @@ class UserController {
         )
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/user/logout")
     fun logout(request: HttpServletRequest): Map<String, Any> {
         request.session.invalidate()
         return mapOf(
@@ -106,7 +106,7 @@ class UserController {
         )
     }
 
-    @PostMapping("/showInfo")
+    @PostMapping("/user/showInfo")
     fun showInfo(request: HttpServletRequest): Map<String, Any> {
         val username = request.session.getAttribute("username") as? String ?: return mapOf(
             "success" to false,
