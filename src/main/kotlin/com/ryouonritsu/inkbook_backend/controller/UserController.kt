@@ -5,6 +5,8 @@ import com.ryouonritsu.inkbook_backend.service.UserService
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -28,21 +30,21 @@ class UserController {
     @Autowired
     lateinit var userService: UserService
 
-    @PostMapping("/sendVerificationCode")
-    @ApiOperation(value = "获取并发送验证码", notes = "发送验证码到指定邮箱")
-    suspend fun sendVerificationCode(
-        @RequestParam("email") @ApiParam("邮箱") email: String?,
-        request: HttpServletRequest
-    ): Map<String, Any> {
-        if (email.isNullOrBlank()) return mapOf(
-            "success" to false,
-            "message" to "邮箱不能为空"
-        )
-        val t = userService.selectUserByEmail(email)
-        if (t != null) return mapOf(
-            "success" to false,
-            "message" to "该邮箱已被注册"
-        )
+    fun getHtml(url: String): Pair<Int, String?> {
+        val client = OkHttpClient()
+        val request = Request.Builder().get().url(url).build()
+        return try {
+            val response = client.newCall(request).execute()
+            when (response.code) {
+                200 -> Pair(200, response.body?.string())
+                else -> Pair(response.code, null)
+            }
+        } catch (e: Exception) {
+            Pair(500, e.message)
+        }
+    }
+
+    fun sendEmail(email: String, subject: String, html: String): Boolean {
         val account = "inkbook_ritsu@163.com"
         val password = "OQOEIDABXODMNBVB"
         val nick = "InkBook Official"
@@ -51,9 +53,6 @@ class UserController {
             "mail.smtp.host" to "smtp.163.com",
             "mail.smtp.port" to "25"
         )
-        val subject = "InkBook邮箱注册验证码"
-        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
-        val html = "<h4>您的验证码是:</h4>\n<h1>$verification_code</h1>\n<h4>请在5分钟内使用</h4>"
         val properties = Properties().apply { putAll(props) }
         val authenticator = object : Authenticator() {
             override fun getPasswordAuthentication(): PasswordAuthentication {
@@ -67,7 +66,29 @@ class UserController {
             setSubject(subject, "UTF-8")
             setContent(html, "text/html; charset=UTF-8")
         }
-        val success = runCatching { Transport.send(htmlMessage) }.isSuccess
+        return runCatching { Transport.send(htmlMessage) }.isSuccess
+    }
+
+    @PostMapping("/sendRegistrationVerificationCode")
+    @ApiOperation(value = "获取并发送注册验证码", notes = "发送注册验证码到指定邮箱")
+    fun sendRegistrationVerificationCode(
+        @RequestParam("email") @ApiParam("邮箱") email: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        if (email.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "邮箱不能为空"
+        )
+        val t = userService.selectUserByEmail(email)
+        if (t != null) return mapOf(
+            "success" to false,
+            "message" to "该邮箱已被注册"
+        )
+        val subject = "InkBook邮箱注册验证码"
+        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
+        // 此处需替换成服务器地址!!!
+        val (code, html) = getHtml("http://127.0.0.1:8090/registration_verification?verification_code=$verification_code")
+        val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             request.session.setAttribute("verification_code", verification_code)
             request.session.setAttribute(
