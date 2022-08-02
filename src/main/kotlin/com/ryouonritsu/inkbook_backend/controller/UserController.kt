@@ -11,8 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.mail.Authenticator
@@ -21,7 +19,6 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/user")
@@ -77,7 +74,6 @@ class UserController {
     @Operation(summary = "发送注册验证码到指定邮箱")
     fun sendRegistrationVerificationCode(
         @RequestParam("email") @Parameter(description = "邮箱") email: String?,
-        request: HttpServletRequest
     ): Map<String, Any> {
         if (email.isNullOrBlank()) return mapOf(
             "success" to false,
@@ -95,11 +91,7 @@ class UserController {
         val (code, html) = getHtml("http://127.0.0.1:8090/registration_verification?verification_code=$verification_code")
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
-            request.session.setAttribute("verification_code", verification_code)
-            request.session.setAttribute(
-                "invalidTime",
-                DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalTime.now().plusMinutes(5))
-            )
+            redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
             mapOf(
                 "success" to true,
                 "message" to "验证码已发送"
@@ -124,7 +116,6 @@ class UserController {
             required = false,
             defaultValue = ""
         ) @Parameter(description = "真实姓名") real_name: String,
-        request: HttpServletRequest
     ): Map<String, Any> {
         if (email.isNullOrBlank()) return mapOf(
             "success" to false,
@@ -152,29 +143,16 @@ class UserController {
             "message" to "确认密码不能为空"
         )
         return runCatching {
-            val vc = request.session.getAttribute("verification_code") as? String
-            val invalidTime = request.session.getAttribute("invalidTime") as? String
-            if (vc.isNullOrBlank() || invalidTime.isNullOrBlank()) return let {
-                request.session.invalidate()
-                mapOf(
-                    "success" to false,
-                    "message" to "验证码无效"
-                )
-            }
-            if (LocalTime.parse(invalidTime, DateTimeFormatter.ofPattern("HH:mm:ss"))
-                    .isBefore(LocalTime.now())
-            ) return let {
-                request.session.invalidate()
-                mapOf(
-                    "success" to false,
-                    "message" to "验证码已失效"
-                )
-            }
+            val vc = redisUtils["verification_code"]
+            if (vc.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "验证码无效"
+            )
             if (verificationCode != vc) return mapOf(
                 "success" to false,
                 "message" to "验证码错误, 请再试一次"
             )
-            request.session.invalidate()
+            redisUtils - "verification_code"
             val temp = userService.selectUserByUsername(username)
             if (temp != null) return mapOf(
                 "success" to false,
@@ -240,6 +218,7 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(summary = "用户登出")
     fun logout(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
+        redisUtils - "token"
         return mapOf(
             "success" to true,
             "message" to "登出成功"
@@ -252,6 +231,7 @@ class UserController {
     fun showInfo(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
         return runCatching {
             val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                redisUtils - "token"
                 return mapOf(
                     "success" to false,
                     "message" to "数据库中没有此用户, 此会话已失效"

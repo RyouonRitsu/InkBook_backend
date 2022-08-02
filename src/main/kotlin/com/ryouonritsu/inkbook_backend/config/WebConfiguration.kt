@@ -38,8 +38,9 @@ class WebConfiguration : WebMvcConfigurer {
             "/swagger-resources/**",
             "/v3/api-docs",
             "/webjars/**",
-            "/static/**",
-            "/templates/**",
+            "/change_email",
+            "/forgot_password",
+            "/registration_verification"
         )
         registry.addInterceptor(tokenInterceptor)
             .addPathPatterns("/**")
