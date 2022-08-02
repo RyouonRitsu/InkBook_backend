@@ -32,15 +32,18 @@ class TeamController {
             if (it.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "用户未登录！"
-            )
-            else it
+            ) else it
         }
         if (teamName.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队名为空！"
         )
         return runCatching {
-            var team = Team(teamName, teamInfo)
+            var team = Team(teamName, teamInfo.let {
+                if (it.isNullOrBlank()) {
+                    ""
+                } else it
+            })
             teamService.createNewTeam(team)
             teamService.addMemberIntoTeam(userId, team.teamId.toString(), "0")
             mapOf(
@@ -64,8 +67,7 @@ class TeamController {
             if (it.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "用户未登录！"
-            )
-            else it
+            ) else it
         }
         if (teamId.isNullOrBlank()) return mapOf(
             "success" to false,
@@ -96,8 +98,7 @@ class TeamController {
             if (it.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "用户未登录！"
-            )
-            else it
+            ) else it
         }
         var teamList = teamService.searchTeamByUserId(userId)
         if (teamList.isNullOrEmpty()) {
@@ -110,6 +111,35 @@ class TeamController {
             "success" to true,
             "message" to "查询团队成功！",
             "data" to teamList
+        )
+    }
+
+    @PostMapping("/getMemberList")
+    fun getMemberList(
+        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            ) else it
+        }
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        var memberList = teamService.searchMemberByTeamId(teamId)
+        if (memberList.isNullOrEmpty()) {
+            return mapOf(
+                "success" to false,
+                "message" to "团队成员为空！"
+            )
+        }
+        return mapOf(
+            "success" to true,
+            "message" to "查询队员成功！",
+            "data" to memberList
         )
     }
 }

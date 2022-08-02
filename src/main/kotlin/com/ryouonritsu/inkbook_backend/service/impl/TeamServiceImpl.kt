@@ -28,4 +28,6 @@ class TeamServiceImpl : TeamService {
     override fun deleteTeam(teamId: String) = teamDao.deleteTeam(teamId)
 
     override fun searchTeamByUserId(userId: String) = teamDao.searchTeamByUserId(userId)
+
+    override fun searchMemberByTeamId(teamId: String) = teamDao.searchMemberByTeamId(teamId)
 }

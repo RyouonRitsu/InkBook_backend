@@ -14,4 +14,5 @@ interface TeamDao {
     fun checkPerm(userId: String, teamId: String): String?
     fun deleteTeam(teamId: String)
     fun searchTeamByUserId(userId: String): List<Map<String, String>>?
+    fun searchMemberByTeamId(teamId: String): List<Map<String, String>>?
 }
