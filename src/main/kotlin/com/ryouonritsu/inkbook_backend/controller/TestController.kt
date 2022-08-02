@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import io.swagger.v3.oas.annotations.Hidden
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.stereotype.Controller
@@ -9,14 +10,17 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
+@Hidden
 class TestController {
     @RequestMapping("/test")
+    @Hidden
     fun test(model: Model): String {
         model.addAttribute("msg", "okkkkhttp3")
         return "test"
     }
 
     @GetMapping("/use")
+    @Hidden
     @ResponseBody
     fun use(): Map<String, Any> {
         val client = OkHttpClient()
@@ -34,6 +38,7 @@ class TestController {
                         "message" to string
                     )
                 }
+
                 else -> mapOf(
                     "success" to false,
                     "message" to "${response.code}"

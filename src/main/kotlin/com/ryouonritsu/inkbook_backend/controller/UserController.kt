@@ -2,9 +2,9 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.service.UserService
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/user")
-@Api(value = "用户控制器", tags = ["用户接口"])
+@Tag(name = "用户接口")
 class UserController {
     @Autowired
     lateinit var userService: UserService
@@ -70,9 +70,10 @@ class UserController {
     }
 
     @PostMapping("/sendRegistrationVerificationCode")
-    @ApiOperation(value = "获取并发送注册验证码", notes = "发送注册验证码到指定邮箱")
+    @Tag(name = "用户接口")
+    @Operation(summary = "发送注册验证码到指定邮箱")
     fun sendRegistrationVerificationCode(
-        @RequestParam("email") @ApiParam("邮箱") email: String?,
+        @RequestParam("email") @Parameter(description = "邮箱") email: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         if (email.isNullOrBlank()) return mapOf(
@@ -106,14 +107,19 @@ class UserController {
     }
 
     @PostMapping("/register")
-    @ApiOperation(value = "用户注册", notes = "除了真实姓名其余必填")
+    @Tag(name = "用户接口")
+    @Operation(summary = "用户注册, 除了真实姓名其余必填")
     fun register(
-        @RequestParam("email") @ApiParam("邮箱") email: String?,
-        @RequestParam("verification_code") @ApiParam("验证码") verificationCode: String?,
-        @RequestParam("username") @ApiParam("用户名") username: String?,
-        @RequestParam("password1") @ApiParam("密码") password1: String?,
-        @RequestParam("password2") @ApiParam("确认密码") password2: String?,
-        @RequestParam(value = "real_name", required = false, defaultValue = "") @ApiParam("真实姓名") real_name: String,
+        @RequestParam("email") @Parameter(description = "邮箱") email: String?,
+        @RequestParam("verification_code") @Parameter(description = "验证码") verificationCode: String?,
+        @RequestParam("username") @Parameter(description = "用户名") username: String?,
+        @RequestParam("password1") @Parameter(description = "密码") password1: String?,
+        @RequestParam("password2") @Parameter(description = "确认密码") password2: String?,
+        @RequestParam(
+            value = "real_name",
+            required = false,
+            defaultValue = ""
+        ) @Parameter(description = "真实姓名") real_name: String,
         request: HttpServletRequest
     ): Map<String, Any> {
         if (email.isNullOrBlank()) return mapOf(
@@ -188,10 +194,11 @@ class UserController {
     }
 
     @PostMapping("/login")
-    @ApiOperation(value = "用户登录", notes = "均为必填项")
+    @Tag(name = "用户接口")
+    @Operation(summary = "用户登录, 参数均为必填项")
     fun login(
-        @RequestParam("username") @ApiParam("用户名") username: String?,
-        @RequestParam("password") @ApiParam("密码") password: String?,
+        @RequestParam("username") @Parameter(description = "用户名") username: String?,
+        @RequestParam("password") @Parameter(description = "密码") password: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         if (request.session.getAttribute("user_id") != null) return mapOf(
@@ -229,7 +236,8 @@ class UserController {
     }
 
     @PostMapping("/logout")
-    @ApiOperation(value = "用户登出")
+    @Tag(name = "用户接口")
+    @Operation(summary = "用户登出")
     fun logout(request: HttpServletRequest): Map<String, Any> {
         if (request.session.getAttribute("user_id") == null) return mapOf(
             "success" to false,
@@ -243,7 +251,8 @@ class UserController {
     }
 
     @PostMapping("/showInfo")
-    @ApiOperation(value = "返回已登陆用户的信息", notes = "需要用户登陆才能查询成功")
+    @Tag(name = "用户接口")
+    @Operation(summary = "返回已登陆用户的信息, 需要用户登陆才能查询成功")
     fun showInfo(request: HttpServletRequest): Map<String, Any> {
         val user_id = request.session.getAttribute("user_id") as? Long ?: return mapOf(
             "success" to false,

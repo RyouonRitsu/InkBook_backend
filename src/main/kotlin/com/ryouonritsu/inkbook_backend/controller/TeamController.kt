@@ -2,8 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.service.TeamService
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -17,12 +16,13 @@ import javax.servlet.http.HttpServletRequest
  */
 @RestController
 @RequestMapping("/team")
-@Api(value = "User Controller", tags = ["团队接口"])
+@Tag(name = "团队接口")
 class TeamController {
     @Autowired
     lateinit var teamService: TeamService
 
     @PostMapping("/create")
+    @Tag(name = "团队接口")
     fun createNewTeam(
         @RequestParam("teamName") teamName: String?,
         @RequestParam("teamInfo", required = false) teamInfo: String?,
@@ -59,6 +59,7 @@ class TeamController {
     }
 
     @PostMapping("/delete")
+    @Tag(name = "团队接口")
     fun deleteTeam(
         @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
@@ -91,6 +92,7 @@ class TeamController {
     }
 
     @PostMapping("/update")
+    @Tag(name = "团队接口")
     fun updateTeam(
         @RequestParam("teamId") teamId: String?,
         @RequestParam("teamName") teamName: String?,
@@ -139,6 +141,7 @@ class TeamController {
     }
 
     @PostMapping("/getTeamList")
+    @Tag(name = "团队接口")
     fun getTeamList(
         @RequestParam("userId", required = false) user_id: String?,
         request: HttpServletRequest
@@ -167,6 +170,7 @@ class TeamController {
     }
 
     @PostMapping("/getMemberList")
+    @Tag(name = "团队接口")
     fun getMemberList(
         @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
@@ -196,6 +200,7 @@ class TeamController {
     }
 
     @PostMapping("/inviteMember")
+    @Tag(name = "团队接口")
     fun inviteMember(
         @RequestParam("acceptId") acceptId: String?,
         @RequestParam("teamId") teamId: String?,
@@ -232,6 +237,7 @@ class TeamController {
     }
 
     @PostMapping("/setPerm")
+    @Tag(name = "团队接口")
     fun setPerm(
         @RequestParam("teamId") teamId: String?,
         @RequestParam("memberId") memberId: String?,
@@ -273,6 +279,7 @@ class TeamController {
     }
 
     @PostMapping("/deleteMember")
+    @Tag(name = "团队接口")
     fun deleteMember(
         @RequestParam("memberId") memberId: String?,
         @RequestParam("teamId") teamId: String?,
