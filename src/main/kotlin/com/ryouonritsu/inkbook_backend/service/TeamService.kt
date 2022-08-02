@@ -11,4 +11,5 @@ interface TeamService {
     fun addMemberIntoTeam(userId: String, teamId: String, userPerm: String)
     fun checkPerm(userId: String, teamId: String): String?
     fun deleteTeam(teamId: String)
+    fun searchTeamByUserId(userId: String): List<Map<String, String>>?
 }

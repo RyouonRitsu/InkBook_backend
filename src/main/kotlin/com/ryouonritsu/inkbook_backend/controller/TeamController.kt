@@ -28,7 +28,7 @@ class TeamController {
         @RequestParam("teamInfo") @ApiParam("teamInfo") teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("username")?.toString().let {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
             if (it.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "用户未登录！"
@@ -60,7 +60,7 @@ class TeamController {
         @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("username")?.toString().let {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
             if (it.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "用户未登录！"
@@ -85,6 +85,31 @@ class TeamController {
         return mapOf(
             "success" to true,
             "message" to "解散团队成功！"
+        )
+    }
+
+    @PostMapping("/getTeamList")
+    fun getTeamList(
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            )
+            else it
+        }
+        var teamList = teamService.searchTeamByUserId(userId)
+        if (teamList.isNullOrEmpty()) {
+            return mapOf(
+                "success" to false,
+                "message" to "团队为空！"
+            )
+        }
+        return mapOf(
+            "success" to true,
+            "message" to "查询团队成功！",
+            "data" to teamList
         )
     }
 }

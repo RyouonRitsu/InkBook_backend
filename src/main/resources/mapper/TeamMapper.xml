@@ -23,4 +23,9 @@
         FROM `team_member`
         WHERE team_id = #{team_id};
     </delete>
+    <select id="searchTeamByUserId" resultType="Map">
+        SELECT DISTINCT *
+        FROM `team` NATURAL JOIN `team_member`
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

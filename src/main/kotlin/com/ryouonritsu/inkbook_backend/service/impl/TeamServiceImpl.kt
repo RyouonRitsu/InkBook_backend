@@ -26,4 +26,6 @@ class TeamServiceImpl : TeamService {
     override fun checkPerm(userId: String, teamId: String) = teamDao.checkPerm(userId, teamId)
 
     override fun deleteTeam(teamId: String) = teamDao.deleteTeam(teamId)
+
+    override fun searchTeamByUserId(userId: String) = teamDao.searchTeamByUserId(userId)
 }
