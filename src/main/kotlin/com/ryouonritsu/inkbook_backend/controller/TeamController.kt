@@ -138,8 +138,35 @@ class TeamController {
         }
         return mapOf(
             "success" to true,
-            "message" to "查询队员成功！",
+            "message" to "查询团队成员成功！",
             "data" to memberList
+        )
+    }
+
+    @PostMapping("/inviteMember")
+    fun inviteMember(
+        @RequestParam("acceptId") @ApiParam("acceptId") acceptId: String?,
+        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            ) else it
+        }
+        if (acceptId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "被邀请用户id为空！"
+        )
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        teamService.addMemberIntoTeam(acceptId, teamId, "2")
+        return mapOf(
+            "success" to true,
+            "message" to "添加团队成员成功！"
         )
     }
 }
