@@ -11,7 +11,7 @@ class UserServiceImpl : UserService {
     @Autowired
     lateinit var userDao: UserDao
 
-    override fun selectUserByUserId(userId: Long) = userDao.selectUserByUserId(userId)
+    override fun selectUserByUserId(user_id: Long) = userDao.selectUserByUserId(user_id)
 
     override fun selectUserByEmail(email: String) = userDao.selectUserByEmail(email)
 

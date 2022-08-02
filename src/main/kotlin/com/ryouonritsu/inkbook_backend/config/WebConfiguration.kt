@@ -33,6 +33,7 @@ class WebConfiguration : WebMvcConfigurer {
             "/user/login",
             "/user/register",
             "/user/sendRegistrationVerificationCode",
+            "/user/selectUserByUserId",
             "/doc.html",
             "/swagger-ui/**",
             "/swagger-resources/**",

@@ -252,7 +252,7 @@ class UserController {
         )
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     @Tag(name = "用户接口")
     @Operation(summary = "用户登出")
     fun logout(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
@@ -263,7 +263,7 @@ class UserController {
         )
     }
 
-    @PostMapping("/showInfo")
+    @GetMapping("/showInfo")
     @Tag(name = "用户接口")
     @Operation(summary = "返回已登陆用户的信息, 需要用户登陆才能查询成功")
     fun showInfo(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
@@ -275,6 +275,28 @@ class UserController {
                     "message" to "数据库中没有此用户, 此会话已失效"
                 )
             }
+            mapOf(
+                "success" to true,
+                "message" to "获取成功",
+                "data" to user.toDict()
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "获取失败, 发生未知错误"
+            )
+        )
+    }
+
+    @GetMapping("/selectUserByUserId")
+    @Tag(name = "用户接口")
+    @Operation(summary = "根据用户id查询用户信息")
+    fun selectUserByUserId(@RequestParam("user_id") @Parameter(description = "用户id") user_id: Long): Map<String, Any> {
+        return runCatching {
+            val user = userService.selectUserByUserId(user_id) ?: return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此用户"
+            )
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
