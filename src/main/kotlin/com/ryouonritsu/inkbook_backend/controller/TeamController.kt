@@ -167,6 +167,15 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
+        var perm = teamService.checkPerm(userId, teamId)
+        if (perm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "非当前团队成员！"
+        )
+        if (perm > "1") return mapOf(
+            "success" to false,
+            "message" to "非团队管理员！"
+        )
         teamService.addMemberIntoTeam(acceptId, teamId, "2")
         return mapOf(
             "success" to true,
@@ -212,6 +221,42 @@ class TeamController {
         return mapOf(
             "success" to true,
             "message" to "修改团队成员权限成功！"
+        )
+    }
+
+    @PostMapping("/deleteMember")
+    fun deleteMember(
+        @RequestParam("memberId") @ApiParam("memberId") memberId: String?,
+        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            ) else it
+        }
+        if (memberId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "待删除用户id为空！"
+        )
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        var perm = teamService.checkPerm(userId, teamId)
+        if (perm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "非当前团队成员！"
+        )
+        if (perm > "1") return mapOf(
+            "success" to false,
+            "message" to "非团队管理员！"
+        )
+        teamService.deleteMemberByUserId(memberId, teamId)
+        return mapOf(
+            "success" to true,
+            "message" to "删除团队成员成功！"
         )
     }
 }

@@ -16,4 +16,5 @@ interface TeamDao {
     fun deleteTeam(teamId: String)
     fun searchTeamByUserId(userId: String): List<Map<String, String>>?
     fun searchMemberByTeamId(teamId: String): List<Map<String, String>>?
+    fun deleteMemberByUserId(userId: String, teamId: String)
 }
