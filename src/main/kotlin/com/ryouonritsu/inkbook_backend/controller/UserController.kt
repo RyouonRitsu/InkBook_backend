@@ -86,6 +86,7 @@ class UserController {
         val subject = "InkBook邮箱注册验证码"
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         // 此处需替换成服务器地址!!!
+//        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
         val (code, html) = getHtml("http://127.0.0.1:8090/registration_verification?verification_code=$verification_code")
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
