@@ -15,6 +15,12 @@
         WHERE user_id = #{userId}
           AND team_id = #{teamId}
     </select>
+    <update id="updatePerm" parameterType="String">
+        UPDATE `team_member`
+        SET user_perm = #{userPerm}
+        WHERE user_id = #{userId}
+          AND team_id = #{teamId}
+    </update>
     <delete id="deleteTeam">
         DELETE
         FROM `team`

@@ -173,4 +173,45 @@ class TeamController {
             "message" to "添加团队成员成功！"
         )
     }
+
+    @PostMapping("/setPerm")
+    fun setPerm(
+        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        @RequestParam("memberId") @ApiParam("memberId") memberId: String?,
+        @RequestParam("userPerm") @ApiParam("userPerm") userPerm: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            ) else it
+        }
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        if (memberId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队成员id为空！"
+        )
+        if (userPerm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "更改权限为空！"
+        )
+        var perm = teamService.checkPerm(userId, teamId)
+        if (perm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "非当前团队成员！"
+        )
+        if (perm >= userPerm) return mapOf(
+            "success" to false,
+            "message" to "当前用户权限不足！"
+        )
+        teamService.updatePerm(memberId, teamId, userPerm)
+        return mapOf(
+            "success" to true,
+            "message" to "修改团队成员权限成功！"
+        )
+    }
 }
