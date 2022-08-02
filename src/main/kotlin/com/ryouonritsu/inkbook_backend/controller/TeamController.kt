@@ -92,6 +92,7 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     fun getTeamList(
+        @RequestParam("userId") @ApiParam("userId") user_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -99,6 +100,9 @@ class TeamController {
                 "success" to false,
                 "message" to "用户未登录！"
             ) else it
+        }
+        if (!user_id.isNullOrBlank()) {
+            userId = user_id
         }
         var teamList = teamService.searchTeamByUserId(userId)
         if (teamList.isNullOrEmpty()) {
