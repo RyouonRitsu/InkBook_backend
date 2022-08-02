@@ -2,6 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.mail.Authenticator
 import javax.mail.PasswordAuthentication
 import javax.mail.Session
@@ -27,6 +29,9 @@ import javax.servlet.http.HttpServletRequest
 class UserController {
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var redisUtils: RedisUtils
 
     fun getHtml(url: String): Pair<Int, String?> {
         val client = OkHttpClient()
@@ -217,6 +222,7 @@ class UserController {
                 "message" to "密码错误"
             )
             val token = TokenUtils.sign(user)
+            redisUtils.set("token", token, 30, TimeUnit.MINUTES)
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
