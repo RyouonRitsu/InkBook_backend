@@ -69,6 +69,38 @@ class UserController {
         return runCatching { Transport.send(htmlMessage) }.isSuccess
     }
 
+    fun check(email: String, username: String, password: String, real_name: String): Pair<Boolean, Map<String, Any>?> {
+        if (!email.matches(Regex("[\\w\\\\.]+@[\\w\\\\.]+\\.\\w+"))) return Pair(
+            false,
+            mapOf(
+                "success" to false,
+                "message" to "邮箱格式不正确"
+            )
+        )
+        if (username.length > 50) return Pair(
+            false,
+            mapOf(
+                "success" to false,
+                "message" to "用户名长度不能超过50"
+            )
+        )
+        if (password.length < 8 || password.length > 30) return Pair(
+            false,
+            mapOf(
+                "success" to false,
+                "message" to "密码长度必须在8-30之间"
+            )
+        )
+        if (real_name.length > 50) return Pair(
+            false,
+            mapOf(
+                "success" to false,
+                "message" to "真实姓名长度不能超过50"
+            )
+        )
+        return Pair(true, null)
+    }
+
     @PostMapping("/sendRegistrationVerificationCode")
     @Tag(name = "用户接口")
     @Operation(summary = "发送注册验证码到指定邮箱")
@@ -79,6 +111,10 @@ class UserController {
             "success" to false,
             "message" to "邮箱不能为空"
         )
+        if (!email.matches(Regex("[\\w\\\\.]+@[\\w\\\\.]+\\.\\w+"))) return mapOf(
+            "success" to false,
+            "message" to "邮箱格式不正确"
+        )
         val t = userService.selectUserByEmail(email)
         if (t != null) return mapOf(
             "success" to false,
@@ -88,7 +124,7 @@ class UserController {
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         // 此处需替换成服务器地址!!!
 //        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
-        val (code, html) = getHtml("http://127.0.0.1:8090/registration_verification?verification_code=$verification_code")
+        val (code, html) = getHtml("http://localhost:8090/registration_verification?verification_code=$verification_code")
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
@@ -121,11 +157,6 @@ class UserController {
             "success" to false,
             "message" to "邮箱不能为空"
         )
-        val t = userService.selectUserByEmail(email)
-        if (t != null) return mapOf(
-            "success" to false,
-            "message" to "该邮箱已被注册"
-        )
         if (verificationCode.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "验证码不能为空"
@@ -141,6 +172,13 @@ class UserController {
         if (password2.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "确认密码不能为空"
+        )
+        val (result, message) = check(email, username, password1, real_name)
+        if (!result && message != null) return message
+        val t = userService.selectUserByEmail(email)
+        if (t != null) return mapOf(
+            "success" to false,
+            "message" to "该邮箱已被注册"
         )
         return runCatching {
             val vc = redisUtils["verification_code"]
