@@ -1,4 +1,4 @@
-package com.ryouonritsu.inkbook_backend
+package com.ryouonritsu.inkbook_backend.config
 
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.context.annotation.Bean

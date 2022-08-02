@@ -38,6 +38,8 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     implementation("javax.mail:mail:1.5.0-b01")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.auth0:java-jwt:4.0.0")
+    implementation("org.json:json:20220320")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
