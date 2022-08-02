@@ -4,7 +4,7 @@
     <select id="selectUserByUserId" resultType="User">
         SELECT *
         FROM user
-        WHERE user_id = #{userId}
+        WHERE user_id = #{user_id}
     </select>
     <select id="selectUserByEmail" resultType="User">
         SELECT *
