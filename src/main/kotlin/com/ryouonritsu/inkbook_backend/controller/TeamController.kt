@@ -24,8 +24,8 @@ class TeamController {
 
     @PostMapping("/create")
     fun createNewTeam(
-        @RequestParam("teamName") @ApiParam("teamName") teamName: String?,
-        @RequestParam("teamInfo") @ApiParam("teamInfo") teamInfo: String?,
+        @RequestParam("teamName") teamName: String?,
+        @RequestParam("teamInfo", required = false) teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -60,7 +60,7 @@ class TeamController {
 
     @PostMapping("/delete")
     fun deleteTeam(
-        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -90,9 +90,57 @@ class TeamController {
         )
     }
 
+    @PostMapping("/update")
+    fun updateTeam(
+        @RequestParam("teamId") teamId: String?,
+        @RequestParam("teamName") teamName: String?,
+        @RequestParam("teamInfo", required = false) teamInfo: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        var userId = request.session.getAttribute("user_id")?.toString().let {
+            if (it.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "用户未登录！"
+            ) else it
+        }
+        if (teamName.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队名不可为空！"
+        )
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        var perm = teamService.checkPerm(userId, teamId)
+        if (perm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "非当前团队成员！"
+        )
+        if (perm > "1") return mapOf(
+            "success" to false,
+            "message" to "非团队管理员！"
+        )
+        return runCatching {
+            teamService.updateTeam(teamId, teamName, teamInfo.let {
+                if (it.isNullOrBlank()) {
+                    ""
+                } else it
+            })
+            mapOf(
+                "success" to true,
+                "message" to "更新团队信息成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "更新团队信息失败！"
+            )
+        )
+    }
+
     @PostMapping("/getTeamList")
     fun getTeamList(
-        @RequestParam("userId") @ApiParam("userId") user_id: String?,
+        @RequestParam("userId", required = false) user_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -120,7 +168,7 @@ class TeamController {
 
     @PostMapping("/getMemberList")
     fun getMemberList(
-        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -149,8 +197,8 @@ class TeamController {
 
     @PostMapping("/inviteMember")
     fun inviteMember(
-        @RequestParam("acceptId") @ApiParam("acceptId") acceptId: String?,
-        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        @RequestParam("acceptId") acceptId: String?,
+        @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -185,9 +233,9 @@ class TeamController {
 
     @PostMapping("/setPerm")
     fun setPerm(
-        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
-        @RequestParam("memberId") @ApiParam("memberId") memberId: String?,
-        @RequestParam("userPerm") @ApiParam("userPerm") userPerm: String?,
+        @RequestParam("teamId") teamId: String?,
+        @RequestParam("memberId") memberId: String?,
+        @RequestParam("userPerm") userPerm: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -226,8 +274,8 @@ class TeamController {
 
     @PostMapping("/deleteMember")
     fun deleteMember(
-        @RequestParam("memberId") @ApiParam("memberId") memberId: String?,
-        @RequestParam("teamId") @ApiParam("teamId") teamId: String?,
+        @RequestParam("memberId") memberId: String?,
+        @RequestParam("teamId") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {

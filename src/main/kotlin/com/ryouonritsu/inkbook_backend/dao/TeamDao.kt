@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Mapper
 @Mapper
 interface TeamDao {
     fun createNewTeam(team: Team)
+    fun updateTeam(teamId: String, teamName: String, teamInfo: String)
     fun addMemberIntoTeam(userId: String, teamId: String, userPerm: String)
     fun checkPerm(userId: String, teamId: String): String?
     fun updatePerm(userId: String, teamId: String, userPerm: String)

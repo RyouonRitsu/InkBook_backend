@@ -5,6 +5,11 @@
         INSERT INTO `team`(`team_name`, `team_info`)
         VALUES (#{teamName}, #{teamInfo})
     </insert>
+    <update id="updateTeam" parameterType="String">
+        UPDATE `team`
+        SET team_name = #{teamName}, team_info = #{teamInfo}
+        WHERE team_id = #{teamId}
+    </update>
     <insert id="addMemberIntoTeam" parameterType="String">
         INSERT INTO `team_member`(`user_id`, `team_id`, `user_perm`)
         VALUES (#{userId}, #{teamId}, #{userPerm})
