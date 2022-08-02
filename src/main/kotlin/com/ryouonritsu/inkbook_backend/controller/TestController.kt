@@ -1,21 +1,49 @@
 package com.ryouonritsu.inkbook_backend.controller
 
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.springframework.stereotype.Controller
+import org.springframework.ui.Model
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseBody
 
-@RestController
+@Controller
 class TestController {
-    @PostMapping("/test")
-    @ApiOperation(value = "测试", notes = "测试")
-    fun test(
-        @RequestParam("msg") @ApiParam("msg") msg: String?
-    ): Map<String, Any> {
-        return mapOf(
-            "success" to true,
-            "message" to msg.toString()
-        )
+    @RequestMapping("/test")
+    fun test(model: Model): String {
+        model.addAttribute("msg", "okkkkhttp3")
+        return "test"
+    }
+
+    @GetMapping("/use")
+    @ResponseBody
+    fun use(): Map<String, Any> {
+        val client = OkHttpClient()
+        val request = Request.Builder().get().url("http://127.0.0.1:8090/test").build()
+        return try {
+            val response = client.newCall(request).execute()
+            when (response.code) {
+                200 -> {
+                    val string = response.body?.string() ?: return mapOf(
+                        "success" to false,
+                        "message" to "无法获取body"
+                    )
+                    mapOf(
+                        "success" to true,
+                        "message" to string
+                    )
+                }
+                else -> mapOf(
+                    "success" to false,
+                    "message" to "${response.code}"
+                )
+            }
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to e
+            )
+        }
     }
 }
