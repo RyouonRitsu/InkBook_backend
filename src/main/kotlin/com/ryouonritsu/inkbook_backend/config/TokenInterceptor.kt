@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.config
 
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,9 +19,9 @@ class TokenInterceptor : HandlerInterceptor {
             return true
         }
         response.characterEncoding = "UTF-8"
-        val token = request.getHeader("token")
+        val token = request.getHeader("Authorization")
         if (token != null) {
-            if (TokenUtils.verify(token)) {
+            if (TokenUtils.verify(token).first) {
                 log.info("通过拦截器")
                 return true
             }
@@ -28,8 +29,8 @@ class TokenInterceptor : HandlerInterceptor {
         response.contentType = "application/json; charset=utf-8"
         try {
             val json = JSONObject()
+            json.put("success", false)
             json.put("message", "token验证失败")
-            json.put("code", "500")
             response.writer.append(json.toString())
             log.info("认证失败，未通过拦截器")
         } catch (e: Exception) {

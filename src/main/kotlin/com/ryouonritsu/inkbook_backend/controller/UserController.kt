@@ -2,16 +2,14 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -199,12 +197,7 @@ class UserController {
     fun login(
         @RequestParam("username") @Parameter(description = "用户名") username: String?,
         @RequestParam("password") @Parameter(description = "密码") password: String?,
-        request: HttpServletRequest
     ): Map<String, Any> {
-        if (request.session.getAttribute("user_id") != null) return mapOf(
-            "success" to false,
-            "message" to "请勿重复登录"
-        )
         if (username.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "用户名不能为空"
@@ -222,10 +215,11 @@ class UserController {
                 "success" to false,
                 "message" to "密码错误"
             )
-            request.session.setAttribute("user_id", user.user_id)
+            val token = TokenUtils.sign(user)
             mapOf(
                 "success" to true,
-                "message" to "登录成功"
+                "message" to "登录成功",
+                "token" to token
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -238,12 +232,7 @@ class UserController {
     @PostMapping("/logout")
     @Tag(name = "用户接口")
     @Operation(summary = "用户登出")
-    fun logout(request: HttpServletRequest): Map<String, Any> {
-        if (request.session.getAttribute("user_id") == null) return mapOf(
-            "success" to false,
-            "message" to "用户未登录"
-        )
-        request.session.invalidate()
+    fun logout(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
         return mapOf(
             "success" to true,
             "message" to "登出成功"
@@ -253,14 +242,9 @@ class UserController {
     @PostMapping("/showInfo")
     @Tag(name = "用户接口")
     @Operation(summary = "返回已登陆用户的信息, 需要用户登陆才能查询成功")
-    fun showInfo(request: HttpServletRequest): Map<String, Any> {
-        val user_id = request.session.getAttribute("user_id") as? Long ?: return mapOf(
-            "success" to false,
-            "message" to "请先登录"
-        )
+    fun showInfo(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(user_id) ?: let {
-                request.session.invalidate()
+            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
                 return mapOf(
                     "success" to false,
                     "message" to "数据库中没有此用户, 此会话已失效"
