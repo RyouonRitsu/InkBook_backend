@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import springfox.documentation.builders.ApiInfoBuilder
@@ -17,7 +18,7 @@ class SwaggerConfig {
     fun createRestApi(): Docket = Docket(DocumentationType.OAS_30)
         .apiInfo(apiInfo()).enable(true)
         .select()
-        .apis(RequestHandlerSelectors.basePackage("com.ryouonritsu.inkbook_backend.controller"))
+        .apis(RequestHandlerSelectors.withClassAnnotation(Tag::class.java))
         .paths(PathSelectors.any())
         .build()
 
