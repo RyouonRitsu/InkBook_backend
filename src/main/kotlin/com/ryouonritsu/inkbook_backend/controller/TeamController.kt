@@ -288,9 +288,9 @@ class TeamController {
             "message" to "非团队管理员！"
         )
         val t = userService.selectUserByEmail(email) ?: return mapOf(
-                "success" to false,
-                "message" to "该用户不存在！"
-            )
+            "success" to false,
+            "message" to "该用户不存在！"
+        )
         val inTeam = teamService.checkPerm(t.user_id.toString(), teamId)
         if (inTeam != null) {
             return mapOf(
