@@ -50,4 +50,9 @@
         WHERE user_id = #{userId}
           AND team_id = #{teamId}
     </delete>
+    <select id="searchTeamByTeamId" resultType="Map">
+        SELECT *
+        FROM `team`
+        WHERE team_id = #{teamId}
+    </select>
 </mapper>

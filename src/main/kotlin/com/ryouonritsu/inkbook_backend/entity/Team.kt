@@ -19,4 +19,10 @@ class Team(
     var teamId = 0
 
     constructor() : this("", "")
+
+    fun toDict() = mapOf(
+        "team_id" to teamId,
+        "team_name" to teamName,
+        "team_info" to teamInfo
+    )
 }

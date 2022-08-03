@@ -403,4 +403,40 @@ class TeamController {
             "message" to "退出团队成功！"
         )
     }
+
+    @PostMapping("/getTeam")
+    @Tag(name = "团队接口")
+    @Operation(
+        summary = "获得指定团队信息",
+        description = "可由指定团队ID获得对应团队信息\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询团队信息成功！\",\n" +
+                "    \"data\": {\n" +
+                "        \"team_info\": \"123\",\n" +
+                "        \"team_id\": 5,\n" +
+                "        \"team_name\": \"123\"\n" +
+                "    }\n" +
+                "}"
+    )
+    fun getTeam(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?
+    ): Map<String, Any> {
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        val team = teamService.searchTeamByTeamId(teamId) ?: let {
+            return mapOf(
+                "success" to false,
+                "message" to "团队id无效！"
+            )
+        }
+        return mapOf(
+            "success" to true,
+            "message" to "查询团队信息成功！",
+            "data" to team
+        )
+    }
 }

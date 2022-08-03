@@ -44,4 +44,6 @@ class TeamServiceImpl : TeamService {
         teamName: String,
         teamInfo: String
     ) = teamDao.updateTeam(teamId, teamName, teamInfo)
+
+    override fun searchTeamByTeamId(teamId: String) = teamDao.searchTeamByTeamId(teamId)
 }
