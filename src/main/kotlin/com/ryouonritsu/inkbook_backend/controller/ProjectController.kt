@@ -28,10 +28,12 @@ class ProjectController {
 
     @PostMapping("/create")
     @Tag(name = "项目接口")
-    @Operation(summary = "创建新项目", description = "项目信息为可选项\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"创建项目成功！\"\n" +
-            "}")
+    @Operation(
+        summary = "创建新项目", description = "项目信息为可选项\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"创建项目成功！\"\n" +
+                "}"
+    )
     fun createNewTeam(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -68,10 +70,12 @@ class ProjectController {
 
     @PostMapping("/delete")
     @Tag(name = "项目接口")
-    @Operation(summary = "删除项目", description = "先检查是否为该项目团队成员根据传入的项目ID删除对应项目\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"删除项目成功！\"\n" +
-            "}")
+    @Operation(
+        summary = "删除项目", description = "先检查是否为该项目团队成员根据传入的项目ID删除对应项目\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"删除项目成功！\"\n" +
+                "}"
+    )
     fun deleteTeam(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -107,10 +111,12 @@ class ProjectController {
 
     @PostMapping("/update")
     @Tag(name = "项目接口")
-    @Operation(summary = "更新项目信息", description = "更新对应项目ID的项目名或信息\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"更新项目成功！\"\n" +
-            "}")
+    @Operation(
+        summary = "更新项目信息", description = "更新对应项目ID的项目名或信息\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"更新项目成功！\"\n" +
+                "}"
+    )
     fun updateTeam(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -156,31 +162,33 @@ class ProjectController {
 
     @PostMapping("/getProjectList")
     @Tag(name = "项目接口")
-    @Operation(summary = "获得团队项目列表", description = "返回团队ID对应团队的所有项目" +
-            "\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"查询团队项目成功！\",\n" +
-            "    \"data\": [\n" +
-            "        {\n" +
-            "            \"project_id\": 2,\n" +
-            "            \"team_id\": \"1\",\n" +
-            "            \"project_name\": \"55555\",\n" +
-            "            \"project_info\": \"\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"project_id\": 3,\n" +
-            "            \"team_id\": \"1\",\n" +
-            "            \"project_name\": \"123\",\n" +
-            "            \"project_info\": \"\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"project_id\": 4,\n" +
-            "            \"team_id\": \"1\",\n" +
-            "            \"project_name\": \"1234\",\n" +
-            "            \"project_info\": \"\"\n" +
-            "        }\n" +
-            "    ]\n" +
-            "}")
+    @Operation(
+        summary = "获得团队项目列表", description = "返回团队ID对应团队的所有项目" +
+                "\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询团队项目成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"project_id\": 2,\n" +
+                "            \"team_id\": \"1\",\n" +
+                "            \"project_name\": \"55555\",\n" +
+                "            \"project_info\": \"\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"project_id\": 3,\n" +
+                "            \"team_id\": \"1\",\n" +
+                "            \"project_name\": \"123\",\n" +
+                "            \"project_info\": \"\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"project_id\": 4,\n" +
+                "            \"team_id\": \"1\",\n" +
+                "            \"project_name\": \"1234\",\n" +
+                "            \"project_info\": \"\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
     fun getTeamList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,

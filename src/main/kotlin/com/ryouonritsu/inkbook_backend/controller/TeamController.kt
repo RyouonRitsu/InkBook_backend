@@ -134,38 +134,41 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队列表", description = "0为超管，1为管理，2为成员。返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户\n{\n" +
-            "    \"success\": false,\n" +
-            "    \"message\": \"团队为空！\"\n" +
-            "}\n" +
-            "或\n" +
-            "\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"查询团队成功！\",\n" +
-            "    \"data\": [\n" +
-            "        {\n" +
-            "            \"team_info\": \"1234\",\n" +
-            "            \"user_id\": 2,\n" +
-            "            \"team_id\": 10,\n" +
-            "            \"team_name\": \"123444\",\n" +
-            "            \"user_perm\": 0\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"team_info\": \"1234\",\n" +
-            "            \"user_id\": 2,\n" +
-            "            \"team_id\": 11,\n" +
-            "            \"team_name\": \"123444\",\n" +
-            "            \"user_perm\": 0\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"team_info\": \"123\",\n" +
-            "            \"user_id\": 2,\n" +
-            "            \"team_id\": 5,\n" +
-            "            \"team_name\": \"123\",\n" +
-            "            \"user_perm\": 2\n" +
-            "        }\n" +
-            "    ]\n" +
-            "}")
+    @Operation(
+        summary = "获得团队列表",
+        description = "0为超管，1为管理，2为成员。返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户\n{\n" +
+                "    \"success\": false,\n" +
+                "    \"message\": \"团队为空！\"\n" +
+                "}\n" +
+                "或\n" +
+                "\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询团队成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"team_info\": \"1234\",\n" +
+                "            \"user_id\": 2,\n" +
+                "            \"team_id\": 10,\n" +
+                "            \"team_name\": \"123444\",\n" +
+                "            \"user_perm\": 0\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"team_info\": \"1234\",\n" +
+                "            \"user_id\": 2,\n" +
+                "            \"team_id\": 11,\n" +
+                "            \"team_name\": \"123444\",\n" +
+                "            \"user_perm\": 0\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"user_id\": 2,\n" +
+                "            \"team_id\": 5,\n" +
+                "            \"team_name\": \"123\",\n" +
+                "            \"user_perm\": 2\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
     fun getTeamList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -194,22 +197,24 @@ class TeamController {
 
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表\n{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"查询团队成员成功！\",\n" +
-            "    \"data\": [\n" +
-            "        {\n" +
-            "            \"user_id\": 1,\n" +
-            "            \"real_name\": \"2\",\n" +
-            "            \"email\": \"\",\n" +
-            "            \"username\": \"123\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"user_id\": 2,\n" +
-            "            \"username\": \"1234\"\n" +
-            "        }\n" +
-            "    ]\n" +
-            "}")
+    @Operation(
+        summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询团队成员成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"user_id\": 1,\n" +
+                "            \"real_name\": \"2\",\n" +
+                "            \"email\": \"\",\n" +
+                "            \"username\": \"123\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"user_id\": 2,\n" +
+                "            \"username\": \"1234\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
     fun getMemberList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -236,7 +241,10 @@ class TeamController {
 
     @PostMapping("/inviteMember")
     @Tag(name = "团队接口")
-    @Operation(summary = "邀请成员", description = "0为超管，1为管理，2为成员。管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中，并设置权限为2")
+    @Operation(
+        summary = "邀请成员",
+        description = "0为超管，1为管理，2为成员。管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中，并设置权限为2"
+    )
     fun inviteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -309,7 +317,10 @@ class TeamController {
 
     @PostMapping("/deleteMember")
     @Tag(name = "团队接口")
-    @Operation(summary = "删除成员", description = "当前登录用户可从团队中删除成员ID对应成员，前提是权限更高，例如0可删除1和2，1可删除2")
+    @Operation(
+        summary = "删除成员",
+        description = "当前登录用户可从团队中删除成员ID对应成员，前提是权限更高，例如0可删除1和2，1可删除2"
+    )
     fun deleteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -343,21 +354,23 @@ class TeamController {
 
     @PostMapping("/quitTeam")
     @Tag(name = "团队接口")
-    @Operation(summary = "用户退出团队", description = "当前登录用户退出团队ID对应团队，如果是超管0，则会直接解散团队\n" +
-            "{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"解散团队成功！\"\n" +
-            "}\n" +
-            "或\n" +
-            "{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"退出团队成功！\"\n" +
-            "}\n" +
-            "或\n" +
-            "{\n" +
-            "    \"success\": false,\n" +
-            "    \"message\": \"非当前团队成员！\"\n" +
-            "}")
+    @Operation(
+        summary = "用户退出团队", description = "当前登录用户退出团队ID对应团队，如果是超管0，则会直接解散团队\n" +
+                "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"解散团队成功！\"\n" +
+                "}\n" +
+                "或\n" +
+                "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"退出团队成功！\"\n" +
+                "}\n" +
+                "或\n" +
+                "{\n" +
+                "    \"success\": false,\n" +
+                "    \"message\": \"非当前团队成员！\"\n" +
+                "}"
+    )
     fun deleteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
