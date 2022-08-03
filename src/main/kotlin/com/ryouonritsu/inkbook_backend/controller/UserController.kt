@@ -142,7 +142,10 @@ class UserController {
 
     @PostMapping("/sendRegistrationVerificationCode")
     @Tag(name = "用户接口")
-    @Operation(summary = "发送注册验证码", description = "发送注册验证码到指定邮箱, 若modify为true, 则发送修改邮箱验证码, 默认为false")
+    @Operation(
+        summary = "发送注册验证码",
+        description = "发送注册验证码到指定邮箱, 若modify为true, 则发送修改邮箱验证码, 默认为false"
+    )
     fun sendRegistrationVerificationCode(
         @RequestParam("email") @Parameter(description = "邮箱") email: String?,
         @RequestParam("modify", defaultValue = "false") @Parameter(description = "是否修改邮箱") modify: Boolean
@@ -533,8 +536,25 @@ class UserController {
                     "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
                 )
             }
-            if (!username.isNullOrBlank()) user.username = username
-            if (!real_name.isNullOrBlank()) user.real_name = real_name
+            if (!username.isNullOrBlank()) {
+                val t = userService.selectUserByUsername(username)
+                if (t != null) return mapOf(
+                    "success" to false,
+                    "message" to "用户名已存在"
+                )
+                if (username.length > 50) return mapOf(
+                    "success" to false,
+                    "message" to "用户名长度不能超过50"
+                )
+                user.username = username
+            }
+            if (!real_name.isNullOrBlank()) {
+                if (real_name.length > 50) return mapOf(
+                    "success" to false,
+                    "message" to "真实姓名长度不能超过50"
+                )
+                user.real_name = real_name
+            }
             userService.updateUserInfo(user)
             mapOf(
                 "success" to true,
@@ -586,7 +606,8 @@ class UserController {
                 "message" to "密码错误"
             )
             val (code, html) = getHtml("http://localhost:8090/change_email?email=${email}")
-            val success = if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
+            val success =
+                if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
             if (!success) throw Exception("邮件发送失败")
             user.email = email
             userService.updateUserInfo(user)
@@ -594,10 +615,12 @@ class UserController {
                 "success" to true,
                 "message" to "修改成功"
             )
-        }.onFailure { if (it.message != null) return mapOf(
-            "success" to false,
-            "message" to "${it.message}"
-        ) else it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it.message != null) return mapOf(
+                "success" to false,
+                "message" to "${it.message}"
+            ) else it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "修改失败, 发生未知错误"
