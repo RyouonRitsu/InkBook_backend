@@ -198,18 +198,22 @@ class TeamController {
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
     @Operation(
-        summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表\n{\n" +
+        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队成员成功！\",\n" +
                 "    \"data\": [\n" +
                 "        {\n" +
                 "            \"user_id\": 1,\n" +
                 "            \"real_name\": \"2\",\n" +
-                "            \"email\": \"\",\n" +
+                "            \"email\": \"1\",\n" +
+                "            \"user_perm\": 0,\n" +
                 "            \"username\": \"123\"\n" +
                 "        },\n" +
                 "        {\n" +
                 "            \"user_id\": 2,\n" +
+                "            \"real_name\": \"2\",\n" +
+                "            \"email\": \"1\",\n" +
+                "            \"user_perm\": 2,\n" +
                 "            \"username\": \"1234\"\n" +
                 "        }\n" +
                 "    ]\n" +
