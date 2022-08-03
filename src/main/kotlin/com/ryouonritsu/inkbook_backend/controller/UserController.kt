@@ -71,29 +71,25 @@ class UserController {
 
     fun check(email: String, username: String, password: String, real_name: String): Pair<Boolean, Map<String, Any>?> {
         if (!email.matches(Regex("[\\w\\\\.]+@[\\w\\\\.]+\\.\\w+"))) return Pair(
-            false,
-            mapOf(
+            false, mapOf(
                 "success" to false,
                 "message" to "邮箱格式不正确"
             )
         )
         if (username.length > 50) return Pair(
-            false,
-            mapOf(
+            false, mapOf(
                 "success" to false,
                 "message" to "用户名长度不能超过50"
             )
         )
         if (password.length < 8 || password.length > 30) return Pair(
-            false,
-            mapOf(
+            false, mapOf(
                 "success" to false,
                 "message" to "密码长度必须在8-30之间"
             )
         )
         if (real_name.length > 50) return Pair(
-            false,
-            mapOf(
+            false, mapOf(
                 "success" to false,
                 "message" to "真实姓名长度不能超过50"
             )
@@ -101,30 +97,31 @@ class UserController {
         return Pair(true, null)
     }
 
-    @PostMapping("/sendRegistrationVerificationCode")
-    @Tag(name = "用户接口")
-    @Operation(summary = "发送注册验证码到指定邮箱")
-    fun sendRegistrationVerificationCode(
-        @RequestParam("email") @Parameter(description = "邮箱") email: String?,
+    fun emailCheck(email: String?): Pair<Boolean, Map<String, Any>?> {
+        if (email.isNullOrBlank()) return Pair(
+            false, mapOf(
+                "success" to false,
+                "message" to "邮箱不能为空"
+            )
+        )
+        if (!email.matches(Regex("[\\w\\\\.]+@[\\w\\\\.]+\\.\\w+"))) return Pair(
+            false, mapOf(
+                "success" to false,
+                "message" to "邮箱格式不正确"
+            )
+        )
+        return Pair(true, null)
+    }
+
+    fun sendVerifyCodeEmailUseTemplate(
+        template: String,
+        verification_code: String,
+        email: String,
+        subject: String
     ): Map<String, Any> {
-        if (email.isNullOrBlank()) return mapOf(
-            "success" to false,
-            "message" to "邮箱不能为空"
-        )
-        if (!email.matches(Regex("[\\w\\\\.]+@[\\w\\\\.]+\\.\\w+"))) return mapOf(
-            "success" to false,
-            "message" to "邮箱格式不正确"
-        )
-        val t = userService.selectUserByEmail(email)
-        if (t != null) return mapOf(
-            "success" to false,
-            "message" to "该邮箱已被注册"
-        )
-        val subject = "InkBook邮箱注册验证码"
-        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         // 此处需替换成服务器地址!!!
 //        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
-        val (code, html) = getHtml("http://localhost:8090/registration_verification?verification_code=$verification_code")
+        val (code, html) = getHtml("http://localhost:8090/$template?verification_code=$verification_code")
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
@@ -136,11 +133,53 @@ class UserController {
             "success" to false,
             "message" to "验证码发送失败"
         )
+
+    }
+
+    @PostMapping("/sendRegistrationVerificationCode")
+    @Tag(name = "用户接口")
+    @Operation(summary = "发送注册验证码", description = "发送注册验证码到指定邮箱")
+    fun sendRegistrationVerificationCode(
+        @RequestParam("email") @Parameter(description = "邮箱") email: String?,
+    ): Map<String, Any> {
+        val (result, message) = emailCheck(email)
+        if (!result && message != null) return message
+        val t = userService.selectUserByEmail(email!!)
+        if (t != null) return mapOf(
+            "success" to false,
+            "message" to "该邮箱已被注册"
+        )
+        val subject = "InkBook邮箱注册验证码"
+        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
+        return sendVerifyCodeEmailUseTemplate(
+            "registration_verification",
+            verification_code,
+            email,
+            subject
+        )
+    }
+
+    fun verifyCodeCheck(verifyCode: String?): Pair<Boolean, Map<String, Any>?> {
+        val vc = redisUtils["verification_code"]
+        if (vc.isNullOrBlank()) return Pair(
+            false, mapOf(
+                "success" to false,
+                "message" to "验证码无效"
+            )
+        )
+        if (verifyCode != vc) return Pair(
+            false, mapOf(
+                "success" to false,
+                "message" to "验证码错误, 请再试一次"
+            )
+        )
+        redisUtils - "verification_code"
+        return Pair(true, null)
     }
 
     @PostMapping("/register")
     @Tag(name = "用户接口")
-    @Operation(summary = "用户注册, 除了真实姓名其余必填")
+    @Operation(summary = "用户注册", description = "除了真实姓名其余必填")
     fun register(
         @RequestParam("email") @Parameter(description = "邮箱") email: String?,
         @RequestParam("verification_code") @Parameter(description = "验证码") verificationCode: String?,
@@ -181,16 +220,8 @@ class UserController {
             "message" to "该邮箱已被注册"
         )
         return runCatching {
-            val vc = redisUtils["verification_code"]
-            if (vc.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "验证码无效"
-            )
-            if (verificationCode != vc) return mapOf(
-                "success" to false,
-                "message" to "验证码错误, 请再试一次"
-            )
-            redisUtils - "verification_code"
+            val (re, msg) = verifyCodeCheck(verificationCode)
+            if (!re && msg != null) return@runCatching msg
             val temp = userService.selectUserByUsername(username)
             if (temp != null) return mapOf(
                 "success" to false,
@@ -215,7 +246,7 @@ class UserController {
 
     @PostMapping("/login")
     @Tag(name = "用户接口")
-    @Operation(summary = "用户登录, 参数均为必填项")
+    @Operation(summary = "用户登录", description = "参数均为必填项")
     fun login(
         @RequestParam("username") @Parameter(description = "用户名") username: String?,
         @RequestParam("password") @Parameter(description = "密码") password: String?,
@@ -265,7 +296,7 @@ class UserController {
 
     @GetMapping("/showInfo")
     @Tag(name = "用户接口")
-    @Operation(summary = "返回已登陆用户的信息, 需要用户登陆才能查询成功")
+    @Operation(summary = "返回已登陆用户的信息", description = "需要用户登陆才能查询成功")
     fun showInfo(@RequestHeader("Authorization") @Parameter(description = "用户登陆后获取的token令牌") token: String): Map<String, Any> {
         return runCatching {
             val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
@@ -308,5 +339,127 @@ class UserController {
                 "message" to "获取失败, 发生未知错误"
             )
         )
+    }
+
+    @PostMapping("/sendForgotPasswordEmail")
+    @Tag(name = "用户接口")
+    @Operation(summary = "发送找回密码验证码", description = "发送找回密码验证码到指定邮箱")
+    fun sendForgotPasswordEmail(
+        @RequestParam("email") @Parameter(description = "邮箱") email: String?
+    ): Map<String, Any> {
+        val (result, message) = emailCheck(email)
+        if (!result && message != null) return message
+        userService.selectUserByEmail(email!!) ?: return mapOf(
+            "success" to false,
+            "message" to "该邮箱未被注册"
+        )
+        val subject = "InkBook邮箱找回密码验证码"
+        val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
+        return sendVerifyCodeEmailUseTemplate(
+            "forgot_password",
+            verification_code,
+            email,
+            subject
+        )
+    }
+
+    @PostMapping("/changePassword")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "修改用户密码",
+        description = "可选忘记密码修改或正常修改密码, 参数的必要性根据模式选择, 如\"1: 验证码\"则表示模式1需要填写参数\"验证码\""
+    )
+    fun changePassword(
+        @RequestParam("mode") @Parameter(description = "修改模式, 0为忘记密码修改, 1为正常修改") mode: Int?,
+        @RequestHeader(
+            "Authorization",
+            required = false,
+            defaultValue = ""
+        ) @Parameter(description = "1: 用户登陆后获取的token令牌") token: String,
+        @RequestParam("old_password", required = false) @Parameter(description = "1: 旧密码") old_password: String?,
+        @RequestParam("password1") @Parameter(description = "新密码") password1: String?,
+        @RequestParam("password2") @Parameter(description = "确认新密码") password2: String?,
+        @RequestParam("email", required = false) @Parameter(description = "0: 邮箱") email: String?,
+        @RequestParam("verify_code", required = false) @Parameter(description = "0: 验证码") verify_code: String?
+    ): Map<String, Any> {
+        when (mode) {
+            0 -> {
+                val (result, message) = verifyCodeCheck(verify_code)
+                if (!result && message != null) return message
+                if (password1.isNullOrBlank() || password2.isNullOrBlank()) return mapOf(
+                    "success" to false,
+                    "message" to "密码不能为空"
+                )
+                if (password1 != password2) return mapOf(
+                    "success" to false,
+                    "message" to "两次密码不一致"
+                )
+                val (re, msg) = emailCheck(email)
+                if (!re && msg != null) return msg
+                return runCatching {
+                    val user = userService.selectUserByEmail(email!!) ?: return mapOf(
+                        "success" to false,
+                        "message" to "该邮箱未被注册, 发生未知错误, 请检查数据库"
+                    )
+                    user.password = password1
+                    userService.updateUserInfo(user)
+                    redisUtils - "token"
+                    mapOf(
+                        "success" to true,
+                        "message" to "修改成功"
+                    )
+                }.onFailure { it.printStackTrace() }.getOrDefault(
+                    mapOf(
+                        "success" to false,
+                        "message" to "修改失败, 发生未知错误"
+                    )
+                )
+            }
+
+            1 -> {
+                if (token.isBlank()) return mapOf(
+                    "success" to false,
+                    "message" to "请先登陆"
+                )
+                val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                    redisUtils - "token"
+                    return mapOf(
+                        "success" to false,
+                        "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                    )
+                }
+                if (password1.isNullOrBlank() || password2.isNullOrBlank() || old_password.isNullOrBlank()) return mapOf(
+                    "success" to false,
+                    "message" to "密码不能为空"
+                )
+                if (user.password != old_password) return mapOf(
+                    "success" to false,
+                    "message" to "原密码错误"
+                )
+                if (password1 != password2) return mapOf(
+                    "success" to false,
+                    "message" to "两次密码不一致"
+                )
+                user.password = password1
+                return runCatching {
+                    userService.updateUserInfo(user)
+                    redisUtils - "token"
+                    mapOf(
+                        "success" to true,
+                        "message" to "修改成功"
+                    )
+                }.onFailure { it.printStackTrace() }.getOrDefault(
+                    mapOf(
+                        "success" to false,
+                        "message" to "修改失败, 发生未知错误"
+                    )
+                )
+            }
+
+            else -> return mapOf(
+                "success" to false,
+                "message" to "修改模式不在合法范围内, 应为0或1"
+            )
+        }
     }
 }

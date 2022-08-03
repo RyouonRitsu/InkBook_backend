@@ -18,4 +18,6 @@ class UserServiceImpl : UserService {
     override fun selectUserByUsername(username: String) = userDao.selectUserByUsername(username)
 
     override fun registerNewUser(user: User) = userDao.registerNewUser(user)
+
+    override fun updateUserInfo(user: User) = userDao.updateUserInfo(user)
 }

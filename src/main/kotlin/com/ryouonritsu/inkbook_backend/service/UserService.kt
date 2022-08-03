@@ -7,4 +7,6 @@ interface UserService {
     fun selectUserByEmail(email: String): User?
     fun selectUserByUsername(username: String): User?
     fun registerNewUser(user: User)
+
+    fun updateUserInfo(user: User)
 }
