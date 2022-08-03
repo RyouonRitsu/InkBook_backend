@@ -1,7 +1,6 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Project
-import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
 import io.swagger.v3.oas.annotations.Operation
@@ -79,20 +78,27 @@ class ProjectController {
             "success" to false,
             "message" to "项目id为空！"
         )
-        var team_id = projectService.searchTeamIdByProjectId(project_id)
-        if (team_id.isNullOrBlank()) return mapOf(
-            "success" to false,
-            "message" to "找不到该项目所在团队！"
-        )
-        var perm = teamService.checkPerm(user_id, team_id)
-        if (perm.isNullOrBlank()) return mapOf(
-            "success" to false,
-            "message" to "非该项目所在团队成员！"
-        )
-        projectService.deleteProject(project_id)
-        return mapOf(
-            "success" to true,
-            "message" to "删除项目成功！"
+        return runCatching {
+            var teamId = projectService.searchTeamIdByProjectId(project_id)
+            if (teamId.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "找不到该项目所在团队！"
+            )
+            var perm = teamService.checkPerm(user_id, teamId)
+            if (perm.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "非该项目所在团队成员！"
+            )
+            projectService.deleteProject(project_id)
+            mapOf(
+                "success" to true,
+                "message" to "删除项目成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "删除项目失败！"
+            )
         )
     }
 
