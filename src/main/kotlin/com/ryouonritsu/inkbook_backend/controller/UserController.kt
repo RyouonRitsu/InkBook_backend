@@ -249,6 +249,7 @@ class UserController {
     fun login(
         @RequestParam("username") @Parameter(description = "用户名") username: String?,
         @RequestParam("password") @Parameter(description = "密码") password: String?,
+        @RequestParam("keep_login", defaultValue = "false") @Parameter(description = "是否记住登录") keepLogin: Boolean
     ): Map<String, Any> {
         if (username.isNullOrBlank()) return mapOf(
             "success" to false,
@@ -268,7 +269,8 @@ class UserController {
                 "message" to "密码错误"
             )
             val token = TokenUtils.sign(user)
-            redisUtils.set("${user.user_id}", token, 30, TimeUnit.MINUTES)
+            if (keepLogin) redisUtils["${user.user_id}"] = token
+            else redisUtils.set("${user.user_id}", token, 3, TimeUnit.DAYS)
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
@@ -289,8 +291,7 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(summary = "用户登出")
     fun logout(
-        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         redisUtils - "token"
         return mapOf(
@@ -303,8 +304,7 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(summary = "返回已登陆用户的信息", description = "需要用户登陆才能查询成功")
     fun showInfo(
-        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
             val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
@@ -384,11 +384,6 @@ class UserController {
             required = false,
             defaultValue = ""
         ) @Parameter(description = "1: 用户登陆后获取的token令牌") token: String,
-        @RequestParam(
-            "user_id",
-            required = false,
-            defaultValue = ""
-        ) @Parameter(description = "1: 用于认证的用户id") user_id: String,
         @RequestParam("old_password", required = false) @Parameter(description = "1: 旧密码") old_password: String?,
         @RequestParam("password1") @Parameter(description = "新密码") password1: String?,
         @RequestParam("password2") @Parameter(description = "确认新密码") password2: String?,
