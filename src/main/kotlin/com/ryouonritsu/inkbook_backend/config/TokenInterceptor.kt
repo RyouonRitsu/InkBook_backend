@@ -23,14 +23,15 @@ class TokenInterceptor : HandlerInterceptor {
         }
         response.characterEncoding = "UTF-8"
         val token = request.getParameter("token")
-        val user_id = request.getParameter("user_id")
+        //val user_id = request.getParameter("user_id")
         if (!token.isNullOrBlank()) {
 //            if (TokenUtils.verify(token).first) {
 //                log.info("通过拦截器")
 //                return true
 //            }
+            val (re, user_id) = TokenUtils.verify(token)
             log.info("现有的token: $token")
-            if (redisUtils[user_id] == token) {
+            if (redisUtils[user_id] == token && re) {
                 log.info("通过拦截器")
                 return true
             } else {
