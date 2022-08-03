@@ -343,7 +343,21 @@ class TeamController {
 
     @PostMapping("/quitTeam")
     @Tag(name = "团队接口")
-    @Operation(summary = "用户退出团队", description = "当前登录用户退出团队ID对应团队，如果是超管0，则会直接解散团队")
+    @Operation(summary = "用户退出团队", description = "当前登录用户退出团队ID对应团队，如果是超管0，则会直接解散团队\n" +
+            "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"解散团队成功！\"\n" +
+            "}\n" +
+            "或\n" +
+            "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"退出团队成功！\"\n" +
+            "}\n" +
+            "或\n" +
+            "{\n" +
+            "    \"success\": false,\n" +
+            "    \"message\": \"非当前团队成员！\"\n" +
+            "}")
     fun deleteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
