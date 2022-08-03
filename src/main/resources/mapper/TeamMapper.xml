@@ -42,7 +42,7 @@
     <select id="searchMemberByTeamId" resultType="Map">
         SELECT DISTINCT user_id, username, email, real_name
         FROM `user` NATURAL JOIN `team_member`
-        WHERE user_id = #{userId}
+        WHERE team_id = #{teamId}
     </select>
     <delete id="deleteMemberByUserId">
         DELETE
