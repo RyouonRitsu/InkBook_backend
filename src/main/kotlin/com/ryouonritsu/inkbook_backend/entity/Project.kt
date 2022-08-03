@@ -13,7 +13,7 @@ import javax.persistence.Id
 class Project (
     var project_name: String,
     var project_info: String?,
-    var team_id: String?,
+    var team_id: String,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
