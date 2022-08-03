@@ -20,4 +20,12 @@ class ProjectServiceImpl : ProjectService {
     override fun searchTeamIdByProjectId(project_id: String) = projectDao.searchTeamIdByProjectId(project_id)
 
     override fun deleteProject(project_id: String) = projectDao.deleteProject(project_id)
+
+    override fun updateProject(
+        project_id: String,
+        project_name: String,
+        project_info: String
+    ) = projectDao.updateProject(project_id, project_name, project_info)
+
+    override fun searchProjectByTeamId(team_id: String) = projectDao.searchProjectByTeamId(team_id)
 }
