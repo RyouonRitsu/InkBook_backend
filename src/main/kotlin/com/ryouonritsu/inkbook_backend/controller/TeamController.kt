@@ -2,6 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.service.TeamService
+import com.ryouonritsu.inkbook_backend.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -22,6 +23,9 @@ import javax.servlet.http.HttpServletRequest
 class TeamController {
     @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var userService: UserService
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
@@ -247,24 +251,34 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(
         summary = "邀请成员",
-        description = "0为超管，1为管理，2为成员。管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中，并设置权限为2"
+        description = "0为超管，1为管理，2为成员。\n" +
+                "管理员和超管可邀请成员，邀请后若邮箱对应用户存在，则获取用户ID对应用户直接加入团队ID对应团队中，并设置权限为2。\n" +
+                "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"添加团队成员成功！\"\n" +
+                "}\n" +
+                "或\n" +
+                "{\n" +
+                "    \"success\": false,\n" +
+                "    \"message\": \"该用户不存在！\"\n" +
+                "}"
     )
     fun inviteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
-        @RequestParam("acceptId") @Parameter(description = "被邀请成员ID") acceptId: String?,
+        @RequestParam("email") @Parameter(description = "被邀请成员邮箱") email: String?,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        if (acceptId.isNullOrBlank()) return mapOf(
+        if (email.isNullOrBlank()) return mapOf(
             "success" to false,
-            "message" to "被邀请用户id为空！"
+            "message" to "被邀请用户邮箱为空！"
         )
         if (teamId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(user_id, teamId)
+        val perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -273,7 +287,18 @@ class TeamController {
             "success" to false,
             "message" to "非团队管理员！"
         )
-        teamService.addMemberIntoTeam(acceptId, teamId, "2")
+        val t = userService.selectUserByEmail(email) ?: return mapOf(
+                "success" to false,
+                "message" to "该用户不存在！"
+            )
+        val inTeam = teamService.checkPerm(t.user_id.toString(), teamId)
+        if (inTeam != null) {
+            return mapOf(
+                "success" to false,
+                "message" to "被邀请用户已加入该团队！"
+            )
+        }
+        teamService.addMemberIntoTeam(t.user_id.toString(), teamId, "2")
         return mapOf(
             "success" to true,
             "message" to "添加团队成员成功！"
