@@ -27,16 +27,12 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "创建新团队", description = "团队信息为可选项")
     fun createNewTeam(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("teamName") @Parameter(description = "团队名") teamName: String?,
         @RequestParam("teamInfo", required = false) @Parameter(description = "团队信息") teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (teamName.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队名为空！"
@@ -48,7 +44,7 @@ class TeamController {
                 } else it
             })
             teamService.createNewTeam(team)
-            teamService.addMemberIntoTeam(userId, team.teamId.toString(), "0")
+            teamService.addMemberIntoTeam(user_id, team.teamId.toString(), "0")
             mapOf(
                 "success" to true,
                 "message" to "创建团队成功！"
@@ -65,20 +61,16 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "删除团队", description = "根据传入的团队ID删除对应团队")
     fun deleteTeam(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (teamId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(userId, teamId)
+        var perm = teamService.checkPerm(user_id, teamId)
         println(perm)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
@@ -99,17 +91,13 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "更新团队信息", description = "更新对应团队ID的团队名或信息")
     fun updateTeam(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         @RequestParam("teamName") @Parameter(description = "团队名") teamName: String?,
         @RequestParam("teamInfo", required = false) @Parameter(description = "团队信息") teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (teamName.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队名不可为空！"
@@ -118,7 +106,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(userId, teamId)
+        var perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -147,19 +135,18 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队列表", description = "返回用户所加入的所有团队，用户ID为可选项，若不传入用户ID，则默认为当前登录的用户")
+    @Operation(summary = "获得团队列表", description = "返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户")
     fun getTeamList(
-        @RequestParam("userId", required = false) @Parameter(description = "用户ID") user_id: String?,
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("userId", required = false) @Parameter(description = "需要查询的用户ID") other_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
-        if (!user_id.isNullOrBlank()) {
-            userId = user_id
+        var userId = other_id.let {
+            if (it.isNullOrBlank())
+                user_id
+            else
+                it
         }
         var teamList = teamService.searchTeamByUserId(userId)
         if (teamList.isNullOrEmpty()) {
@@ -179,15 +166,11 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表")
     fun getMemberList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (teamId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队id为空！"
@@ -210,16 +193,12 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "邀请成员", description = "管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中")
     fun inviteMember(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("acceptId") @Parameter(description = "被邀请成员ID") acceptId: String?,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (acceptId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "被邀请用户id为空！"
@@ -228,7 +207,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(userId, teamId)
+        var perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -248,17 +227,13 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "设置权限", description = "0为超管，1为管理，2为成员。仅可设置权限比自己低的，例如0可设置1和2")
     fun setPerm(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         @RequestParam("memberId") @Parameter(description = "成员ID") memberId: String?,
         @RequestParam("userPerm") @Parameter(description = "用户权限") userPerm: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (teamId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "团队id为空！"
@@ -271,7 +246,7 @@ class TeamController {
             "success" to false,
             "message" to "更改权限为空！"
         )
-        var perm = teamService.checkPerm(userId, teamId)
+        var perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -291,16 +266,12 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(summary = "删除成员", description = "当前登录用户可从团队中删除成员ID对应成员，前提是权限更高，例如0可删除1和2，1可删除2")
     fun deleteMember(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("memberId") @Parameter(description = "成员ID") memberId: String?,
         @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = request.session.getAttribute("user_id")?.toString().let {
-            if (it.isNullOrBlank()) return mapOf(
-                "success" to false,
-                "message" to "用户未登录！"
-            ) else it
-        }
         if (memberId.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "待删除用户id为空！"
@@ -309,7 +280,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(userId, teamId)
+        var perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
