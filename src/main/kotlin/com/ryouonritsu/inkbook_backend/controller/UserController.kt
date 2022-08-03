@@ -436,6 +436,10 @@ class UserController {
                     "success" to false,
                     "message" to "原密码错误"
                 )
+                if (password1.length < 8 || password1.length > 30) return mapOf(
+                    "success" to false,
+                    "message" to "密码长度必须在8-30位之间"
+                )
                 if (password1 != password2) return mapOf(
                     "success" to false,
                     "message" to "两次密码不一致"
