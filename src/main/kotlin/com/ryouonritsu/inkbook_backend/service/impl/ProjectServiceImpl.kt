@@ -28,4 +28,6 @@ class ProjectServiceImpl : ProjectService {
     ) = projectDao.updateProject(project_id, project_name, project_info)
 
     override fun searchProjectByTeamId(team_id: String) = projectDao.searchProjectByTeamId(team_id)
+
+    override fun searchProjectByProjectId(project_id: String) = projectDao.searchProjectByProjectId(project_id)
 }

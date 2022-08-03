@@ -25,4 +25,9 @@
         FROM `project`
         WHERE team_id = #{team_id}
     </select>
+    <select id="searchProjectByProjectId" resultType="Map">
+        SELECT *
+        FROM `project`
+        WHERE project_id = #{project_id}
+    </select>
 </mapper>

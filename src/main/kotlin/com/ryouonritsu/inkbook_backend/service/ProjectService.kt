@@ -12,4 +12,5 @@ interface ProjectService {
     fun deleteProject(project_id: String)
     fun updateProject(project_id: String, project_name: String, project_info: String)
     fun searchProjectByTeamId(team_id: String): List<Map<String, String>>?
+    fun searchProjectByProjectId(project_id: String): Map<String, String>?
 }

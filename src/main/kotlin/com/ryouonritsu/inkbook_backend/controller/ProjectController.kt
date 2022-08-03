@@ -211,4 +211,41 @@ class ProjectController {
             "data" to projectList
         )
     }
+
+    @PostMapping("/getProject")
+    @Tag(name = "项目接口")
+    @Operation(
+        summary = "获得指定项目信息",
+        description = "可由指定项目ID获得对应项目信息\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询团队信息成功！\",\n" +
+                "    \"data\": {\n" +
+                "        \"project_id\": 3,\n" +
+                "        \"team_id\": \"1\",\n" +
+                "        \"project_name\": \"新名字\",\n" +
+                "        \"project_info\": \"\"\n" +
+                "    }\n" +
+                "}"
+    )
+    fun getTeam(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("project_id") @Parameter(description = "项目ID") project_id: String?
+    ): Map<String, Any> {
+        if (project_id.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "项目id为空！"
+        )
+        val project = projectService.searchProjectByProjectId(project_id) ?: let {
+            return mapOf(
+                "success" to false,
+                "message" to "团队id无效！"
+            )
+        }
+        return mapOf(
+            "success" to true,
+            "message" to "查询团队信息成功！",
+            "data" to project
+        )
+    }
 }
