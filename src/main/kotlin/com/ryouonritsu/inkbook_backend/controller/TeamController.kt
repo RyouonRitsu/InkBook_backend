@@ -2,6 +2,8 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.service.TeamService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
@@ -23,9 +25,10 @@ class TeamController {
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
+    @Operation(summary = "创建新团队", description = "团队信息为可选项")
     fun createNewTeam(
-        @RequestParam("teamName") teamName: String?,
-        @RequestParam("teamInfo", required = false) teamInfo: String?,
+        @RequestParam("teamName") @Parameter(description = "团队名") teamName: String?,
+        @RequestParam("teamInfo", required = false) @Parameter(description = "团队信息") teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -60,8 +63,9 @@ class TeamController {
 
     @PostMapping("/delete")
     @Tag(name = "团队接口")
+    @Operation(summary = "删除团队", description = "根据传入的团队ID删除对应团队")
     fun deleteTeam(
-        @RequestParam("teamId") teamId: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -93,10 +97,11 @@ class TeamController {
 
     @PostMapping("/update")
     @Tag(name = "团队接口")
+    @Operation(summary = "更新团队信息", description = "更新对应团队ID的团队名或信息")
     fun updateTeam(
-        @RequestParam("teamId") teamId: String?,
-        @RequestParam("teamName") teamName: String?,
-        @RequestParam("teamInfo", required = false) teamInfo: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
+        @RequestParam("teamName") @Parameter(description = "团队名") teamName: String?,
+        @RequestParam("teamInfo", required = false) @Parameter(description = "团队信息") teamInfo: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -142,8 +147,9 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     @Tag(name = "团队接口")
+    @Operation(summary = "获得团队列表", description = "返回用户所加入的所有团队，用户ID为可选项，若不传入用户ID，则默认为当前登录的用户")
     fun getTeamList(
-        @RequestParam("userId", required = false) user_id: String?,
+        @RequestParam("userId", required = false) @Parameter(description = "用户ID") user_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -171,8 +177,9 @@ class TeamController {
 
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
+    @Operation(summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表")
     fun getMemberList(
-        @RequestParam("teamId") teamId: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -201,9 +208,10 @@ class TeamController {
 
     @PostMapping("/inviteMember")
     @Tag(name = "团队接口")
+    @Operation(summary = "邀请成员", description = "管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中")
     fun inviteMember(
-        @RequestParam("acceptId") acceptId: String?,
-        @RequestParam("teamId") teamId: String?,
+        @RequestParam("acceptId") @Parameter(description = "被邀请成员ID") acceptId: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -238,10 +246,11 @@ class TeamController {
 
     @PostMapping("/setPerm")
     @Tag(name = "团队接口")
+    @Operation(summary = "设置权限", description = "0为超管，1为管理，2为成员。仅可设置权限比自己低的，例如0可设置1和2")
     fun setPerm(
-        @RequestParam("teamId") teamId: String?,
-        @RequestParam("memberId") memberId: String?,
-        @RequestParam("userPerm") userPerm: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
+        @RequestParam("memberId") @Parameter(description = "成员ID") memberId: String?,
+        @RequestParam("userPerm") @Parameter(description = "用户权限") userPerm: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
@@ -280,9 +289,10 @@ class TeamController {
 
     @PostMapping("/deleteMember")
     @Tag(name = "团队接口")
+    @Operation(summary = "删除成员", description = "当前登录用户可从团队中删除成员ID对应成员，前提是权限更高，例如0可删除1和2，1可删除2")
     fun deleteMember(
-        @RequestParam("memberId") memberId: String?,
-        @RequestParam("teamId") teamId: String?,
+        @RequestParam("memberId") @Parameter(description = "成员ID") memberId: String?,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = request.session.getAttribute("user_id")?.toString().let {
