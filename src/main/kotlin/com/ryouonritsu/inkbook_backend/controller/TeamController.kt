@@ -134,11 +134,42 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队列表", description = "0为超管，1为管理，2为成员。返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户")
+    @Operation(summary = "获得团队列表", description = "0为超管，1为管理，2为成员。返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户\n{\n" +
+            "    \"success\": false,\n" +
+            "    \"message\": \"团队为空！\"\n" +
+            "}\n" +
+            "或\n" +
+            "\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询团队成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"team_info\": \"1234\",\n" +
+            "            \"user_id\": 2,\n" +
+            "            \"team_id\": 10,\n" +
+            "            \"team_name\": \"123444\",\n" +
+            "            \"user_perm\": 0\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"team_info\": \"1234\",\n" +
+            "            \"user_id\": 2,\n" +
+            "            \"team_id\": 11,\n" +
+            "            \"team_name\": \"123444\",\n" +
+            "            \"user_perm\": 0\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"team_info\": \"123\",\n" +
+            "            \"user_id\": 2,\n" +
+            "            \"team_id\": 5,\n" +
+            "            \"team_name\": \"123\",\n" +
+            "            \"user_perm\": 2\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
     fun getTeamList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
-        @RequestParam("userId", required = false) @Parameter(description = "需要查询的用户ID") other_id: String?,
+        @RequestParam("other_id", required = false) @Parameter(description = "需要查询的用户ID") other_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
         var userId = other_id.let {
@@ -163,7 +194,22 @@ class TeamController {
 
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表")
+    @Operation(summary = "获得团队成员列表", description = "根据团队ID来获得对应的成员列表\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询团队成员成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"user_id\": 1,\n" +
+            "            \"real_name\": \"2\",\n" +
+            "            \"email\": \"\",\n" +
+            "            \"username\": \"123\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"user_id\": 2,\n" +
+            "            \"username\": \"1234\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
     fun getMemberList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
