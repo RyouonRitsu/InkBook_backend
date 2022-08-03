@@ -11,6 +11,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.mail.Authenticator
@@ -19,6 +21,7 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
+import kotlin.io.path.Path
 
 @RestController
 @RequestMapping("/user")
@@ -117,7 +120,8 @@ class UserController {
         template: String,
         verification_code: String,
         email: String,
-        subject: String
+        subject: String,
+        modify: Boolean = false
     ): Map<String, Any> {
         // 此处需替换成服务器地址!!!
 //        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
@@ -125,6 +129,7 @@ class UserController {
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
+            if (modify) redisUtils.set("email", email, 5, TimeUnit.MINUTES)
             mapOf(
                 "success" to true,
                 "message" to "验证码已发送"
@@ -137,9 +142,10 @@ class UserController {
 
     @PostMapping("/sendRegistrationVerificationCode")
     @Tag(name = "用户接口")
-    @Operation(summary = "发送注册验证码", description = "发送注册验证码到指定邮箱")
+    @Operation(summary = "发送注册验证码", description = "发送注册验证码到指定邮箱, 若modify为true, 则发送修改邮箱验证码, 默认为false")
     fun sendRegistrationVerificationCode(
         @RequestParam("email") @Parameter(description = "邮箱") email: String?,
+        @RequestParam("modify", defaultValue = "false") @Parameter(description = "是否修改邮箱") modify: Boolean
     ): Map<String, Any> {
         val (result, message) = emailCheck(email)
         if (!result && message != null) return message
@@ -148,13 +154,14 @@ class UserController {
             "success" to false,
             "message" to "该邮箱已被注册"
         )
-        val subject = "InkBook邮箱注册验证码"
+        val subject = "InkBook邮箱验证码"
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         return sendVerifyCodeEmailUseTemplate(
             "registration_verification",
             verification_code,
             email,
-            subject
+            subject,
+            modify
         )
     }
 
@@ -476,5 +483,125 @@ class UserController {
                 "message" to "修改模式不在合法范围内, 应为0或1"
             )
         }
+    }
+
+    @PostMapping("/uploadFile")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "上传文件",
+        description = "将用户上传的文件保存在静态文件目录src/main/resources/static/user/\${user_id}/\${file_name}下"
+    )
+    fun uploadFile(
+        @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            val fileName = file.originalFilename
+            val filePath = "src/main/resources/static/user/${user_id}/${fileName}"
+            val fileDir = File("src/main/resources/static/user/${user_id}")
+            if (!fileDir.exists()) fileDir.mkdirs()
+            file.transferTo(Path(filePath))
+            mapOf(
+                "success" to true,
+                "message" to "上传成功"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "上传失败, 发生未知错误"
+            )
+        )
+    }
+
+    @PostMapping("/modifyUserInfo")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "修改用户信息",
+        description = "未填写的信息则保持原样不变"
+    )
+    fun modifyUserInfo(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("username", defaultValue = "") @Parameter(description = "用户名") username: String?,
+        @RequestParam("real_name", defaultValue = "") @Parameter(description = "真实姓名") real_name: String?,
+    ): Map<String, Any> {
+        return runCatching {
+            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+            if (!username.isNullOrBlank()) user.username = username
+            if (!real_name.isNullOrBlank()) user.real_name = real_name
+            userService.updateUserInfo(user)
+            mapOf(
+                "success" to true,
+                "message" to "修改成功"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "修改失败, 发生未知错误"
+            )
+        )
+    }
+
+    @PostMapping("/modifyEmail")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "修改邮箱",
+        description = "需要进行新邮箱验证和密码验证, 新邮箱验证发送验证码使用注册验证码接口即可"
+    )
+    fun modifyEmail(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("email") @Parameter(description = "新邮箱") email: String?,
+        @RequestParam("verify_code") @Parameter(description = "邮箱验证码") verify_code: String?,
+        @RequestParam("password") @Parameter(description = "密码") password: String?
+    ): Map<String, Any> {
+        return runCatching {
+            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+            val (result, message) = emailCheck(email)
+            if (!result && message != null) return message
+            val t = userService.selectUserByEmail(email!!)
+            if (t != null) return mapOf(
+                "success" to false,
+                "message" to "该邮箱已被注册"
+            )
+            val (re, msg) = verifyCodeCheck(verify_code)
+            if (!re && msg != null) return@runCatching msg
+            if (redisUtils["email"] != email) return mapOf(
+                "success" to false,
+                "message" to "该邮箱与验证邮箱不匹配"
+            )
+            if (password != user.password) return mapOf(
+                "success" to false,
+                "message" to "密码错误"
+            )
+            val (code, html) = getHtml("http://localhost:8090/change_email?email=${email}")
+            val success = if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
+            if (!success) throw Exception("邮件发送失败")
+            user.email = email
+            userService.updateUserInfo(user)
+            mapOf(
+                "success" to true,
+                "message" to "修改成功"
+            )
+        }.onFailure { if (it.message != null) return mapOf(
+            "success" to false,
+            "message" to "${it.message}"
+        ) else it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "修改失败, 发生未知错误"
+            )
+        )
     }
 }
