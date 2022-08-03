@@ -10,7 +10,7 @@ import javax.persistence.Id
  * @author WuKunchao
  */
 @Entity
-class Project (
+class Project(
     var project_name: String,
     var project_info: String?,
     var team_id: String,

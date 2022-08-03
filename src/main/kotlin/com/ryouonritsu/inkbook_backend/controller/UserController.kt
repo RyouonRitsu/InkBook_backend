@@ -245,7 +245,10 @@ class UserController {
 
     @PostMapping("/login")
     @Tag(name = "用户接口")
-    @Operation(summary = "用户登录", description = "\"1\"或true为保持，\"0\"或false为不保持，参数均为必填项")
+    @Operation(
+        summary = "用户登录",
+        description = "keep_login为true时, 保持登录状态, 否则token会在3天后失效, 默认为false"
+    )
     fun login(
         @RequestParam("username") @Parameter(description = "用户名") username: String?,
         @RequestParam("password") @Parameter(description = "密码") password: String?,
