@@ -1,6 +1,7 @@
 package com.ryouonritsu.inkbook_backend.config
 
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

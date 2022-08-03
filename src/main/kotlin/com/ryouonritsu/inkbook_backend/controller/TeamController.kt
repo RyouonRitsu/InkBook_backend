@@ -25,7 +25,7 @@ class TeamController {
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
-    @Operation(summary = "创建新团队", description = "团队信息为可选项")
+    @Operation(summary = "创建新团队", description = "0为超管，1为管理，2为成员。团队信息为可选项")
     fun createNewTeam(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -135,7 +135,7 @@ class TeamController {
 
     @PostMapping("/getTeamList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得团队列表", description = "返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户")
+    @Operation(summary = "获得团队列表", description = "0为超管，1为管理，2为成员。返回用户所加入的所有团队，其他用户ID为可选项，若不传入其他用户ID，则默认为当前登录的用户")
     fun getTeamList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
@@ -191,7 +191,7 @@ class TeamController {
 
     @PostMapping("/inviteMember")
     @Tag(name = "团队接口")
-    @Operation(summary = "邀请成员", description = "管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中")
+    @Operation(summary = "邀请成员", description = "0为超管，1为管理，2为成员。管理员和超管可邀请成员，邀请后成员ID对应成员直接加入团队ID对应团队中，并设置权限为2")
     fun inviteMember(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
