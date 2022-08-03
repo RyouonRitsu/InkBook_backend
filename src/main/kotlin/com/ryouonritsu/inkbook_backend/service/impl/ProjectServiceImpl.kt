@@ -16,4 +16,8 @@ class ProjectServiceImpl : ProjectService {
     lateinit var projectDao: ProjectDao
 
     override fun createNewProject(project: Project) = projectDao.createNewProject(project)
+
+    override fun searchTeamIdByProjectId(project_id: String) = projectDao.searchTeamIdByProjectId(project_id)
+
+    override fun deleteProject(project_id: String) = projectDao.deleteProject(project_id)
 }

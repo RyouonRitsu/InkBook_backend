@@ -10,4 +10,6 @@ import org.apache.ibatis.annotations.Mapper
 @Mapper
 interface ProjectDao {
     fun createNewProject(project: Project)
+    fun searchTeamIdByProjectId(project_id: String): String?
+    fun deleteProject(project_id: String)
 }

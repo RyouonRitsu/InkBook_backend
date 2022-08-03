@@ -5,4 +5,14 @@
         INSERT INTO `project`(`project_name`, `project_info`, `team_id`)
         VALUES (#{project_name}, #{project_info}, #{team_id})
     </insert>
+    <select id="searchTeamIdByProjectId" resultType="String">
+        SELECT team_id
+        FROM `project`
+        WHERE project_id = #{project_id}
+    </select>
+    <delete id="deleteProject">
+        DELETE
+        FROM `project`
+        WHERE project_id = #{project_id}
+    </delete>
 </mapper>

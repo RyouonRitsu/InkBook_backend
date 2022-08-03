@@ -71,7 +71,6 @@ class TeamController {
             "message" to "团队id为空！"
         )
         var perm = teamService.checkPerm(user_id, teamId)
-        println(perm)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非团队成员！"
