@@ -293,7 +293,7 @@ class UserController {
     fun logout(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
-        redisUtils - "token"
+        redisUtils - "${TokenUtils.verify(token).second}"
         return mapOf(
             "success" to true,
             "message" to "登出成功"
@@ -308,7 +308,7 @@ class UserController {
     ): Map<String, Any> {
         return runCatching {
             val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
-                redisUtils - "token"
+                redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
                     "message" to "数据库中没有此用户, 此会话已失效"
@@ -411,7 +411,7 @@ class UserController {
                     )
                     user.password = password1
                     userService.updateUserInfo(user)
-                    redisUtils - "token"
+                    redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
                         "message" to "修改成功"
@@ -430,7 +430,7 @@ class UserController {
                     "message" to "请先登陆"
                 )
                 val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
-                    redisUtils - "token"
+                    redisUtils - "${TokenUtils.verify(token).second}"
                     return mapOf(
                         "success" to false,
                         "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
@@ -455,7 +455,7 @@ class UserController {
                 user.password = password1
                 return runCatching {
                     userService.updateUserInfo(user)
-                    redisUtils - "token"
+                    redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
                         "message" to "修改成功"
