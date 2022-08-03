@@ -340,4 +340,36 @@ class TeamController {
             "message" to "删除团队成员成功！"
         )
     }
+
+    @PostMapping("/quitTeam")
+    @Tag(name = "团队接口")
+    @Operation(summary = "用户退出团队", description = "当前登录用户退出团队ID对应团队，如果是超管0，则会直接解散团队")
+    fun deleteMember(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("teamId") @Parameter(description = "团队ID") teamId: String?,
+        request: HttpServletRequest
+    ): Map<String, Any> {
+        if (teamId.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        var perm = teamService.checkPerm(user_id, teamId)
+        if (perm.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "非当前团队成员！"
+        )
+        if (perm == "0") {
+            teamService.deleteTeam(teamId)
+            return mapOf(
+                "success" to true,
+                "message" to "解散团队成功！"
+            )
+        }
+        teamService.deleteMemberByUserId(user_id, teamId)
+        return mapOf(
+            "success" to true,
+            "message" to "退出团队成功！"
+        )
+    }
 }
