@@ -30,7 +30,6 @@ class WebConfiguration : WebMvcConfigurer {
 
     override fun addInterceptors(registry: InterceptorRegistry) {
         val excludePath = listOf(
-            "/user/**",
             "/user/login",
             "/user/register",
             "/user/sendRegistrationVerificationCode",
@@ -44,7 +43,8 @@ class WebConfiguration : WebMvcConfigurer {
             "/webjars/**",
             "/change_email",
             "/forgot_password",
-            "/registration_verification"
+            "/registration_verification",
+            "/file/**",
         )
         registry.addInterceptor(tokenInterceptor)
             .addPathPatterns("/**")

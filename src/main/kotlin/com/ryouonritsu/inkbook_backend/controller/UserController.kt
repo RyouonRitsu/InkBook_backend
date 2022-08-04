@@ -30,6 +30,7 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/user")
@@ -508,7 +509,8 @@ class UserController {
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
-        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        request: HttpServletRequest
     ): Map<String, Any> {
         return runCatching {
             if (file.size >= 10 * 1024 * 1024) return mapOf(
@@ -518,9 +520,9 @@ class UserController {
             val current = LocalDateTime.now()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_")
             val formatted = current.format(formatter)
+            val token = request.getParameter("token")
             val user_id = TokenUtils.verify(token).second
-            val dir = "static/user/${user_id}"
-            println(user_id)
+            val dir = "static/file/${user_id}"
             var fileUrl = ""
             val fileName = formatted + file.originalFilename;
             val filePath: String = Paths.get(dir, fileName).toString()
@@ -530,7 +532,7 @@ class UserController {
             }
             val stream = BufferedOutputStream(FileOutputStream(File(filePath)))
             stream.write(file.bytes)
-            fileUrl = "http://101.42.171.88:8090/user/${user_id}/${fileName}"
+            fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
             userFileService.saveFile(UserFile(fileUrl))
             stream.close()
             mapOf(
