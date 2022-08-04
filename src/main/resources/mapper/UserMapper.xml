@@ -22,7 +22,7 @@
     </insert>
     <update id="updateUserInfo" parameterType="User">
         UPDATE `user`
-        SET `email` = #{email}, `username` = #{username}, `password` = #{password}, `real_name` = #{real_name}
+        SET `email` = #{email}, `username` = #{username}, `password` = #{password}, `real_name` = #{real_name}, `avatar` = #{avatar}
         WHERE `user_id` = #{user_id}
     </update>
 </mapper>
