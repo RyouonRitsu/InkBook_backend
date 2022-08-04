@@ -2,6 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
@@ -33,6 +34,9 @@ import kotlin.io.path.Path
 class UserController {
     @Autowired
     lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var docRepository: DocumentationRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -665,5 +669,48 @@ class UserController {
                 "message" to "修改失败, 发生意外错误"
             )
         )
+    }
+
+    @PostMapping("/favorite")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "收藏",
+        description = "将指定的内容加入收藏夹"
+    )
+    fun favorite(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("doc_id") @Parameter(description = "要收藏的文档id") docId: Long
+    ): Map<String, Any> {
+        val userId = TokenUtils.verify(token).second
+        val user = try {
+            userRepository.findById(userId).get()
+        } catch (e: NoSuchElementException) {
+            redisUtils - "$userId"
+            return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+            )
+        }
+        val doc = try {
+            docRepository.findById(docId).get()
+        } catch (e: NoSuchElementException) {
+            return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此文档, 请检查文档Id是否正确"
+            )
+        }
+        user.favoritedocuments.add(doc)
+        return try {
+            userRepository.save(user)
+            mapOf(
+                "success" to true,
+                "message" to "收藏成功"
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to "收藏失败, 发生意外错误"
+            )
+        }
     }
 }
