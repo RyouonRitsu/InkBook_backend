@@ -42,6 +42,7 @@ class UserController {
 
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
+
     @Autowired
     lateinit var redisUtils: RedisUtils
 
@@ -805,7 +806,8 @@ class UserController {
                 )
             }
         }
-        val list = user.user2documentations.sortedByDescending { it.lastviewedtime }.subList(0, min(10, user.user2documentations.size))
+        val list = user.user2documentations.sortedByDescending { it.lastviewedtime }
+            .subList(0, min(10, user.user2documentations.size))
         val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
         try {
             user2DocRepository.deleteAllById(id2DelList)

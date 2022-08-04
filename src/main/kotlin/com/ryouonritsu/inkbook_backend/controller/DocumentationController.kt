@@ -173,7 +173,10 @@ class DocumentationController {
 
     @PostMapping("/save")
     @Tag(name = "文档接口")
-    @Operation(summary = "保存文档", description = "保存文档内容, 此操作会**刷新**文档**最后编辑时间**和**最后浏览时间**")
+    @Operation(
+        summary = "保存文档",
+        description = "保存文档内容, 此操作会**刷新**文档**最后编辑时间**和**最后浏览时间**"
+    )
     fun save(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?,

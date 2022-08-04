@@ -13,7 +13,11 @@ class User {
     var realname: String? = null
     var avatar: String? = null
 
-    @ManyToMany(targetEntity = Documentation::class, fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToMany(
+        targetEntity = Documentation::class,
+        fetch = FetchType.EAGER,
+        cascade = [CascadeType.PERSIST, CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH]
+    )
     var favoritedocuments = mutableListOf<Documentation>()
 
     @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user")
