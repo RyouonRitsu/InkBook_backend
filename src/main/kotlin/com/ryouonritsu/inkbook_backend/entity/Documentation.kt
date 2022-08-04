@@ -12,10 +12,10 @@ class Documentation {
     var did: Long? = null
     var dname: String? = null
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     var ddescription: String? = null
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     var dcontent: String? = null
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
     var pid: Int? = null

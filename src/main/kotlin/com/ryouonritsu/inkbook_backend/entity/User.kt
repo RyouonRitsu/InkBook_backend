@@ -15,7 +15,7 @@ class User {
 
     @ManyToMany(targetEntity = Documentation::class, fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
     var favoritedocuments = mutableListOf<Documentation>()
-//
+
 //    @OneToMany(targetEntity = Documentation::class, cascade = [CascadeType.ALL])
 //    @JoinColumn(name = "doc_id")
 //    var recently_viewed_documents = mutableListOf<Documentation>()
