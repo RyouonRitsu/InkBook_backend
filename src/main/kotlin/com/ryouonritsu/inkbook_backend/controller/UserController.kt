@@ -2,8 +2,8 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.UserFileService
-import com.ryouonritsu.inkbook_backend.service.UserService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -32,7 +32,7 @@ import kotlin.io.path.Path
 @Tag(name = "用户接口")
 class UserController {
     @Autowired
-    lateinit var userService: UserService
+    lateinit var userRepository: UserRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -158,7 +158,7 @@ class UserController {
     ): Map<String, Any> {
         val (result, message) = emailCheck(email)
         if (!result && message != null) return message
-        val t = userService.selectUserByEmail(email!!)
+        val t = userRepository.findByEmail(email!!)
         if (t != null) return mapOf(
             "success" to false,
             "message" to "该邮箱已被注册"
@@ -229,7 +229,7 @@ class UserController {
         )
         val (result, message) = check(email, username, password1, real_name)
         if (!result && message != null) return message
-        val t = userService.selectUserByEmail(email)
+        val t = userRepository.findByEmail(email)
         if (t != null) return mapOf(
             "success" to false,
             "message" to "该邮箱已被注册"
@@ -241,7 +241,7 @@ class UserController {
                 "success" to false,
                 "message" to "该邮箱与验证邮箱不匹配"
             )
-            val temp = userService.selectUserByUsername(username)
+            val temp = userRepository.findByUsername(username)
             if (temp != null) return mapOf(
                 "success" to false,
                 "message" to "用户名已存在"
@@ -250,7 +250,7 @@ class UserController {
                 "success" to false,
                 "message" to "两次输入的密码不一致"
             )
-            userService + User(email, username, password1, real_name, avatar ?: "")
+            userRepository.save(User(email, username, password1, real_name, avatar ?: ""))
             mapOf(
                 "success" to true,
                 "message" to "注册成功"
@@ -283,7 +283,7 @@ class UserController {
             "message" to "密码不能为空"
         )
         return runCatching {
-            val user = userService.selectUserByUsername(username) ?: return mapOf(
+            val user = userRepository.findByUsername(username) ?: return mapOf(
                 "success" to false,
                 "message" to "用户不存在"
             )
@@ -330,19 +330,22 @@ class UserController {
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
-            val user = userService[TokenUtils.verify(token).second] ?: let {
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+            mapOf(
+                "success" to true,
+                "message" to "获取成功",
+                "data" to user.toDict()
+            )
+        }.onFailure {
+            if (it is NoSuchElementException) {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
                     "message" to "数据库中没有此用户, 此会话已失效"
                 )
             }
-            mapOf(
-                "success" to true,
-                "message" to "获取成功",
-                "data" to user.toDict()
-            )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "获取失败, 发生意外错误"
@@ -355,16 +358,19 @@ class UserController {
     @Operation(summary = "根据用户id查询用户信息")
     fun selectUserByUserId(@RequestParam("user_id") @Parameter(description = "用户id") user_id: Long): Map<String, Any> {
         return runCatching {
-            val user = userService[user_id] ?: return mapOf(
-                "success" to false,
-                "message" to "数据库中没有此用户"
-            )
+            val user = userRepository.findById(user_id).get()
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
                 "data" to user.toDict()
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此用户"
+            )
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "获取失败, 发生意外错误"
@@ -380,7 +386,7 @@ class UserController {
     ): Map<String, Any> {
         val (result, message) = emailCheck(email)
         if (!result && message != null) return message
-        userService.selectUserByEmail(email!!) ?: return mapOf(
+        userRepository.findByEmail(email!!) ?: return mapOf(
             "success" to false,
             "message" to "该邮箱未被注册"
         )
@@ -428,12 +434,12 @@ class UserController {
                 val (re, msg) = emailCheck(email)
                 if (!re && msg != null) return msg
                 return runCatching {
-                    val user = userService.selectUserByEmail(email!!) ?: return mapOf(
+                    val user = userRepository.findByEmail(email!!) ?: return mapOf(
                         "success" to false,
                         "message" to "该邮箱未被注册, 发生意外错误, 请检查数据库"
                     )
                     user.password = password1
-                    userService(user)
+                    userRepository.save(user)
                     redisUtils - "${user.uid}"
                     mapOf(
                         "success" to true,
@@ -452,38 +458,42 @@ class UserController {
                     "success" to false,
                     "message" to "请先登陆"
                 )
-                val user = userService[TokenUtils.verify(token).second] ?: let {
-                    redisUtils - "${TokenUtils.verify(token).second}"
-                    return mapOf(
-                        "success" to false,
-                        "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
-                    )
-                }
-                if (password1.isNullOrBlank() || password2.isNullOrBlank() || old_password.isNullOrBlank()) return mapOf(
-                    "success" to false,
-                    "message" to "密码不能为空"
-                )
-                if (user.password != old_password) return mapOf(
-                    "success" to false,
-                    "message" to "原密码错误"
-                )
-                if (password1.length < 8 || password1.length > 30) return mapOf(
-                    "success" to false,
-                    "message" to "密码长度必须在8-30位之间"
-                )
-                if (password1 != password2) return mapOf(
-                    "success" to false,
-                    "message" to "两次密码不一致"
-                )
-                user.password = password1
                 return runCatching {
-                    userService(user)
+                    val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                    if (password1.isNullOrBlank() || password2.isNullOrBlank() || old_password.isNullOrBlank()) return mapOf(
+                        "success" to false,
+                        "message" to "密码不能为空"
+                    )
+                    if (user.password != old_password) return mapOf(
+                        "success" to false,
+                        "message" to "原密码错误"
+                    )
+                    if (password1.length < 8 || password1.length > 30) return mapOf(
+                        "success" to false,
+                        "message" to "密码长度必须在8-30位之间"
+                    )
+                    if (password1 != password2) return mapOf(
+                        "success" to false,
+                        "message" to "两次密码不一致"
+                    )
+                    user.password = password1
+                    userRepository.save(user)
                     redisUtils - "${user.uid}"
                     mapOf(
                         "success" to true,
                         "message" to "修改成功"
                     )
-                }.onFailure { it.printStackTrace() }.getOrDefault(
+                }.onFailure {
+                    if (it is NoSuchElementException) {
+                        redisUtils - "${TokenUtils.verify(token).second}"
+                        return mapOf(
+                            "success" to false,
+                            "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                        )
+
+                    }
+                    it.printStackTrace()
+                }.getOrDefault(
                     mapOf(
                         "success" to false,
                         "message" to "修改失败, 发生意外错误"
@@ -551,15 +561,9 @@ class UserController {
         @RequestParam("avatar", defaultValue = "") @Parameter(description = "个人头像") avatar: String?,
     ): Map<String, Any> {
         return runCatching {
-            val user = userService[TokenUtils.verify(token).second] ?: let {
-                redisUtils - "${TokenUtils.verify(token).second}"
-                return mapOf(
-                    "success" to false,
-                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
-                )
-            }
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
             if (!username.isNullOrBlank()) {
-                val t = userService.selectUserByUsername(username)
+                val t = userRepository.findByUsername(username)
                 if (t != null) return mapOf(
                     "success" to false,
                     "message" to "用户名已存在"
@@ -580,12 +584,21 @@ class UserController {
             if (!avatar.isNullOrBlank()) {
                 user.avatar = avatar
             }
-            userService(user)
+            userRepository.save(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "修改失败, 发生意外错误"
@@ -606,16 +619,10 @@ class UserController {
         @RequestParam("password") @Parameter(description = "密码") password: String?
     ): Map<String, Any> {
         return runCatching {
-            val user = userService[TokenUtils.verify(token).second] ?: let {
-                redisUtils - "${TokenUtils.verify(token).second}"
-                return mapOf(
-                    "success" to false,
-                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
-                )
-            }
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
             val (result, message) = emailCheck(email)
             if (!result && message != null) return message
-            val t = userService.selectUserByEmail(email!!)
+            val t = userRepository.findByEmail(email!!)
             if (t != null) return mapOf(
                 "success" to false,
                 "message" to "该邮箱已被注册"
@@ -635,12 +642,19 @@ class UserController {
                 if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
             if (!success) throw Exception("邮件发送失败")
             user.email = email
-            userService(user)
+            userRepository.save(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"
             )
         }.onFailure {
+            if (it is NoSuchElementException) {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
             if (it.message != null) return mapOf(
                 "success" to false,
                 "message" to "${it.message}"
