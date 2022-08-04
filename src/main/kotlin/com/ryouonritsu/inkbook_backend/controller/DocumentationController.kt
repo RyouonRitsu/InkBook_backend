@@ -1,8 +1,8 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Documentation
-import com.ryouonritsu.inkbook_backend.service.DocumentationService
-import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -22,10 +22,10 @@ class DocumentationController {
     val logger: Logger = LoggerFactory.getLogger(DocumentationController::class.java)
 
     @Autowired
-    lateinit var docService: DocumentationService
+    lateinit var docRepository: DocumentationRepository
 
     @Autowired
-    lateinit var userService: UserService
+    lateinit var userRepository: UserRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -69,13 +69,23 @@ class DocumentationController {
         if (!result && message != null) return message
         return runCatching {
             val creator_id = TokenUtils.verify(token).second
-            val doc = Documentation(doc_name!!, doc_description, doc_content, creator_id, project_id!!)
-            docService + doc
+            val creator = userRepository.findById(creator_id).get()
+            val doc = Documentation(doc_name!!, doc_description, doc_content, project_id!!, creator)
+            docRepository.save(doc)
             mapOf(
                 "success" to true,
                 "message" to "文档创建成功"
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                mapOf(
+                    "success" to false,
+                    "message" to "用户不存在, 可能是数据库出错, 请检查后重试, 当前会话已失效"
+                )
+            }
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档创建失败, 发生意外错误"
@@ -95,7 +105,7 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
-            docService - doc_id
+            docRepository.deleteById(doc_id)
             mapOf(
                 "success" to true,
                 "message" to "文档删除成功"
@@ -128,24 +138,27 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
-            val doc = docService[doc_id] ?: return@runCatching mapOf(
-                "success" to false,
-                "message" to "文档不存在, 请检查后再试"
-            )
+            val doc = docRepository.findById(doc_id).get()
             if (doc_name.isNotBlank()) {
                 if (doc_name.length > 200) return@runCatching mapOf(
                     "success" to false,
                     "message" to "文档名称不能超过200个字符"
                 )
-                doc.doc_name = doc_name
+                doc.dname = doc_name
             }
-            if (doc_description.isNotBlank()) doc.doc_description = doc_description
-            docService(doc)
+            if (doc_description.isNotBlank()) doc.ddescription = doc_description
+            docRepository.save(doc)
             mapOf(
                 "success" to true,
                 "message" to "文档信息更新成功"
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) return mapOf(
+                "success" to false,
+                "message" to "文档不存在, 请检查后再试"
+            )
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档信息更新失败, 发生意外错误"
@@ -166,19 +179,21 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
-            val doc = docService[doc_id] ?: return@runCatching mapOf(
-                "success" to false,
-                "message" to "文档不存在, 请检查后再试"
-            )
-            doc.doc_content = doc_content
-            doc.last_edit_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-//            doc.last_viewed_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-            docService(doc)
+            val doc = docRepository.findById(doc_id).get()
+            doc.dcontent = doc_content
+            doc.lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+            docRepository.save(doc)
             mapOf(
                 "success" to true,
                 "message" to "文档保存成功"
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) return mapOf(
+                "success" to false,
+                "message" to "文档不存在, 请检查后再试"
+            )
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档保存失败, 发生意外错误"
@@ -198,21 +213,20 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
-            val doc = docService[doc_id] ?: return@runCatching mapOf(
-                "success" to false,
-                "message" to "文档不存在, 请检查后再试"
-            )
-//            doc.last_viewed_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-            val creator = userService[TokenUtils.verify(token).second] ?: return@runCatching mapOf(
-                "success" to false,
-                "message" to "用户不存在, 请检查数据库数据"
-            )
+            val doc = docRepository.findById(doc_id).get()
+            val creator = doc.creator
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
-                "data" to HashMap(doc.toDict()).apply { this["creator_name"] = creator.username }
+                "data" to HashMap(doc.toDict()).apply { this["creator_name"] = creator?.username }
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) return mapOf(
+                "success" to false,
+                "message" to "文档不存在, 请检查后再试"
+            )
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档获取失败, 发生意外错误"
@@ -231,18 +245,15 @@ class DocumentationController {
         @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int
     ): Map<String, Any> {
         return runCatching {
-            val creator = userService[TokenUtils.verify(token).second] ?: return@runCatching mapOf(
-                "success" to false,
-                "message" to "用户不存在, 请检查数据库数据"
-            )
+            val creator = userRepository.findById(TokenUtils.verify(token).second).get()
             val docList = if (project_id == -1) {
-                docService.findByCreatorId(creator.user_id!!)
+                docRepository.findByCreator(creator)
                     .map { HashMap(it.toDict()).apply { this["creator_name"] = creator.username } }
             } else {
-                docService.findByProjectId(project_id).map {
+                docRepository.findByPid(project_id).map {
                     HashMap(it.toDict()).apply {
                         this["creator_name"] =
-                            userService[this["creator_id"] as Long]?.username ?: "数据库出错, 查无此人"
+                            userRepository.findById(this["creator_id"] as Long).get().username ?: "数据库出错, 查无此人"
                     }
                 }
             }
@@ -251,7 +262,13 @@ class DocumentationController {
                 "message" to "文档列表获取成功",
                 "data" to docList
             )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
+        }.onFailure {
+            if (it is NoSuchElementException) return mapOf(
+                "success" to false,
+                "message" to "用户不存在, 请检查数据库数据"
+            )
+            it.printStackTrace()
+        }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档列表获取失败, 发生意外错误"

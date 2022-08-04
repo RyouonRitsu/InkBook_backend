@@ -9,41 +9,44 @@ import javax.persistence.*
 class Documentation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var doc_id: Long? = null
-    var doc_name: String? = null
+    var did: Long? = null
+    var dname: String? = null
 
     @Column(columnDefinition = "TEXT")
-    var doc_description: String? = null
+    var ddescription: String? = null
 
     @Column(columnDefinition = "TEXT")
-    var doc_content: String? = null
-    var last_edit_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-    var creator_id: Long? = null
-    var project_id: Int? = null
+    var dcontent: String? = null
+    var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+    var pid: Int? = null
+
+    @OneToOne(targetEntity = User::class)
+    @JoinColumn(name = "creator")
+    var creator: User? = null
 
     constructor(
         doc_name: String,
         doc_description: String?,
         doc_content: String?,
-        creator_id: Long,
-        project_id: Int
+        project_id: Int,
+        creator: User
     ) {
-        this.doc_name = doc_name
-        this.doc_description = doc_description
-        this.doc_content = doc_content
-        this.creator_id = creator_id
-        this.project_id = project_id
+        this.dname = doc_name
+        this.ddescription = doc_description
+        this.dcontent = doc_content
+        this.pid = project_id
+        this.creator = creator
     }
 
     constructor()
 
     fun toDict() = mapOf(
-        "doc_id" to doc_id,
-        "doc_name" to doc_name,
-        "doc_description" to doc_description,
-        "doc_content" to doc_content,
-        "last_edit_time" to last_edit_time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-        "creator_id" to creator_id,
-        "project_id" to project_id
+        "doc_id" to did,
+        "doc_name" to dname,
+        "doc_description" to ddescription,
+        "doc_content" to dcontent,
+        "last_edit_time" to lastedittime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+        "creator_id" to creator?.uid,
+        "project_id" to pid
     )
 }

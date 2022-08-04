@@ -292,14 +292,14 @@ class UserController {
                 "message" to "密码错误"
             )
             val token = TokenUtils.sign(user)
-            if (keepLogin) redisUtils["${user.user_id}"] = token
-            else redisUtils.set("${user.user_id}", token, 3, TimeUnit.DAYS)
+            if (keepLogin) redisUtils["${user.uid}"] = token
+            else redisUtils.set("${user.uid}", token, 3, TimeUnit.DAYS)
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
                 "data" to mapOf(
                     "token" to token,
-                    "user_id" to user.user_id
+                    "user_id" to user.uid
                 )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
@@ -434,7 +434,7 @@ class UserController {
                     )
                     user.password = password1
                     userService(user)
-                    redisUtils - "${user.user_id}"
+                    redisUtils - "${user.uid}"
                     mapOf(
                         "success" to true,
                         "message" to "修改成功"
@@ -478,7 +478,7 @@ class UserController {
                 user.password = password1
                 return runCatching {
                     userService(user)
-                    redisUtils - "${user.user_id}"
+                    redisUtils - "${user.uid}"
                     mapOf(
                         "success" to true,
                         "message" to "修改成功"
@@ -575,7 +575,7 @@ class UserController {
                     "success" to false,
                     "message" to "真实姓名长度不能超过50"
                 )
-                user.real_name = real_name
+                user.realname = real_name
             }
             if (!avatar.isNullOrBlank()) {
                 user.avatar = avatar
