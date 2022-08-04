@@ -30,7 +30,8 @@ class Documentation {
         this.doc_name = doc_name
         this.doc_description = doc_description
         this.doc_content = doc_content
-        this.last_edit_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        this.last_edit_time =
+            LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         this.creator_username = creator_username
         this.project_id = project_id
     }
