@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ryouonritsu.inkbook_backend.dao.ProjectDao">
+    <insert id="createNewAxure" parameterType="Axure" useGeneratedKeys="true" keyProperty="axure_id">
+        INSERT INTO `axure`(`axure_info`, `axure_name`, `project_id`,`title`, `items`, `config`)
+        VALUES (#{axure_info}, #{axure_name}, #{project_id}, #{title}, #{items}, #{config})
+    </insert>
+    <update id="updateAxure" parameterType="String">
+        UPDATE `axure`
+        SET title = #{title},
+            items = #{items},
+            config = #{config}
+        WHERE axure_id = #{axure_id}
+    </update>
+</mapper>
