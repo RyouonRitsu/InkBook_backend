@@ -726,7 +726,7 @@ class UserController {
         }
     }
 
-    @PostMapping("/favoriteList")
+    @GetMapping("/favoriteList")
     @Tag(name = "用户接口")
     @Operation(
         summary = "收藏列表",
