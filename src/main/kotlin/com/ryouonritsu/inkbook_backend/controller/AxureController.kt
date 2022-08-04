@@ -174,4 +174,28 @@ class AxureController {
             )
         )
     }
+
+    @PostMapping("/delete")
+    @Tag(name = "原型接口")
+    @Operation(summary = "删除原型", description = "删除给定原型id对应原型\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"删除原型成功！\"\n" +
+            "}")
+    fun deleteAxure (
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val axure = axureService.deleteAxureByAxureId(axure_id)
+            return mapOf(
+                "success" to true,
+                "message" to "删除原型成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "删除原型失败！"
+            )
+        )
+    }
 }
