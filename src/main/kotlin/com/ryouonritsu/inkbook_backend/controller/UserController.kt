@@ -127,8 +127,7 @@ class UserController {
         template: String,
         verification_code: String,
         email: String,
-        subject: String,
-        modify: Boolean = false
+        subject: String
     ): Map<String, Any> {
         // 此处需替换成服务器地址!!!
 //        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
@@ -136,7 +135,7 @@ class UserController {
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
-            if (modify) redisUtils.set("email", email, 5, TimeUnit.MINUTES)
+            redisUtils.set("email", email, 5, TimeUnit.MINUTES)
             mapOf(
                 "success" to true,
                 "message" to "验证码已发送"
@@ -164,14 +163,13 @@ class UserController {
             "success" to false,
             "message" to "该邮箱已被注册"
         )
-        val subject = "InkBook邮箱验证码"
+        val subject = if (modify) "InkBook邮箱注册验证码" else "InkBook修改邮箱验证码"
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         return sendVerifyCodeEmailUseTemplate(
             "registration_verification",
             verification_code,
             email,
-            subject,
-            modify
+            subject
         )
     }
 
@@ -239,6 +237,10 @@ class UserController {
         return runCatching {
             val (re, msg) = verifyCodeCheck(verificationCode)
             if (!re && msg != null) return@runCatching msg
+            if (redisUtils["email"] != email) return mapOf(
+                "success" to false,
+                "message" to "该邮箱与验证邮箱不匹配"
+            )
             val temp = userService.selectUserByUsername(username)
             if (temp != null) return mapOf(
                 "success" to false,
