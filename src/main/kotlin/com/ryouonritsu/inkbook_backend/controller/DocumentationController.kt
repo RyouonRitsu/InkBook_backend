@@ -111,7 +111,10 @@ class DocumentationController {
 
     @PostMapping("/updateDocInfo")
     @Tag(name = "文档接口")
-    @Operation(summary = "更新文档信息", description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作不会刷新文档的最后编辑时间")
+    @Operation(
+        summary = "更新文档信息",
+        description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作不会刷新文档的最后编辑时间"
+    )
     fun updateDocInfo(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?,
