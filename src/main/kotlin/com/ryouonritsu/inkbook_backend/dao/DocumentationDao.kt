@@ -10,5 +10,5 @@ interface DocumentationDao {
     fun update(documentation: Documentation)
     fun find(doc_id: Long): Documentation?
     fun findByProjectId(project_id: Int): List<Documentation>
-    fun findByCreatorId(creator_id: Int): List<Documentation>
+    fun findByCreatorId(creator_id: Long): List<Documentation>
 }

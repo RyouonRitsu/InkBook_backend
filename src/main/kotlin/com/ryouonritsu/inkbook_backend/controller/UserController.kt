@@ -250,7 +250,7 @@ class UserController {
                 "success" to false,
                 "message" to "两次输入的密码不一致"
             )
-            userService.registerNewUser(User(email, username, password1, real_name, avatar ?: ""))
+            userService + User(email, username, password1, real_name, avatar ?: "")
             mapOf(
                 "success" to true,
                 "message" to "注册成功"
@@ -330,7 +330,7 @@ class UserController {
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -355,7 +355,7 @@ class UserController {
     @Operation(summary = "根据用户id查询用户信息")
     fun selectUserByUserId(@RequestParam("user_id") @Parameter(description = "用户id") user_id: Long): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(user_id) ?: return mapOf(
+            val user = userService[user_id] ?: return mapOf(
                 "success" to false,
                 "message" to "数据库中没有此用户"
             )
@@ -433,7 +433,7 @@ class UserController {
                         "message" to "该邮箱未被注册, 发生意外错误, 请检查数据库"
                     )
                     user.password = password1
-                    userService.updateUserInfo(user)
+                    userService(user)
                     redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
@@ -452,7 +452,7 @@ class UserController {
                     "success" to false,
                     "message" to "请先登陆"
                 )
-                val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                val user = userService[TokenUtils.verify(token).second] ?: let {
                     redisUtils - "${TokenUtils.verify(token).second}"
                     return mapOf(
                         "success" to false,
@@ -477,7 +477,7 @@ class UserController {
                 )
                 user.password = password1
                 return runCatching {
-                    userService.updateUserInfo(user)
+                    userService(user)
                     redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
@@ -551,7 +551,7 @@ class UserController {
         @RequestParam("avatar", defaultValue = "") @Parameter(description = "个人头像") avatar: String?,
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -580,7 +580,7 @@ class UserController {
             if (!avatar.isNullOrBlank()) {
                 user.avatar = avatar
             }
-            userService.updateUserInfo(user)
+            userService(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"
@@ -606,7 +606,7 @@ class UserController {
         @RequestParam("password") @Parameter(description = "密码") password: String?
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -635,7 +635,7 @@ class UserController {
                 if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
             if (!success) throw Exception("邮件发送失败")
             user.email = email
-            userService.updateUserInfo(user)
+            userService(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"

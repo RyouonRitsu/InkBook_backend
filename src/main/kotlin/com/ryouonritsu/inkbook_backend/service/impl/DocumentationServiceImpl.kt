@@ -16,5 +16,5 @@ class DocumentationServiceImpl : DocumentationService {
     override fun invoke(documentation: Documentation) = docDao.update(documentation)
     override fun get(doc_id: Long) = docDao.find(doc_id)
     override fun findByProjectId(project_id: Int) = docDao.findByProjectId(project_id)
-    override fun findByCreatorId(creator_id: Int) = docDao.findByCreatorId(creator_id)
+    override fun findByCreatorId(creator_id: Long) = docDao.findByCreatorId(creator_id)
 }

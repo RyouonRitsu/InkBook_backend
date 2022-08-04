@@ -184,9 +184,9 @@ class DocumentationController {
         )
     }
 
-    @GetMapping("/getDocContent")
+    @GetMapping("/getDocInfo")
     @Tag(name = "文档接口")
-    @Operation(summary = "获取文档内容", description = "根据文档Id获取文档内容")
+    @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息")
     fun getDocContent(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?
@@ -200,15 +200,52 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档不存在, 请检查后再试"
             )
+            val creator = userService[TokenUtils.verify(token).second] ?: return@runCatching mapOf(
+                "success" to false,
+                "message" to "用户不存在, 请检查数据库数据"
+            )
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
-                "data" to (doc.doc_content ?: "")
+                "data" to HashMap(doc.toDict()).apply { this["creator_name"] = creator.username }
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档获取失败, 发生意外错误"
+            )
+        )
+    }
+
+    @GetMapping("/getDocList")
+    @Tag(name = "文档接口")
+    @Operation(
+        summary = "获取文档列表",
+        description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表"
+    )
+    fun getDocList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int
+    ): Map<String, Any> {
+        return runCatching {
+            val creator = userService[TokenUtils.verify(token).second] ?: return@runCatching mapOf(
+                "success" to false,
+                "message" to "用户不存在, 请检查数据库数据"
+            )
+            val docList = if (project_id == -1) {
+                docService.findByCreatorId(creator.user_id!!).map { HashMap(it.toDict()).apply { this["creator_name"] = creator.username } }
+            } else {
+                docService.findByProjectId(project_id).map { HashMap(it.toDict()).apply { this["creator_name"] = userService[this["creator_id"] as Long]?.username ?: "数据库出错, 查无此人" } }
+            }
+            mapOf(
+                "success" to true,
+                "message" to "文档列表获取成功",
+                "data" to docList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "文档列表获取失败, 发生意外错误"
             )
         )
     }

@@ -8,5 +8,5 @@ interface DocumentationService {
     operator fun invoke(documentation: Documentation)
     operator fun get(doc_id: Long): Documentation?
     fun findByProjectId(project_id: Int): List<Documentation>
-    fun findByCreatorId(creator_id: Int): List<Documentation>
+    fun findByCreatorId(creator_id: Long): List<Documentation>
 }
