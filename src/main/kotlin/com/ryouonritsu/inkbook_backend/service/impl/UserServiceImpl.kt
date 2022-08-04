@@ -11,13 +11,13 @@ class UserServiceImpl : UserService {
     @Autowired
     lateinit var userDao: UserDao
 
-    override fun selectUserByUserId(user_id: Long) = userDao.selectUserByUserId(user_id)
+    override fun get(user_id: Long) = userDao.selectUserByUserId(user_id)
 
     override fun selectUserByEmail(email: String) = userDao.selectUserByEmail(email)
 
     override fun selectUserByUsername(username: String) = userDao.selectUserByUsername(username)
 
-    override fun registerNewUser(user: User) = userDao.registerNewUser(user)
+    override fun plus(user: User) = userDao.registerNewUser(user)
 
-    override fun updateUserInfo(user: User) = userDao.updateUserInfo(user)
+    override fun invoke(user: User) = userDao.updateUserInfo(user)
 }

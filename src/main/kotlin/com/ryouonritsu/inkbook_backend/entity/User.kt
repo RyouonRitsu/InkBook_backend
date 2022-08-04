@@ -16,7 +16,7 @@ class User {
     var real_name: String? = null
     var avatar: String? = null
 
-    constructor(email: String?, username: String?, password: String?, real_name: String?, avatar: String?) {
+    constructor(email: String, username: String, password: String, real_name: String?, avatar: String?) {
         this.email = email
         this.username = username
         this.password = password

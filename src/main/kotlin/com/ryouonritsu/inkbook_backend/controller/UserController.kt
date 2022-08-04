@@ -8,18 +8,13 @@ import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.enums.ParameterStyle
 import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -30,7 +25,7 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import javax.servlet.http.HttpServletRequest
+import kotlin.io.path.Path
 
 @RestController
 @RequestMapping("/user")
@@ -132,8 +127,7 @@ class UserController {
         template: String,
         verification_code: String,
         email: String,
-        subject: String,
-        modify: Boolean = false
+        subject: String
     ): Map<String, Any> {
         // 此处需替换成服务器地址!!!
 //        val (code, html) = getHtml("http://101.42.171.88:8090/registration_verification?verification_code=$verification_code")
@@ -141,7 +135,7 @@ class UserController {
         val success = if (code == 200 && html != null) sendEmail(email, subject, html) else false
         return if (success) {
             redisUtils.set("verification_code", verification_code, 5, TimeUnit.MINUTES)
-            if (modify) redisUtils.set("email", email, 5, TimeUnit.MINUTES)
+            redisUtils.set("email", email, 5, TimeUnit.MINUTES)
             mapOf(
                 "success" to true,
                 "message" to "验证码已发送"
@@ -169,14 +163,13 @@ class UserController {
             "success" to false,
             "message" to "该邮箱已被注册"
         )
-        val subject = "InkBook邮箱验证码"
+        val subject = if (modify) "InkBook修改邮箱验证码" else "InkBook邮箱注册验证码"
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         return sendVerifyCodeEmailUseTemplate(
             "registration_verification",
             verification_code,
             email,
-            subject,
-            modify
+            subject
         )
     }
 
@@ -244,6 +237,10 @@ class UserController {
         return runCatching {
             val (re, msg) = verifyCodeCheck(verificationCode)
             if (!re && msg != null) return@runCatching msg
+            if (redisUtils["email"] != email) return mapOf(
+                "success" to false,
+                "message" to "该邮箱与验证邮箱不匹配"
+            )
             val temp = userService.selectUserByUsername(username)
             if (temp != null) return mapOf(
                 "success" to false,
@@ -253,7 +250,7 @@ class UserController {
                 "success" to false,
                 "message" to "两次输入的密码不一致"
             )
-            userService.registerNewUser(User(email, username, password1, real_name, avatar ?: ""))
+            userService + User(email, username, password1, real_name, avatar ?: "")
             mapOf(
                 "success" to true,
                 "message" to "注册成功"
@@ -261,7 +258,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "注册失败, 发生未知错误"
+                "message" to "注册失败, 发生意外错误"
             )
         )
     }
@@ -308,7 +305,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "登录失败, 发生未知错误"
+                "message" to "登录失败, 发生意外错误"
             )
         )
     }
@@ -333,7 +330,7 @@ class UserController {
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -348,7 +345,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "获取失败, 发生未知错误"
+                "message" to "获取失败, 发生意外错误"
             )
         )
     }
@@ -358,7 +355,7 @@ class UserController {
     @Operation(summary = "根据用户id查询用户信息")
     fun selectUserByUserId(@RequestParam("user_id") @Parameter(description = "用户id") user_id: Long): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(user_id) ?: return mapOf(
+            val user = userService[user_id] ?: return mapOf(
                 "success" to false,
                 "message" to "数据库中没有此用户"
             )
@@ -370,7 +367,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "获取失败, 发生未知错误"
+                "message" to "获取失败, 发生意外错误"
             )
         )
     }
@@ -433,10 +430,10 @@ class UserController {
                 return runCatching {
                     val user = userService.selectUserByEmail(email!!) ?: return mapOf(
                         "success" to false,
-                        "message" to "该邮箱未被注册, 发生未知错误, 请检查数据库"
+                        "message" to "该邮箱未被注册, 发生意外错误, 请检查数据库"
                     )
                     user.password = password1
-                    userService.updateUserInfo(user)
+                    userService(user)
                     redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
@@ -445,7 +442,7 @@ class UserController {
                 }.onFailure { it.printStackTrace() }.getOrDefault(
                     mapOf(
                         "success" to false,
-                        "message" to "修改失败, 发生未知错误"
+                        "message" to "修改失败, 发生意外错误"
                     )
                 )
             }
@@ -455,7 +452,7 @@ class UserController {
                     "success" to false,
                     "message" to "请先登陆"
                 )
-                val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+                val user = userService[TokenUtils.verify(token).second] ?: let {
                     redisUtils - "${TokenUtils.verify(token).second}"
                     return mapOf(
                         "success" to false,
@@ -480,7 +477,7 @@ class UserController {
                 )
                 user.password = password1
                 return runCatching {
-                    userService.updateUserInfo(user)
+                    userService(user)
                     redisUtils - "${user.user_id}"
                     mapOf(
                         "success" to true,
@@ -489,7 +486,7 @@ class UserController {
                 }.onFailure { it.printStackTrace() }.getOrDefault(
                     mapOf(
                         "success" to false,
-                        "message" to "修改失败, 发生未知错误"
+                        "message" to "修改失败, 发生意外错误"
                     )
                 )
             }
@@ -505,36 +502,27 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(
         summary = "上传文件",
-        description = "将用户上传的文件保存在静态文件目录 static/user/\${user_id}/\${file_name}下"
+        description = "将用户上传的文件保存在静态文件目录static/user/\${user_id}/\${file_name}下"
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
-        request: HttpServletRequest
     ): Map<String, Any> {
         return runCatching {
             if (file.size >= 10 * 1024 * 1024) return mapOf(
                 "success" to false,
                 "message" to "上传失败, 文件大小超过最大限制10MB！"
             )
-            val current = LocalDateTime.now()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_")
-            val formatted = current.format(formatter)
-            val token = request.getParameter("token")
+            val time = LocalDateTime.now().format(formatter)
             val user_id = TokenUtils.verify(token).second
-            val dir = "static/file/${user_id}"
-            var fileUrl = ""
-            val fileName = formatted + file.originalFilename;
-            val filePath: String = Paths.get(dir, fileName).toString()
-            val fileDir = File(dir)
-            if (!fileDir.exists()) {
-                fileDir.mkdirs()
-            }
-            val stream = BufferedOutputStream(FileOutputStream(File(filePath)))
-            stream.write(file.bytes)
-            fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
+            val fileDir = "static/file/${user_id}"
+            val fileName = time + file.originalFilename
+            val filePath = "$fileDir/$fileName"
+            if (!File(fileDir).exists()) File(fileDir).mkdirs()
+            file.transferTo(Path(filePath))
+            val fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
             userFileService.saveFile(UserFile(fileUrl))
-            stream.close()
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
@@ -545,7 +533,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "上传失败, 发生未知错误"
+                "message" to "上传失败, 发生意外错误"
             )
         )
     }
@@ -563,7 +551,7 @@ class UserController {
         @RequestParam("avatar", defaultValue = "") @Parameter(description = "个人头像") avatar: String?,
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -592,7 +580,7 @@ class UserController {
             if (!avatar.isNullOrBlank()) {
                 user.avatar = avatar
             }
-            userService.updateUserInfo(user)
+            userService(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"
@@ -600,7 +588,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "修改失败, 发生未知错误"
+                "message" to "修改失败, 发生意外错误"
             )
         )
     }
@@ -618,7 +606,7 @@ class UserController {
         @RequestParam("password") @Parameter(description = "密码") password: String?
     ): Map<String, Any> {
         return runCatching {
-            val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
+            val user = userService[TokenUtils.verify(token).second] ?: let {
                 redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
@@ -647,7 +635,7 @@ class UserController {
                 if (code == 200 && html != null) sendEmail(user.email!!, "InkBook邮箱修改通知", html) else false
             if (!success) throw Exception("邮件发送失败")
             user.email = email
-            userService.updateUserInfo(user)
+            userService(user)
             mapOf(
                 "success" to true,
                 "message" to "修改成功"
@@ -660,7 +648,7 @@ class UserController {
         }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "修改失败, 发生未知错误"
+                "message" to "修改失败, 发生意外错误"
             )
         )
     }
