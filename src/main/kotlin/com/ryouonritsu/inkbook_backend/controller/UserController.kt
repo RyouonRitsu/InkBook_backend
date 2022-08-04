@@ -163,7 +163,7 @@ class UserController {
             "success" to false,
             "message" to "该邮箱已被注册"
         )
-        val subject = if (modify) "InkBook邮箱注册验证码" else "InkBook修改邮箱验证码"
+        val subject = if (modify) "InkBook修改邮箱验证码" else "InkBook邮箱注册验证码"
         val verification_code = (1..6).joinToString("") { "${(0..9).random()}" }
         return sendVerifyCodeEmailUseTemplate(
             "registration_verification",
@@ -521,7 +521,7 @@ class UserController {
             val filePath = "$fileDir/$fileName"
             if (!File(fileDir).exists()) File(fileDir).mkdirs()
             file.transferTo(Path(filePath))
-            val fileUrl = "http://localhost:8090/file/${user_id}/${fileName}"
+            val fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
             userFileService.saveFile(UserFile(fileUrl))
             mapOf(
                 "success" to true,
