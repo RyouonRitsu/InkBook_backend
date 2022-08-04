@@ -25,4 +25,6 @@ class AxureServiceImpl : AxureService {
     ) = axureDao.updateAxure(axure_id, title, items, config)
 
     override fun selectAxureByAxureId(axure_id: String) = axureDao.selectAxureByAxureId(axure_id)
+
+    override fun searchAxureByProjectId(project_id: String) = axureDao.searchAxureByProjectId(project_id)
 }

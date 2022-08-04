@@ -99,7 +99,7 @@ class AxureController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "更新原型页面信息失败！"
+                "message" to "查询原型页面信息失败！"
             )
         )
     }
@@ -111,9 +111,24 @@ class AxureController {
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("project_id") @Parameter(description = "项目id") project_id: String,
     ): Map<String, Any> {
-        return mapOf(
-            "success" to true,
-            "message" to "更新原型成功！"
+        return runCatching {
+            val axureList = axureService.searchAxureByProjectId(project_id)
+            if (axureList.isNullOrEmpty()) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "项目原型为空！"
+                )
+            }
+            return mapOf(
+                "success" to true,
+                "message" to "查询项目原型列表成功！",
+                "data" to axureList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查询项目原型列表失败！"
+            )
         )
     }
 }

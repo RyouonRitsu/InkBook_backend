@@ -17,4 +17,9 @@
         FROM `axure`
         WHERE axure_id = #{axure_id}
     </select>
+    <select id="searchAxureByProjectId" resultType="Map">
+        SELECT *
+        FROM `axure`
+        WHERE project_id = #{project_id}
+    </select>
 </mapper>
