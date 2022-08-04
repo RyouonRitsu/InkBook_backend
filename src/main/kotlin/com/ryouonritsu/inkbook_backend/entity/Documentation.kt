@@ -17,14 +17,14 @@ class Documentation {
     var doc_description: String? = null
     var doc_content: String? = null
     var last_edit_time: String? = null
-    var creator_username: String? = null
+    var creator_id: Long? = null
     var project_id: Int? = null
 
     constructor(
         doc_name: String,
         doc_description: String?,
         doc_content: String?,
-        creator_username: String,
+        creator_id: Long,
         project_id: Int
     ) {
         this.doc_name = doc_name
@@ -32,7 +32,7 @@ class Documentation {
         this.doc_content = doc_content
         this.last_edit_time =
             LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        this.creator_username = creator_username
+        this.creator_id = creator_id
         this.project_id = project_id
     }
 
@@ -44,7 +44,7 @@ class Documentation {
         "doc_description" to doc_description,
         "doc_content" to doc_content,
         "last_edit_time" to last_edit_time,
-        "creator_username" to creator_username,
+        "creator_id" to creator_id,
         "project_id" to project_id
     )
 }

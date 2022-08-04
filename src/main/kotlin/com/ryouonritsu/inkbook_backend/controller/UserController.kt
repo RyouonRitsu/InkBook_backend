@@ -258,7 +258,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "注册失败, 发生未知错误"
+                "message" to "注册失败, 发生意外错误"
             )
         )
     }
@@ -305,7 +305,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "登录失败, 发生未知错误"
+                "message" to "登录失败, 发生意外错误"
             )
         )
     }
@@ -345,7 +345,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "获取失败, 发生未知错误"
+                "message" to "获取失败, 发生意外错误"
             )
         )
     }
@@ -367,7 +367,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "获取失败, 发生未知错误"
+                "message" to "获取失败, 发生意外错误"
             )
         )
     }
@@ -430,7 +430,7 @@ class UserController {
                 return runCatching {
                     val user = userService.selectUserByEmail(email!!) ?: return mapOf(
                         "success" to false,
-                        "message" to "该邮箱未被注册, 发生未知错误, 请检查数据库"
+                        "message" to "该邮箱未被注册, 发生意外错误, 请检查数据库"
                     )
                     user.password = password1
                     userService.updateUserInfo(user)
@@ -442,7 +442,7 @@ class UserController {
                 }.onFailure { it.printStackTrace() }.getOrDefault(
                     mapOf(
                         "success" to false,
-                        "message" to "修改失败, 发生未知错误"
+                        "message" to "修改失败, 发生意外错误"
                     )
                 )
             }
@@ -486,7 +486,7 @@ class UserController {
                 }.onFailure { it.printStackTrace() }.getOrDefault(
                     mapOf(
                         "success" to false,
-                        "message" to "修改失败, 发生未知错误"
+                        "message" to "修改失败, 发生意外错误"
                     )
                 )
             }
@@ -533,7 +533,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "上传失败, 发生未知错误"
+                "message" to "上传失败, 发生意外错误"
             )
         )
     }
@@ -588,7 +588,7 @@ class UserController {
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "修改失败, 发生未知错误"
+                "message" to "修改失败, 发生意外错误"
             )
         )
     }
@@ -648,7 +648,7 @@ class UserController {
         }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "修改失败, 发生未知错误"
+                "message" to "修改失败, 发生意外错误"
             )
         )
     }
