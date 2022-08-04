@@ -8,18 +8,13 @@ import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.enums.ParameterStyle
 import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -30,7 +25,7 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import javax.servlet.http.HttpServletRequest
+import kotlin.io.path.Path
 
 @RestController
 @RequestMapping("/user")
@@ -505,36 +500,27 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(
         summary = "上传文件",
-        description = "将用户上传的文件保存在静态文件目录 static/user/\${user_id}/\${file_name}下"
+        description = "将用户上传的文件保存在静态文件目录static/user/\${user_id}/\${file_name}下"
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
-        request: HttpServletRequest
     ): Map<String, Any> {
         return runCatching {
             if (file.size >= 10 * 1024 * 1024) return mapOf(
                 "success" to false,
                 "message" to "上传失败, 文件大小超过最大限制10MB！"
             )
-            val current = LocalDateTime.now()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_")
-            val formatted = current.format(formatter)
-            val token = request.getParameter("token")
+            val time = LocalDateTime.now().format(formatter)
             val user_id = TokenUtils.verify(token).second
-            val dir = "static/file/${user_id}"
-            var fileUrl = ""
-            val fileName = formatted + file.originalFilename;
-            val filePath: String = Paths.get(dir, fileName).toString()
-            val fileDir = File(dir)
-            if (!fileDir.exists()) {
-                fileDir.mkdirs()
-            }
-            val stream = BufferedOutputStream(FileOutputStream(File(filePath)))
-            stream.write(file.bytes)
-            fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
+            val fileDir = "static/file/${user_id}"
+            val fileName = time + file.originalFilename
+            val filePath = "$fileDir/$fileName"
+            if (!File(fileDir).exists()) File(fileDir).mkdirs()
+            file.transferTo(Path(filePath))
+            val fileUrl = "http://localhost:8090/file/${user_id}/${fileName}"
             userFileService.saveFile(UserFile(fileUrl))
-            stream.close()
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
