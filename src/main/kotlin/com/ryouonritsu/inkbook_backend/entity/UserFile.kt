@@ -10,7 +10,7 @@ import javax.persistence.Id
  * @author WuKunchao
  */
 @Entity
-class UserFile (var url: String) {
+class UserFile(var url: String) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var fileId = 0L

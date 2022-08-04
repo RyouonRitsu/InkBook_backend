@@ -8,8 +8,6 @@ import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.enums.ParameterStyle
 import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -521,8 +519,8 @@ class UserController {
             val user_id = TokenUtils.verify(token).second
             val dir = "static/user/${user_id}"
             println(user_id)
-            var fileUrl = ""
-            val fileName = formatted + file.originalFilename;
+            val fileUrl: String
+            val fileName = formatted + file.originalFilename
             val filePath: String = Paths.get(dir, fileName).toString()
             val fileDir = File(dir)
             if (!fileDir.exists()) {

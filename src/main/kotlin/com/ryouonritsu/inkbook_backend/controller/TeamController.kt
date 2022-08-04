@@ -307,9 +307,11 @@ class TeamController {
 
     @PostMapping("/setPerm")
     @Tag(name = "团队接口")
-    @Operation(summary = "设置权限", description = "0为超管，1为管理，2为成员。仅可设置权限比自己低的，例如0可设置1和2\n" +
-            "超管无法更改自身权限，只可转让团队，此时设置userPerm为\"0\"即可\n" +
-            "之后对应的成员会变成超管，原先的超管降为成员")
+    @Operation(
+        summary = "设置权限", description = "0为超管，1为管理，2为成员。仅可设置权限比自己低的，例如0可设置1和2\n" +
+                "超管无法更改自身权限，只可转让团队，此时设置userPerm为\"0\"即可\n" +
+                "之后对应的成员会变成超管，原先的超管降为成员"
+    )
     fun setPerm(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
