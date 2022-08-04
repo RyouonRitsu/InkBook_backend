@@ -1,18 +1,27 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
+import com.ryouonritsu.inkbook_backend.entity.UserFile
+import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.service.UserService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.enums.ParameterStyle
 import io.swagger.v3.oas.annotations.tags.Tag
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Paths
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.mail.Authenticator
@@ -21,7 +30,6 @@ import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import kotlin.io.path.Path
 
 @RestController
 @RequestMapping("/user")
@@ -32,6 +40,9 @@ class UserController {
 
     @Autowired
     lateinit var redisUtils: RedisUtils
+
+    @Autowired
+    lateinit var userFileService: UserFileService
 
     fun getHtml(url: String): Pair<Int, String?> {
         val client = OkHttpClient()
@@ -195,6 +206,7 @@ class UserController {
         @RequestParam("username") @Parameter(description = "用户名") username: String?,
         @RequestParam("password1") @Parameter(description = "密码") password1: String?,
         @RequestParam("password2") @Parameter(description = "确认密码") password2: String?,
+        @RequestParam("avatar") @Parameter(description = "个人头像") avatar: String?,
         @RequestParam(
             value = "real_name",
             required = false,
@@ -240,7 +252,7 @@ class UserController {
                 "success" to false,
                 "message" to "两次输入的密码不一致"
             )
-            userService.registerNewUser(User(email, username, password1, real_name))
+            userService.registerNewUser(User(email, username, password1, real_name, avatar ?: ""))
             mapOf(
                 "success" to true,
                 "message" to "注册成功"
@@ -492,22 +504,41 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(
         summary = "上传文件",
-        description = "将用户上传的文件保存在静态文件目录src/main/resources/static/user/\${user_id}/\${file_name}下"
+        description = "将用户上传的文件保存在静态文件目录 static/user/\${user_id}/\${file_name}下"
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String
     ): Map<String, Any> {
         return runCatching {
+            if (file.size >= 10 * 1024 * 1024) return mapOf(
+                "success" to false,
+                "message" to "上传失败, 文件大小超过最大限制10MB！"
+            )
+            val current = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_")
+            val formatted = current.format(formatter)
             val user_id = TokenUtils.verify(token).second
-            val fileName = file.originalFilename
-            val filePath = "src/main/resources/static/user/${user_id}/${fileName}"
-            val fileDir = File("src/main/resources/static/user/${user_id}")
-            if (!fileDir.exists()) fileDir.mkdirs()
-            file.transferTo(Path(filePath))
+            val dir = "static/user/${user_id}"
+            println(user_id)
+            var fileUrl = ""
+            val fileName = formatted + file.originalFilename;
+            val filePath: String = Paths.get(dir, fileName).toString()
+            val fileDir = File(dir)
+            if (!fileDir.exists()) {
+                fileDir.mkdirs()
+            }
+            val stream = BufferedOutputStream(FileOutputStream(File(filePath)))
+            stream.write(file.bytes)
+            fileUrl = "http://101.42.171.88:8090/user/${user_id}/${fileName}"
+            userFileService.saveFile(UserFile(fileUrl))
+            stream.close()
             mapOf(
                 "success" to true,
-                "message" to "上传成功"
+                "message" to "上传成功",
+                "data" to mapOf(
+                    "url" to fileUrl
+                )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -527,6 +558,7 @@ class UserController {
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
         @RequestParam("username", defaultValue = "") @Parameter(description = "用户名") username: String?,
         @RequestParam("real_name", defaultValue = "") @Parameter(description = "真实姓名") real_name: String?,
+        @RequestParam("avatar", defaultValue = "") @Parameter(description = "个人头像") avatar: String?,
     ): Map<String, Any> {
         return runCatching {
             val user = userService.selectUserByUserId(TokenUtils.verify(token).second) ?: let {
@@ -554,6 +586,9 @@ class UserController {
                     "message" to "真实姓名长度不能超过50"
                 )
                 user.real_name = real_name
+            }
+            if (!avatar.isNullOrBlank()) {
+                user.avatar = avatar
             }
             userService.updateUserInfo(user)
             mapOf(

@@ -14,12 +14,14 @@ class User {
     var username: String? = null
     var password: String? = null
     var real_name: String? = null
+    var avatar: String? = null
 
-    constructor(email: String?, username: String?, password: String?, real_name: String?) {
+    constructor(email: String?, username: String?, password: String?, real_name: String?, avatar: String?) {
         this.email = email
         this.username = username
         this.password = password
         this.real_name = real_name
+        this.avatar = avatar
     }
 
     constructor()
@@ -29,6 +31,7 @@ class User {
         "email" to email,
         "username" to username,
         "password" to password,
-        "real_name" to real_name
+        "real_name" to real_name,
+        "avatar" to avatar
     )
 }

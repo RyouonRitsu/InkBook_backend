@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ryouonritsu.inkbook_backend.dao.UserFileDao">
+    <insert id="saveFile" parameterType="UserFile">
+        INSERT INTO `user_file`(`url`) VALUES (#{url})
+    </insert>
+</mapper>
