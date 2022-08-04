@@ -7,7 +7,8 @@
     </insert>
     <update id="updateTeam" parameterType="String">
         UPDATE `team`
-        SET team_name = #{teamName}, team_info = #{teamInfo}
+        SET team_name = #{teamName},
+            team_info = #{teamInfo}
         WHERE team_id = #{teamId}
     </update>
     <insert id="addMemberIntoTeam" parameterType="String">
@@ -36,12 +37,14 @@
     </delete>
     <select id="searchTeamByUserId" resultType="Map">
         SELECT DISTINCT *
-        FROM `team` NATURAL JOIN `team_member`
+        FROM `team`
+                 NATURAL JOIN `team_member`
         WHERE user_id = #{userId}
     </select>
     <select id="searchMemberByTeamId" resultType="Map">
         SELECT DISTINCT user_id, username, email, real_name, user_perm
-        FROM `user` NATURAL JOIN `team_member`
+        FROM `user`
+                 NATURAL JOIN `team_member`
         WHERE team_id = #{teamId}
     </select>
     <delete id="deleteMemberByUserId">

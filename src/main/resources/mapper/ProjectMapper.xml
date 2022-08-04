@@ -17,7 +17,8 @@
     </delete>
     <update id="updateProject" parameterType="String">
         UPDATE `project`
-        SET project_name = #{project_name}, project_info = #{project_info}
+        SET project_name = #{project_name},
+            project_info = #{project_info}
         WHERE project_id = #{project_id}
     </update>
     <select id="searchProjectByTeamId" resultType="Map">

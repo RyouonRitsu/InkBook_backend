@@ -12,7 +12,7 @@ class DocumentationServiceImpl : DocumentationService {
     lateinit var docDao: DocumentationDao
 
     override fun plus(documentation: Documentation) = docDao.new(documentation)
-    override fun minus(doc_id: Long)  = docDao.delete(doc_id)
+    override fun minus(doc_id: Long) = docDao.delete(doc_id)
     override fun invoke(documentation: Documentation) = docDao.update(documentation)
     override fun get(doc_id: Long) = docDao.find(doc_id)
     override fun findByProjectId(project_id: Int) = docDao.findByProjectId(project_id)

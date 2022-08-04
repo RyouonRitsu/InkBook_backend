@@ -55,7 +55,10 @@ class DocumentationController {
     fun newDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_name") @Parameter(description = "文档名称") doc_name: String?,
-        @RequestParam("doc_description", defaultValue = "") @Parameter(description = "文档描述") doc_description: String,
+        @RequestParam(
+            "doc_description",
+            defaultValue = ""
+        ) @Parameter(description = "文档描述") doc_description: String,
         @RequestParam("doc_content", defaultValue = "") @Parameter(description = "文档内容") doc_content: String,
         @RequestParam("project_id") @Parameter(description = "项目id") project_id: Int?
     ): Map<String, Any> {
