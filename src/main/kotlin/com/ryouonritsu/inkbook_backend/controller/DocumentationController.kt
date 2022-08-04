@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/doc")
@@ -156,7 +155,7 @@ class DocumentationController {
 
     @PostMapping("/save")
     @Tag(name = "文档接口")
-    @Operation(summary = "保存文档", description = "保存文档内容, 此操作会刷新文档最后编辑时间")
+    @Operation(summary = "保存文档", description = "保存文档内容, 此操作会刷新文档最后编辑时间和最后浏览时间")
     fun save(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?,
@@ -172,8 +171,8 @@ class DocumentationController {
                 "message" to "文档不存在, 请检查后再试"
             )
             doc.doc_content = doc_content
-            doc.last_edit_time =
-                LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            doc.last_edit_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+//            doc.last_viewed_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             docService(doc)
             mapOf(
                 "success" to true,
@@ -189,7 +188,7 @@ class DocumentationController {
 
     @GetMapping("/getDocInfo")
     @Tag(name = "文档接口")
-    @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息")
+    @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息, 此操作会刷新最后浏览时间")
     fun getDocContent(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?
@@ -203,6 +202,7 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档不存在, 请检查后再试"
             )
+//            doc.last_viewed_time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             val creator = userService[TokenUtils.verify(token).second] ?: return@runCatching mapOf(
                 "success" to false,
                 "message" to "用户不存在, 请检查数据库数据"
@@ -224,7 +224,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "获取文档列表",
-        description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表"
+        description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表, 此操作不会刷新文档最后浏览时间"
     )
     fun getDocList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
