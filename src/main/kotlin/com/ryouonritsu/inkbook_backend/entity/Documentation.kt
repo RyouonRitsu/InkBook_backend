@@ -47,4 +47,13 @@ class Documentation {
         "creator_id" to creator_id,
         "project_id" to project_id
     )
+
+    fun display() = mapOf(
+        "doc_id" to doc_id,
+        "doc_name" to doc_name,
+        "doc_description" to doc_description,
+        "last_edit_time" to last_edit_time,
+        "creator_id" to creator_id,
+        "project_id" to project_id
+    )
 }
