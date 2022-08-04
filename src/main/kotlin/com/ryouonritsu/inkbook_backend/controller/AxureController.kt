@@ -1,7 +1,11 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Axure
+import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.service.AxureService
+import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -10,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  *
@@ -22,15 +28,16 @@ class AxureController {
     @Autowired
     lateinit var axureService: AxureService
 
+    @Autowired
+    lateinit var userService: UserService
+
     @PostMapping("/create")
     @Tag(name = "原型接口")
-    @Operation(
-        summary = "创建新原型", description = "原型简介为可选项，\n{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"创建原型成功！\"\n" +
-                "}"
-    )
-    fun createNewAxure(
+    @Operation(summary = "创建新原型", description = "原型简介为可选项，同时会将发起请求的用户作为原型创建者，若有真名则展示真名，否则展示用户名。\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"创建原型成功！\"\n" +
+            "}")
+    fun createNewAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
         @RequestParam("axure_info", required = false) @Parameter(description = "原型简介") axure_info: String?,
@@ -41,7 +48,17 @@ class AxureController {
             "message" to "项目id为空！"
         )
         return runCatching {
-            var axure = Axure(axure_name ?: "", axure_info ?: "", project_id, "", "", "")
+            val user_id = TokenUtils.verify(token).second
+            val user = userService.get(user_id) ?: return mapOf(
+                "success" to false,
+                "message" to "用户不存在！"
+            )
+            val name = user.realname.let {
+                if (it.isNullOrBlank()) {
+                    user.username
+                } else it
+            }
+            var axure = Axure(axure_name ?: "", axure_info ?: "" , project_id, "", "", "", 0, "", name)
             axureService.createNewAxure(axure)
             mapOf(
                 "success" to true,
@@ -57,23 +74,23 @@ class AxureController {
 
     @PostMapping("/update")
     @Tag(name = "原型接口")
-    @Operation(
-        summary = "更新原型页面信息", description = "在原型页面中点击保存时，将config中的信息上传于此\n" +
-                "并根据提供的axure_id更新对应的原型\n" +
-                "{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"更新原型页面信息成功！\"\n" +
-                "}"
-    )
-    fun updateAxure(
+    @Operation(summary = "更新原型页面信息", description = "在原型页面中点击保存时，将config中的信息上传于此\n" +
+            "并根据提供的axure_id更新对应的原型\n" +
+            "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"更新原型页面信息成功！\"\n" +
+            "}")
+    fun updateAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
-        @RequestParam("title") @Parameter(description = "页面信息中的title") title: String?,
-        @RequestParam("config") @Parameter(description = "页面信息中的config") config: String?,
-        @RequestParam("items") @Parameter(description = "页面信息中的items") items: String?,
+        @RequestParam("title", required = false) @Parameter(description = "页面信息中的title") title: String?,
+        @RequestParam("config", required = false) @Parameter(description = "页面信息中的config") config: String?,
+        @RequestParam("items", required = false) @Parameter(description = "页面信息中的items") items: String?,
     ): Map<String, Any> {
         return runCatching {
-            axureService.updateAxure(axure_id, title ?: "", config ?: "", items ?: "")
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val time = LocalDateTime.now().format(formatter)
+            axureService.updateAxure(axure_id, title ?: "",items?: "", config ?: "", time)
             mapOf(
                 "success" to true,
                 "message" to "更新原型页面信息成功！"
@@ -88,22 +105,23 @@ class AxureController {
 
     @PostMapping("/getAxureInfo")
     @Tag(name = "原型接口")
-    @Operation(
-        summary = "获得原型页面信息", description = "通过原型ID获取对应原型\n{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"查询原型页面信息成功！\",\n" +
-                "    \"data\": {\n" +
-                "        \"axure_id\": 1,\n" +
-                "        \"axure_name\": \"111\",\n" +
-                "        \"axure_info\": \"\",\n" +
-                "        \"project_id\": \"3\",\n" +
-                "        \"title\": \"title\",\n" +
-                "        \"items\": \"config\",\n" +
-                "        \"config\": \"items\"\n" +
-                "    }\n" +
-                "}"
-    )
-    fun getAxureInfo(
+    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询原型页面信息成功！\",\n" +
+            "    \"data\": {\n" +
+            "        \"axure_id\": 7,\n" +
+            "        \"axure_name\": \"新版本\",\n" +
+            "        \"axure_info\": \"\",\n" +
+            "        \"project_id\": \"3\",\n" +
+            "        \"title\": \"123\",\n" +
+            "        \"items\": \"123\",\n" +
+            "        \"config\": \"123\",\n" +
+            "        \"config_id\": 2,\n" +
+            "        \"last_edit\": \"2022-08-05 02:10:41\",\n" +
+            "        \"create_user\": \"2\"\n" +
+            "    }\n" +
+            "}")
+    fun getAxureInfo (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
     ): Map<String, Any> {
@@ -130,33 +148,37 @@ class AxureController {
 
     @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
-    @Operation(
-        summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息\n{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"查询项目原型列表成功！\",\n" +
-                "    \"data\": [\n" +
-                "        {\n" +
-                "            \"axure_info\": \"\",\n" +
-                "            \"axure_id\": 1,\n" +
-                "            \"project_id\": \"3\",\n" +
-                "            \"axure_name\": \"111\",\n" +
-                "            \"title\": \"title\",\n" +
-                "            \"config\": \"items\",\n" +
-                "            \"items\": \"config\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"axure_info\": \"\",\n" +
-                "            \"axure_id\": 2,\n" +
-                "            \"project_id\": \"3\",\n" +
-                "            \"axure_name\": \"222\",\n" +
-                "            \"title\": \"title2\",\n" +
-                "            \"config\": \"items2\",\n" +
-                "            \"items\": \"config2\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}"
-    )
-    fun getAxureList(
+    @Operation(summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询项目原型列表成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"axure_info\": \"\",\n" +
+            "            \"axure_id\": 2,\n" +
+            "            \"project_id\": \"3\",\n" +
+            "            \"config_id\": 0,\n" +
+            "            \"axure_name\": \"222\",\n" +
+            "            \"last_edit\": \" \",\n" +
+            "            \"create_user\": \" \",\n" +
+            "            \"title\": \"\",\n" +
+            "            \"config\": \"\",\n" +
+            "            \"items\": \"{\\\"referenceLine\\\":{\\\"row\\\":[],\\\"col\\\":[]},\\\"canvasSize\\\":{\\\"width\\\":338,\\\"height\\\":600}}\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"axure_info\": \"\",\n" +
+            "            \"axure_id\": 7,\n" +
+            "            \"project_id\": \"3\",\n" +
+            "            \"config_id\": 2,\n" +
+            "            \"axure_name\": \"新版本\",\n" +
+            "            \"last_edit\": \"2022-08-05 02:10:41\",\n" +
+            "            \"create_user\": \"2\",\n" +
+            "            \"title\": \"123\",\n" +
+            "            \"config\": \"123\",\n" +
+            "            \"items\": \"123\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getAxureList (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("project_id") @Parameter(description = "项目id") project_id: String,
     ): Map<String, Any> {
@@ -183,13 +205,11 @@ class AxureController {
 
     @PostMapping("/delete")
     @Tag(name = "原型接口")
-    @Operation(
-        summary = "删除原型", description = "删除给定原型id对应原型\n{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"删除原型成功！\"\n" +
-                "}"
-    )
-    fun deleteAxure(
+    @Operation(summary = "删除原型", description = "删除给定原型id对应原型\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"删除原型成功！\"\n" +
+            "}")
+    fun deleteAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
     ): Map<String, Any> {
