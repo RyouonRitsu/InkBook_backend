@@ -233,9 +233,15 @@ class DocumentationController {
                 "message" to "用户不存在, 请检查数据库数据"
             )
             val docList = if (project_id == -1) {
-                docService.findByCreatorId(creator.user_id!!).map { HashMap(it.toDict()).apply { this["creator_name"] = creator.username } }
+                docService.findByCreatorId(creator.user_id!!)
+                    .map { HashMap(it.toDict()).apply { this["creator_name"] = creator.username } }
             } else {
-                docService.findByProjectId(project_id).map { HashMap(it.toDict()).apply { this["creator_name"] = userService[this["creator_id"] as Long]?.username ?: "数据库出错, 查无此人" } }
+                docService.findByProjectId(project_id).map {
+                    HashMap(it.toDict()).apply {
+                        this["creator_name"] =
+                            userService[this["creator_id"] as Long]?.username ?: "数据库出错, 查无此人"
+                    }
+                }
             }
             mapOf(
                 "success" to true,
