@@ -17,7 +17,7 @@ class TokenUtils {
             val expireAt = Date(System.currentTimeMillis() + EXPIRE_TIME)
             return JWT.create()
                 .withIssuer("inkBook_backend")
-                .withClaim("user_id", user.user_id)
+                .withClaim("user_id", user.uid)
                 .withExpiresAt(expireAt)
                 .sign(Algorithm.HMAC256(TOKEN_SECRET))
         }

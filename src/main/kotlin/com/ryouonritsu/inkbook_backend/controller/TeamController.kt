@@ -291,14 +291,14 @@ class TeamController {
             "success" to false,
             "message" to "该用户不存在！"
         )
-        val inTeam = teamService.checkPerm(t.user_id.toString(), teamId)
+        val inTeam = teamService.checkPerm(t.uid.toString(), teamId)
         if (inTeam != null) {
             return mapOf(
                 "success" to false,
                 "message" to "被邀请用户已加入该团队！"
             )
         }
-        teamService.addMemberIntoTeam(t.user_id.toString(), teamId, "2")
+        teamService.addMemberIntoTeam(t.uid.toString(), teamId, "2")
         return mapOf(
             "success" to true,
             "message" to "添加团队成员成功！"
