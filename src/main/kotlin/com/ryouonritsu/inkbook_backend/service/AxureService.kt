@@ -8,7 +8,7 @@ import com.ryouonritsu.inkbook_backend.entity.Axure
  */
 interface AxureService {
     fun createNewAxure(axure: Axure)
-    fun updateAxure(axure_id: String, title: String, items: String, config: String)
+    fun updateAxure(axure_id: String, title: String, items: String, config: String, last_edit: String)
     fun selectAxureByAxureId(axure_id: String): Axure?
     fun searchAxureByProjectId(project_id: String): List<Map<String, String>>?
     fun deleteAxureByAxureId(axure_id: String)

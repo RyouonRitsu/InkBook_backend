@@ -17,12 +17,15 @@ class Axure (
     var title: String?,
     var items: String?,
     var config: String?,
+    var config_id: Long?,
+    var last_edit: String?,
+    var create_user: String?
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var axure_id = 0
 
-    constructor() : this("", "", "", "", "", "")
+    constructor() : this("", "", "", "", "", "", 0, "", "")
 
     fun toDict() = mapOf(
         "axure_id" to axure_id,
@@ -31,6 +34,9 @@ class Axure (
         "project_id" to project_id,
         "title" to title,
         "items" to items,
-        "config" to config
+        "config" to config,
+        "config_id" to config_id,
+        "last_edit" to last_edit,
+        "create_user" to create_user
     )
 }

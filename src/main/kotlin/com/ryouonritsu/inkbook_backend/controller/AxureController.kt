@@ -4,6 +4,8 @@ import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  *
@@ -24,9 +28,12 @@ class AxureController {
     @Autowired
     lateinit var axureService: AxureService
 
+    @Autowired
+    lateinit var userService: UserService
+
     @PostMapping("/create")
     @Tag(name = "原型接口")
-    @Operation(summary = "创建新原型", description = "原型简介为可选项，\n{\n" +
+    @Operation(summary = "创建新原型", description = "原型简介为可选项，同时会将发起请求的用户作为原型创建者，若有真名则展示真名，否则展示用户名。\n{\n" +
             "    \"success\": true,\n" +
             "    \"message\": \"创建原型成功！\"\n" +
             "}")
@@ -41,7 +48,17 @@ class AxureController {
             "message" to "项目id为空！"
         )
         return runCatching {
-            var axure = Axure(axure_name ?: "", axure_info ?: "" , project_id, "", "", "")
+            val user_id = TokenUtils.verify(token).second
+            val user = userService.get(user_id) ?: return mapOf(
+                    "success" to false,
+                    "message" to "用户不存在！"
+                )
+            val name = user.real_name.let {
+                if (it.isNullOrBlank()) {
+                    user.username
+                } else it
+            }
+            var axure = Axure(axure_name ?: "", axure_info ?: "" , project_id, "", "", "", 0, "", name)
             axureService.createNewAxure(axure)
             mapOf(
                 "success" to true,
@@ -66,12 +83,14 @@ class AxureController {
     fun updateAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
-        @RequestParam("title") @Parameter(description = "页面信息中的title") title: String?,
-        @RequestParam("config") @Parameter(description = "页面信息中的config") config: String?,
-        @RequestParam("items") @Parameter(description = "页面信息中的items") items: String?,
+        @RequestParam("title", required = false) @Parameter(description = "页面信息中的title") title: String?,
+        @RequestParam("config", required = false) @Parameter(description = "页面信息中的config") config: String?,
+        @RequestParam("items", required = false) @Parameter(description = "页面信息中的items") items: String?,
     ): Map<String, Any> {
         return runCatching {
-            axureService.updateAxure(axure_id, title ?: "", config ?: "", items ?: "")
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val time = LocalDateTime.now().format(formatter)
+            axureService.updateAxure(axure_id, title ?: "",items?: "", config ?: "", time)
             mapOf(
                 "success" to true,
                 "message" to "更新原型页面信息成功！"
@@ -90,13 +109,16 @@ class AxureController {
             "    \"success\": true,\n" +
             "    \"message\": \"查询原型页面信息成功！\",\n" +
             "    \"data\": {\n" +
-            "        \"axure_id\": 1,\n" +
-            "        \"axure_name\": \"111\",\n" +
+            "        \"axure_id\": 7,\n" +
+            "        \"axure_name\": \"新版本\",\n" +
             "        \"axure_info\": \"\",\n" +
             "        \"project_id\": \"3\",\n" +
-            "        \"title\": \"title\",\n" +
-            "        \"items\": \"config\",\n" +
-            "        \"config\": \"items\"\n" +
+            "        \"title\": \"123\",\n" +
+            "        \"items\": \"123\",\n" +
+            "        \"config\": \"123\",\n" +
+            "        \"config_id\": 2,\n" +
+            "        \"last_edit\": \"2022-08-05 02:10:41\",\n" +
+            "        \"create_user\": \"2\"\n" +
             "    }\n" +
             "}")
     fun getAxureInfo (
@@ -132,21 +154,27 @@ class AxureController {
             "    \"data\": [\n" +
             "        {\n" +
             "            \"axure_info\": \"\",\n" +
-            "            \"axure_id\": 1,\n" +
+            "            \"axure_id\": 2,\n" +
             "            \"project_id\": \"3\",\n" +
-            "            \"axure_name\": \"111\",\n" +
-            "            \"title\": \"title\",\n" +
-            "            \"config\": \"items\",\n" +
-            "            \"items\": \"config\"\n" +
+            "            \"config_id\": 0,\n" +
+            "            \"axure_name\": \"222\",\n" +
+            "            \"last_edit\": \" \",\n" +
+            "            \"create_user\": \" \",\n" +
+            "            \"title\": \"\",\n" +
+            "            \"config\": \"\",\n" +
+            "            \"items\": \"{\\\"referenceLine\\\":{\\\"row\\\":[],\\\"col\\\":[]},\\\"canvasSize\\\":{\\\"width\\\":338,\\\"height\\\":600}}\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"axure_info\": \"\",\n" +
-            "            \"axure_id\": 2,\n" +
+            "            \"axure_id\": 7,\n" +
             "            \"project_id\": \"3\",\n" +
-            "            \"axure_name\": \"222\",\n" +
-            "            \"title\": \"title2\",\n" +
-            "            \"config\": \"items2\",\n" +
-            "            \"items\": \"config2\"\n" +
+            "            \"config_id\": 2,\n" +
+            "            \"axure_name\": \"新版本\",\n" +
+            "            \"last_edit\": \"2022-08-05 02:10:41\",\n" +
+            "            \"create_user\": \"2\",\n" +
+            "            \"title\": \"123\",\n" +
+            "            \"config\": \"123\",\n" +
+            "            \"items\": \"123\"\n" +
             "        }\n" +
             "    ]\n" +
             "}")
