@@ -20,9 +20,12 @@ class Documentation {
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
     var pid: Int? = null
 
-    @OneToOne(targetEntity = User::class)
+    @OneToOne(targetEntity = User::class, fetch = FetchType.EAGER)
     @JoinColumn(name = "creator")
     var creator: User? = null
+
+    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "doc")
+    var user2documentations = mutableListOf<User2Documentation>()
 
     constructor(
         doc_name: String,

@@ -16,9 +16,9 @@ class User {
     @ManyToMany(targetEntity = Documentation::class, fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
     var favoritedocuments = mutableListOf<Documentation>()
 
-//    @OneToMany(targetEntity = Documentation::class, cascade = [CascadeType.ALL])
-//    @JoinColumn(name = "doc_id")
-//    var recently_viewed_documents = mutableListOf<Documentation>()
+    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user")
+    var user2documentations = mutableListOf<User2Documentation>()
+
 
     constructor(email: String, username: String, password: String, real_name: String?, avatar: String?) {
         this.email = email
