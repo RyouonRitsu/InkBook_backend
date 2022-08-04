@@ -3,6 +3,7 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
@@ -27,6 +28,7 @@ import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import kotlin.io.path.Path
+import kotlin.math.min
 
 @RestController
 @RequestMapping("/user")
@@ -38,6 +40,8 @@ class UserController {
     @Autowired
     lateinit var docRepository: DocumentationRepository
 
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
     @Autowired
     lateinit var redisUtils: RedisUtils
 
@@ -767,6 +771,53 @@ class UserController {
             return mapOf(
                 "success" to false,
                 "message" to "获取失败, 发生意外错误"
+            )
+        }
+    }
+
+    @GetMapping("/recentlyViewedList")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "最近浏览列表",
+        description = "获取指定用户的最近浏览列表, 如不指定用户, 则获取当前登录用户的最近浏览列表"
+    )
+    fun recentlyViewedList(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("user_id", defaultValue = "-1") @Parameter(description = "用户id") userId: Long
+    ): Map<String, Any> {
+        val user = if (userId == -1L) {
+            try {
+                userRepository.findById(TokenUtils.verify(token).second).get()
+            } catch (e: NoSuchElementException) {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+        } else {
+            try {
+                userRepository.findById(userId).get()
+            } catch (e: NoSuchElementException) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户, 获取失败"
+                )
+            }
+        }
+        val list = user.user2documentations.sortedByDescending { it.lastviewedtime }.subList(0, min(10, user.user2documentations.size))
+        val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
+        try {
+            user2DocRepository.deleteAllById(id2DelList)
+            return mapOf(
+                "success" to true,
+                "message" to "获取成功",
+                "data" to list.map { it.doc?.toDict() }
+            )
+        } catch (e: Exception) {
+            return mapOf(
+                "success" to false,
+                "message" to "清理失败, 发生意外错误"
             )
         }
     }
