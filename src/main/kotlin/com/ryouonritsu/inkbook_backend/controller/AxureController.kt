@@ -26,7 +26,10 @@ class AxureController {
 
     @PostMapping("/create")
     @Tag(name = "原型接口")
-    @Operation(summary = "创建新原型", description = "")
+    @Operation(summary = "创建新原型", description = "原型简介为可选项，\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"创建原型成功！\"\n" +
+            "}")
     fun createNewAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
@@ -54,7 +57,12 @@ class AxureController {
 
     @PostMapping("/update")
     @Tag(name = "原型接口")
-    @Operation(summary = "更新原型页面信息", description = "")
+    @Operation(summary = "更新原型页面信息", description = "在原型页面中点击保存时，将config中的信息上传于此\n" +
+            "并根据提供的axure_id更新对应的原型\n" +
+            "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"更新原型页面信息成功！\"\n" +
+            "}")
     fun updateAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
@@ -78,7 +86,19 @@ class AxureController {
 
     @PostMapping("/getAxureInfo")
     @Tag(name = "原型接口")
-    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型")
+    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询原型页面信息成功！\",\n" +
+            "    \"data\": {\n" +
+            "        \"axure_id\": 1,\n" +
+            "        \"axure_name\": \"111\",\n" +
+            "        \"axure_info\": \"\",\n" +
+            "        \"project_id\": \"3\",\n" +
+            "        \"title\": \"title\",\n" +
+            "        \"items\": \"config\",\n" +
+            "        \"config\": \"items\"\n" +
+            "    }\n" +
+            "}")
     fun getAxureInfo (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
@@ -106,7 +126,30 @@ class AxureController {
 
     @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
-    @Operation(summary = "展示项目所有原型", description = "")
+    @Operation(summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息\n{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询项目原型列表成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"axure_info\": \"\",\n" +
+            "            \"axure_id\": 1,\n" +
+            "            \"project_id\": \"3\",\n" +
+            "            \"axure_name\": \"111\",\n" +
+            "            \"title\": \"title\",\n" +
+            "            \"config\": \"items\",\n" +
+            "            \"items\": \"config\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"axure_info\": \"\",\n" +
+            "            \"axure_id\": 2,\n" +
+            "            \"project_id\": \"3\",\n" +
+            "            \"axure_name\": \"222\",\n" +
+            "            \"title\": \"title2\",\n" +
+            "            \"config\": \"items2\",\n" +
+            "            \"items\": \"config2\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
     fun getAxureList (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("project_id") @Parameter(description = "项目id") project_id: String,
