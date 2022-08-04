@@ -79,4 +79,29 @@ class DocumentationController {
             )
         )
     }
+
+    @PostMapping("/deleteDoc")
+    @Tag(name = "文档接口")
+    @Operation(summary = "删除文档", description = "使用doc_id删除文档")
+    fun deleteDoc(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("doc_id") @Parameter(description = "文档id") doc_id: Long?
+    ): Map<String, Any> {
+        return runCatching {
+            if (doc_id == null) return@runCatching mapOf(
+                "success" to false,
+                "message" to "文档id不能为空"
+            )
+            docService - doc_id
+            mapOf(
+                "success" to true,
+                "message" to "文档删除成功"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "文档删除失败, 发生意外错误"
+            )
+        )
+    }
 }
