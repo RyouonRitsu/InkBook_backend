@@ -29,7 +29,6 @@ class AxureController {
     @Operation(summary = "创建新原型", description = "")
     fun createNewAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
         @RequestParam("axure_info", required = false) @Parameter(description = "原型简介") axure_info: String?,
         @RequestParam("project_id") @Parameter(description = "所在项目id") project_id: String?,
@@ -58,7 +57,6 @@ class AxureController {
     @Operation(summary = "更新原型页面信息", description = "")
     fun updateAxure (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
         @RequestParam("title") @Parameter(description = "页面信息中的title") title: String?,
         @RequestParam("config") @Parameter(description = "页面信息中的config") config: String?,
@@ -80,23 +78,36 @@ class AxureController {
 
     @PostMapping("/getAxureInfo")
     @Tag(name = "原型接口")
-    @Operation(summary = "获得原型页面信息", description = "")
+    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型")
     fun getAxureInfo (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("title") @Parameter(description = "页面信息中的title") title: String?,
-        @RequestParam("config") @Parameter(description = "页面信息中的config") config: String?,
-        @RequestParam("items") @Parameter(description = "页面信息中的items") items: String?,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
     ): Map<String, Any> {
-        return mapOf(
-            "success" to true,
-            "message" to "更新原型成功！"
+        return runCatching {
+            val axure = axureService.selectAxureByAxureId(axure_id)
+            if (axure == null) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "该原型ID对应原型不存在！"
+                )
+            }
+            mapOf(
+                "success" to true,
+                "message" to "查询原型页面信息成功！",
+                "data" to axure.toDict()
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "更新原型页面信息失败！"
+            )
         )
     }
 
-    @PostMapping("/showAxureList")
+    @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
     @Operation(summary = "展示项目所有原型", description = "")
-    fun showAxureList (
+    fun getAxureList (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("project_id") @Parameter(description = "项目id") project_id: String,
     ): Map<String, Any> {

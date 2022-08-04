@@ -9,4 +9,5 @@ import com.ryouonritsu.inkbook_backend.entity.Axure
 interface AxureService {
     fun createNewAxure(axure: Axure)
     fun updateAxure(axure_id: String, title: String, items: String, config: String)
+    fun selectAxureByAxureId(axure_id: String): Axure?
 }
