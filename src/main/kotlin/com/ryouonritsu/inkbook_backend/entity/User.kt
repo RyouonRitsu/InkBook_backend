@@ -16,7 +16,7 @@ class User {
     @ManyToMany(
         targetEntity = Documentation::class,
         fetch = FetchType.EAGER,
-        cascade = [CascadeType.PERSIST, CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH]
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
     )
     var favoritedocuments = mutableListOf<Documentation>()
 

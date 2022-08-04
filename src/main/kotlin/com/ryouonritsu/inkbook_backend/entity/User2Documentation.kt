@@ -12,14 +12,14 @@ class User2Documentation {
 
     @ManyToOne(
         targetEntity = User::class,
-        cascade = [CascadeType.PERSIST, CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH]
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
     )
     @JoinColumn(name = "uid")
     var user: User? = null
 
     @ManyToOne(
         targetEntity = Documentation::class,
-        cascade = [CascadeType.PERSIST, CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH]
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
     )
     @JoinColumn(name = "did")
     var doc: Documentation? = null
