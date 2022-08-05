@@ -36,4 +36,20 @@ class AxureServiceImpl : AxureService {
         axure_name: String,
         axure_info: String
     ) = axureDao.updateAxureInfo(axure_id, axure_name, axure_info)
+
+    override fun addRecentView(
+        user_id: String,
+        axure_id: String,
+        time: String
+    ) = axureDao.addRecentView(user_id, axure_id, time)
+
+    override fun getRecentViewList(user_id: String) = axureDao.getRecentViewList(user_id)
+
+    override fun checkRecentView(user_id: String, axure_id: String) = axureDao.checkRecentView(user_id, axure_id)
+
+    override fun updateRecentView(
+        user_id: String,
+        axure_id: String,
+        time: String
+    ) = axureDao.updateRecentView(user_id, axure_id, time)
 }

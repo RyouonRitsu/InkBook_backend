@@ -35,4 +35,33 @@
             axure_info = #{axure_info}
         WHERE axure_id = #{axure_id}
     </update>
+    <insert id="addRecentView">
+        INSERT INTO `user_axure`(`user_id`, `axure_id`, `time`)
+        VALUES (#{user_id}, #{axure_id}, #{time})
+    </insert>
+    <select id="getRecentViewList" resultType="Map">
+        SELECT *
+        FROM `user_axure` u
+            JOIN `axure` a
+            JOIN `project` p
+            JOIN `team` t
+        ON u.axure_id = a.axure_id
+            AND a.project_id = p.project_id
+            AND p.team_id = t.team_id
+        WHERE u.user_id = #{user_id}
+        ORDER BY time DESC
+        LIMIT 0, 10
+    </select>
+    <select id="checkRecentView" resultType="String">
+        SELECT time
+        FROM `user_axure`
+        WHERE user_id = #{user_id}
+          AND axure_id = #{axure_id}
+    </select>
+    <update id="updateRecentView" parameterType="String">
+        UPDATE `user_axure`
+        SET time = #{time}
+        WHERE user_id = #{user_id}
+          AND axure_id = #{axure_id}
+    </update>
 </mapper>

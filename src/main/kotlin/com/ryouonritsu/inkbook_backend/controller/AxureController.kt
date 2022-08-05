@@ -126,7 +126,7 @@ class AxureController {
 
     @PostMapping("/getAxureInfo")
     @Tag(name = "原型接口")
-    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型\n{\n" +
+    @Operation(summary = "获得原型页面信息", description = "通过原型ID获取对应原型，并更新最后访问时间\n{\n" +
             "    \"success\": true,\n" +
             "    \"message\": \"查询原型页面信息成功！\",\n" +
             "    \"data\": {\n" +
@@ -153,6 +153,15 @@ class AxureController {
                     "success" to false,
                     "message" to "该原型ID对应原型不存在！"
                 )
+            }
+            val user_id = TokenUtils.verify(token).second
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val time = LocalDateTime.now().format(formatter)
+            val isViewed = axureService.checkRecentView(user_id.toString(), axure_id)
+            if (!isViewed.isNullOrBlank()) {
+                axureService.updateRecentView(user_id.toString(), axure_id, time)
+            } else {
+                axureService.addRecentView(user_id.toString(), axure_id, time)
             }
             mapOf(
                 "success" to true,
@@ -244,6 +253,56 @@ class AxureController {
             mapOf(
                 "success" to false,
                 "message" to "删除原型失败！"
+            )
+        )
+    }
+
+    @PostMapping("/getRecentViewList")
+    @Tag(name = "原型接口")
+    @Operation(summary = "获得最近访问原型", description = "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查看最近访问原型成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"axure_info\": \"\",\n" +
+            "            \"axure_name\": \"新版本\",\n" +
+            "            \"last_edit\": \"2022-08-05 02:10:41\",\n" +
+            "            \"team_id\": \"1\",\n" +
+            "            \"title\": \"123\",\n" +
+            "            \"project_name\": \"新名字\",\n" +
+            "            \"team_name\": \"4\",\n" +
+            "            \"project_info\": \"\",\n" +
+            "            \"team_info\": \"4\",\n" +
+            "            \"axure_id\": \"7\",\n" +
+            "            \"user_id\": \"3\",\n" +
+            "            \"project_id\": \"3\",\n" +
+            "            \"config_id\": 2,\n" +
+            "            \"time\": \"2022-08-05 10:28:04\",\n" +
+            "            \"create_user\": \"2\",\n" +
+            "            \"config\": \"123\",\n" +
+            "            \"items\": \"123\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getRecentViewList (
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            val info = axureService.getRecentViewList(user_id.toString())
+            if (info.isNullOrEmpty()) return mapOf(
+                "success" to false,
+                "message" to "最近访问原型为空！"
+            )
+            return mapOf(
+                "success" to true,
+                "message" to "查看最近访问原型成功！",
+                "data" to info
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查看最近访问原型失败！"
             )
         )
     }
