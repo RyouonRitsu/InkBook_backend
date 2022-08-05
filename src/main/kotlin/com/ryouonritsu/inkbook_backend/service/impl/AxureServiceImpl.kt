@@ -52,4 +52,12 @@ class AxureServiceImpl : AxureService {
         axure_id: String,
         time: String
     ) = axureDao.updateRecentView(user_id, axure_id, time)
+
+    override fun addFavoriteAxure(user_id: String, axure_id: String) = axureDao.addFavoriteAxure(user_id, axure_id)
+
+    override fun checkFavoriteAxure(user_id: String, axure_id: String) = axureDao.checkFavoriteAxure(user_id, axure_id)
+
+    override fun deleteFavoriteAxure(user_id: String, axure_id: String) = axureDao.deleteFavoriteAxure(user_id, axure_id)
+
+    override fun searchFavoriteAxure(user_id: String) = axureDao.searchFavoriteAxure(user_id)
 }

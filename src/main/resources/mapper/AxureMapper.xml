@@ -31,6 +31,9 @@
         DELETE
         FROM `user_axure`
         WHERE axure_id = #{axure_id};
+        DELETE
+        FROM `user_favoritedaxure`
+        WHERE axure_id = #{axure_id};
     </delete>
     <update id="updateAxureInfo" parameterType="String">
         UPDATE `axure`
@@ -67,4 +70,31 @@
         WHERE user_id = #{user_id}
           AND axure_id = #{axure_id}
     </update>
+    <insert id="addFavoriteAxure">
+        INSERT INTO `user_favoritedaxure`(`user_id`, `axure_id`)
+        VALUES (#{user_id}, #{axure_id})
+    </insert>
+    <select id="checkFavoriteAxure" resultType="Map">
+        SELECT *
+        FROM `user_favoritedaxure`
+        WHERE user_id = #{user_id}
+            AND axure_id = #{axure_id}
+    </select>
+    <delete id="deleteFavoriteAxure">
+        DELETE
+        FROM `user_favoritedaxure`
+        WHERE user_id = #{user_id}
+          AND axure_id = #{axure_id}
+    </delete>
+    <select id="searchFavoriteAxure" resultType="Map">
+        SELECT *
+        FROM `user_favoritedaxure` u
+            JOIN `axure` a
+            JOIN `project` p
+            JOIN `team` t
+        ON u.axure_id = a.axure_id
+            AND a.project_id = p.project_id
+            AND p.team_id = t.team_id
+        WHERE user_id = #{user_id}
+    </select>
 </mapper>

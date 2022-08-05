@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -184,33 +181,35 @@ class AxureController {
     @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
     @Operation(
-        summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息\n{\n" +
+        summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息，isFavorite为0表示未收藏，为1表示收藏\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询项目原型列表成功！\",\n" +
                 "    \"data\": [\n" +
                 "        {\n" +
                 "            \"axure_info\": \"\",\n" +
-                "            \"axure_id\": 2,\n" +
-                "            \"project_id\": \"3\",\n" +
+                "            \"axure_id\": 22,\n" +
+                "            \"project_id\": \"51\",\n" +
                 "            \"config_id\": 0,\n" +
-                "            \"axure_name\": \"222\",\n" +
-                "            \"last_edit\": \" \",\n" +
-                "            \"create_user\": \" \",\n" +
+                "            \"axure_name\": \"favortest\",\n" +
+                "            \"last_edit\": \"2022-08-05 12:25:14\",\n" +
+                "            \"create_user\": \"wkc\",\n" +
                 "            \"title\": \"\",\n" +
                 "            \"config\": \"\",\n" +
-                "            \"items\": \"{\\\"referenceLine\\\":{\\\"row\\\":[],\\\"col\\\":[]},\\\"canvasSize\\\":{\\\"width\\\":338,\\\"height\\\":600}}\"\n" +
+                "            \"items\": \"\",\n" +
+                "            \"isFavorite\": \"0\"\n" +
                 "        },\n" +
                 "        {\n" +
                 "            \"axure_info\": \"\",\n" +
-                "            \"axure_id\": 7,\n" +
-                "            \"project_id\": \"3\",\n" +
-                "            \"config_id\": 2,\n" +
-                "            \"axure_name\": \"新版本\",\n" +
-                "            \"last_edit\": \"2022-08-05 02:10:41\",\n" +
-                "            \"create_user\": \"2\",\n" +
-                "            \"title\": \"123\",\n" +
-                "            \"config\": \"123\",\n" +
-                "            \"items\": \"123\"\n" +
+                "            \"axure_id\": 23,\n" +
+                "            \"project_id\": \"51\",\n" +
+                "            \"config_id\": 0,\n" +
+                "            \"axure_name\": \"favortest2\",\n" +
+                "            \"last_edit\": \"2022-08-05 12:26:52\",\n" +
+                "            \"create_user\": \"wkc\",\n" +
+                "            \"title\": \"\",\n" +
+                "            \"config\": \"\",\n" +
+                "            \"items\": \"\",\n" +
+                "            \"isFavorite\": \"1\"\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}"
@@ -227,10 +226,21 @@ class AxureController {
                     "message" to "项目原型为空！"
                 )
             }
+            val user_id = TokenUtils.verify(token).second
+            var newAxureList = mutableListOf<Map<String, String>>()
+            for (axure: Map<String, String> in axureList) {
+                var a = axure.toMutableMap()
+                if (axureService.checkFavoriteAxure(user_id.toString(), axure["axure_id"].toString()) != null) {
+                    a["isFavorite"] = "1"
+                } else {
+                    a["isFavorite"] = "0"
+                }
+                newAxureList.add(a)
+            }
             return mapOf(
                 "success" to true,
                 "message" to "查询项目原型列表成功！",
-                "data" to axureList
+                "data" to newAxureList
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -315,6 +325,106 @@ class AxureController {
             mapOf(
                 "success" to false,
                 "message" to "查看最近访问原型失败！"
+            )
+        )
+    }
+
+    @PostMapping("/addFavoriteAxure")
+    @Tag(name = "原型接口")
+    @Operation(
+        summary = "收藏原型", description = ""
+    )
+    fun addFavoriteAxure(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            axureService.addFavoriteAxure(user_id.toString(), axure_id)
+            return mapOf(
+                "success" to true,
+                "message" to "收藏原型成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "收藏原型失败！"
+            )
+        )
+    }
+
+    @PostMapping("/deleteFavoriteAxure")
+    @Tag(name = "原型接口")
+    @Operation(
+        summary = "取消收藏原型", description = ""
+    )
+    fun deleteFavoriteAxure(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            axureService.deleteFavoriteAxure(user_id.toString(), axure_id)
+            return mapOf(
+                "success" to true,
+                "message" to "取消收藏原型成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "取消收藏原型失败！"
+            )
+        )
+    }
+
+    @GetMapping("/getFavoriteAxureList")
+    @Tag(name = "原型接口")
+    @Operation(
+        summary = "展示当前用户所有收藏原型", description = "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询收藏原型成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"axure_info\": \"\",\n" +
+                "            \"axure_name\": \"favortest\",\n" +
+                "            \"last_edit\": \"2022-08-05 12:25:14\",\n" +
+                "            \"team_id\": \"1\",\n" +
+                "            \"title\": \"\",\n" +
+                "            \"project_name\": \"favortestProject\",\n" +
+                "            \"team_name\": \"4\",\n" +
+                "            \"team_info\": \"4\",\n" +
+                "            \"axure_id\": \"22\",\n" +
+                "            \"user_id\": \"3\",\n" +
+                "            \"project_id\": \"51\",\n" +
+                "            \"config_id\": 0,\n" +
+                "            \"create_user\": \"wkc\",\n" +
+                "            \"config\": \"\",\n" +
+                "            \"items\": \"\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
+    fun getFavoriteAxureList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            val axureList = axureService.searchFavoriteAxure(user_id.toString())
+            if (axureList.isNullOrEmpty()) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "收藏原型为空！"
+                )
+            }
+            return mapOf(
+                "success" to true,
+                "message" to "查询收藏原型成功！",
+                "data" to axureList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查询收藏原型失败！"
             )
         )
     }
