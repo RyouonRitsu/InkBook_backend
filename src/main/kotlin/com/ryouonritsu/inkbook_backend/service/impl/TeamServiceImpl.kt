@@ -46,4 +46,20 @@ class TeamServiceImpl : TeamService {
     ) = teamDao.updateTeam(teamId, teamName, teamInfo)
 
     override fun searchTeamByTeamId(teamId: String) = teamDao.searchTeamByTeamId(teamId)
+
+    override fun addRecentView(
+        user_id: String,
+        teamId: String,
+        lastViewedTime: String
+    ) = teamDao.addRecentView(user_id, teamId, lastViewedTime)
+
+    override fun getRecentViewList(user_id: String) = teamDao.getRecentViewList(user_id)
+
+    override fun checkRecentView(user_id: String, teamId: String) = teamDao.checkRecentView(user_id, teamId)
+
+    override fun updateRecentView(
+        user_id: String,
+        teamId: String,
+        lastViewedTime: String
+    ) = teamDao.updateRecentView(user_id, teamId, lastViewedTime)
 }

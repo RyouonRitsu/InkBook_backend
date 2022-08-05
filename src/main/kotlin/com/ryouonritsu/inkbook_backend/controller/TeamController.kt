@@ -3,14 +3,14 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletRequest
 
 /**
@@ -202,7 +202,7 @@ class TeamController {
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
     @Operation(
-        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表\n{\n" +
+        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队成员成功！\",\n" +
                 "    \"data\": [\n" +
@@ -234,6 +234,14 @@ class TeamController {
             "message" to "团队id为空！"
         )
         var memberList = teamService.searchMemberByTeamId(teamId)
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val lastViewedTime = LocalDateTime.now().format(formatter)
+        val isViewed = teamService.checkRecentView(user_id.toString(), teamId)
+        if (!isViewed.isNullOrBlank()) {
+            teamService.updateRecentView(user_id.toString(), teamId, lastViewedTime)
+        } else {
+            teamService.addRecentView(user_id.toString(), teamId, lastViewedTime)
+        }
         if (memberList.isNullOrEmpty()) {
             return mapOf(
                 "success" to false,
@@ -488,6 +496,44 @@ class TeamController {
             "success" to true,
             "message" to "查询团队信息成功！",
             "data" to team
+        )
+    }
+
+    @GetMapping("/getRecentViewList")
+    @Tag(name = "团队接口")
+    @Operation(summary = "获得最近访问团队", description = "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查看最近访问团队成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"team_info\": \"123\",\n" +
+            "            \"user_id\": \"3\",\n" +
+            "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
+            "            \"team_id\": \"51\",\n" +
+            "            \"team_name\": \"123\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getRecentViewList (
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            val info = teamService.getRecentViewList(user_id.toString())
+            if (info.isNullOrEmpty()) return mapOf(
+                "success" to false,
+                "message" to "最近访问团队为空！"
+            )
+            return mapOf(
+                "success" to true,
+                "message" to "查看最近访问团队成功！",
+                "data" to info
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查看最近访问团队失败！"
+            )
         )
     }
 }
