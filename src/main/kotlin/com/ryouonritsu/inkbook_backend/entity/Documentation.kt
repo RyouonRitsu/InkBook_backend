@@ -20,7 +20,7 @@ class Documentation {
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
     var pid: Int? = null
 
-    @OneToOne(targetEntity = User::class, fetch = FetchType.EAGER)
+    @OneToOne(targetEntity = User::class, fetch = FetchType.LAZY)
     @JoinColumn(name = "creator")
     var creator: User? = null
 
