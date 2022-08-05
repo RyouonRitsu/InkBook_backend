@@ -42,10 +42,11 @@
         WHERE user_id = #{userId}
     </select>
     <select id="searchMemberByTeamId" resultType="Map">
-        SELECT DISTINCT user_id, username, email, real_name, user_perm
-        FROM `user`
-                 NATURAL JOIN `team_member`
-        WHERE team_id = #{teamId}
+        SELECT DISTINCT user_id, username, email, realname as real_name, user_perm
+        FROM `user` AS u
+            JOIN `team_member` AS t
+        WHERE u.uid = t.user_id
+            AND team_id = #{teamId}
     </select>
     <delete id="deleteMemberByUserId">
         DELETE

@@ -4,7 +4,7 @@
     <select id="selectUserByUserId" resultType="User">
         SELECT *
         FROM user
-        WHERE user_id = #{user_id}
+        WHERE uid = #{user_id}
     </select>
     <select id="selectUserByEmail" resultType="User">
         SELECT *
@@ -17,7 +17,7 @@
         WHERE username = #{username}
     </select>
     <insert id="registerNewUser" parameterType="User">
-        INSERT INTO `user`(`email`, `username`, `password`, `real_name`)
+        INSERT INTO `user`(`email`, `username`, `password`, `realname`)
         VALUES (#{email}, #{username}, #{password}, #{real_name})
     </insert>
     <update id="updateUserInfo" parameterType="User">
@@ -25,8 +25,8 @@
         SET `email`     = #{email},
             `username`  = #{username},
             `password`  = #{password},
-            `real_name` = #{real_name},
+            `realname` = #{real_name},
             `avatar`    = #{avatar}
-        WHERE `user_id` = #{user_id}
+        WHERE `uid` = #{user_id}
     </update>
 </mapper>
