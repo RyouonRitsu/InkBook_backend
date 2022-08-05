@@ -244,7 +244,8 @@ class AxureController {
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
     ): Map<String, Any> {
         return runCatching {
-            axureService.deleteAxureByAxureId(axure_id)
+            val user_id = TokenUtils.verify(token).second
+            axureService.deleteAxureByAxureId(user_id.toString(), axure_id)
             return mapOf(
                 "success" to true,
                 "message" to "删除原型成功！"

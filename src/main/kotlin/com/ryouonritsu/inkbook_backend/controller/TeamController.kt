@@ -83,7 +83,7 @@ class TeamController {
             "success" to false,
             "message" to "非团队创建者！"
         )
-        teamService.deleteTeam(teamId)
+        teamService.deleteTeam(user_id, teamId)
         return mapOf(
             "success" to true,
             "message" to "解散团队成功！"
@@ -450,7 +450,7 @@ class TeamController {
             "message" to "非当前团队成员！"
         )
         if (perm == "0") {
-            teamService.deleteTeam(teamId)
+            teamService.deleteTeam(user_id, teamId)
             return mapOf(
                 "success" to true,
                 "message" to "解散团队成功！"

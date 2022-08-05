@@ -34,6 +34,10 @@
         DELETE
         FROM `team_member`
         WHERE team_id = #{teamId};
+        DELETE
+        FROM `user_team`
+        WHERE team_id = #{teamId}
+          AND user_id = #{user_id};
     </delete>
     <select id="searchTeamByUserId" resultType="Map">
         SELECT DISTINCT *
