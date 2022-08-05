@@ -1,8 +1,9 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.entity.Team
-import com.ryouonritsu.inkbook_backend.service.TeamService
-import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.service.*
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -26,6 +27,18 @@ class TeamController {
 
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var documentationService: DocumentationService
+
+    @Autowired
+    lateinit var axureService: AxureService
+
+    @Autowired
+    lateinit var docRepository: DocumentationRepository
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
@@ -83,6 +96,29 @@ class TeamController {
             "success" to false,
             "message" to "非团队创建者！"
         )
+        val projectList = projectService.searchProjectByTeamId(teamId)
+        if (projectList != null) {
+            projectList.forEach {
+                val project_id = it["project_id"].toString()
+                if (project_id != null) {
+                    projectService.deleteProject(project_id)
+                    val docList = documentationService.findByProjectId(project_id.toInt())
+                    println(docList)
+                    if (docList != null) {
+                        docList.forEach {
+                            println(it.did)
+                            docRepository.deleteById(it.did ?: -1)
+                        }
+                    }
+                    val axureList = axureService.searchAxureByProjectId(project_id)
+                    if (axureList != null) {
+                        axureList.forEach {
+                            axureService.deleteAxureByAxureId(user_id, it["axure_id"].toString())
+                        }
+                    }
+                }
+            }
+        }
         teamService.deleteTeam(user_id, teamId)
         return mapOf(
             "success" to true,

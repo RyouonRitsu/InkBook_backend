@@ -29,7 +29,7 @@
     <select id="findByProjectId" resultType="com.ryouonritsu.inkbook_backend.entity.Documentation">
         SELECT *
         FROM `documentation`
-        WHERE `project_id` = #{project_id}
+        WHERE `pid` = #{project_id}
     </select>
     <select id="findByCreatorId" resultType="com.ryouonritsu.inkbook_backend.entity.Documentation">
         SELECT *
