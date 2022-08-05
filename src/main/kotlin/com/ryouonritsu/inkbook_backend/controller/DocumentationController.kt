@@ -226,7 +226,6 @@ class DocumentationController {
                 "message" to "文档Id不能为空"
             )
             val doc = docRepository.findById(doc_id).get()
-            val creator = doc.creator
             val user = userRepository.findById(TokenUtils.verify(token).second).get()
             val record = user2DocRepository.findByUserAndDoc(user, doc) ?: User2Documentation(user, doc)
             record.lastviewedtime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
@@ -234,7 +233,7 @@ class DocumentationController {
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
-                "data" to HashMap(doc.toDict()).apply { this["creator_name"] = creator?.username }
+                "data" to doc.toDict()
             )
         }.onFailure {
             if (it is NoSuchElementException) return mapOf(
@@ -261,15 +260,14 @@ class DocumentationController {
         @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int
     ): Map<String, Any> {
         return runCatching {
-            val creator = userRepository.findById(TokenUtils.verify(token).second).get()
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
             val docList = if (project_id == -1) {
-                docRepository.findByCreator(creator)
-                    .map { HashMap(it.toDict()).apply { this["creator_name"] = creator.username } }
+                docRepository.findByCreator(user)
+                    .map { HashMap(it.toDict()).apply { this["is_favorite"] = it in user.favoritedocuments } }
             } else {
                 docRepository.findByPid(project_id).map {
                     HashMap(it.toDict()).apply {
-                        this["creator_name"] =
-                            userRepository.findById(this["creator_id"] as Long).get().username ?: "数据库出错, 查无此人"
+                        this["is_favorite"] = it in user.favoritedocuments
                     }
                 }
             }

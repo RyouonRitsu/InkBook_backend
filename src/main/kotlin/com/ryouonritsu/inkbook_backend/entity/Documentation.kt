@@ -50,6 +50,7 @@ class Documentation {
         "doc_content" to dcontent,
         "last_edit_time" to lastedittime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "creator_id" to creator?.uid,
+        "creator_name" to creator?.username,
         "project_id" to pid
     )
 }
