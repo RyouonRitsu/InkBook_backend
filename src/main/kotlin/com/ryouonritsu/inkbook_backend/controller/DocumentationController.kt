@@ -118,6 +118,14 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
+            try {
+                docRepository.findById(doc_id).get()
+            } catch (e: NoSuchElementException) {
+                return@runCatching mapOf(
+                    "success" to false,
+                    "message" to "文档不存在"
+                )
+            }
             val user = userRepository.findById(TokenUtils.verify(token).second).get()
             user.favoritedocuments.removeAll { it.did == doc_id }
             val records = user2DocRepository.findByDocId(doc_id).map { it.id }
@@ -130,7 +138,7 @@ class DocumentationController {
         }.onFailure {
             if (it is NoSuchElementException) {
                 redisUtils - "${TokenUtils.verify(token).second}"
-                mapOf(
+                return mapOf(
                     "success" to false,
                     "message" to "用户不存在, 可能是数据库出错, 请检查后重试, 当前会话已失效"
                 )

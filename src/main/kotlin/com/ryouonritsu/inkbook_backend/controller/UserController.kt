@@ -838,7 +838,7 @@ class UserController {
             .subList(0, min(10, user.user2documentations.size))
         val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
         return try {
-            user2DocRepository.deleteAllById(id2DelList)
+            if (id2DelList.isNotEmpty()) user2DocRepository.deleteAllById(id2DelList)
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
@@ -857,7 +857,7 @@ class UserController {
         } catch (e: Exception) {
             mapOf(
                 "success" to false,
-                "message" to "清理失败, 发生意外错误"
+                "message" to (e.message ?: "清理失败, 发生意外错误")
             )
         }
     }
