@@ -5,6 +5,8 @@ import com.ryouonritsu.inkbook_backend.entity.UserFile
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
@@ -42,6 +44,12 @@ class UserController {
 
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
+
+    @Autowired
+    lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var teamService: TeamService
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -746,14 +754,34 @@ class UserController {
                 mapOf(
                     "success" to true,
                     "message" to "获取成功",
-                    "data" to userRepository.findById(userId).get().favoritedocuments.map { it.toDict() }
+                    "data" to userRepository.findById(userId).get().favoritedocuments.map {
+                        val projectId = it.pid
+                        val project = projectService.searchProjectByProjectId("$projectId")
+                            ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                        val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                        HashMap(it.toDict()).apply {
+                            putAll(project)
+                            putAll(team)
+                        }
+                    }
                 )
             } else {
                 val user = userRepository.findById(TokenUtils.verify(token).second).get()
                 mapOf(
                     "success" to true,
                     "message" to "获取成功",
-                    "data" to user.favoritedocuments.map { it.toDict() }
+                    "data" to user.favoritedocuments.map {
+                        val projectId = it.pid
+                        val project = projectService.searchProjectByProjectId("$projectId")
+                            ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                        val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                        HashMap(it.toDict()).apply {
+                            putAll(project)
+                            putAll(team)
+                        }
+                    }
                 )
             }
         } catch (e: NoSuchElementException) {
@@ -771,7 +799,7 @@ class UserController {
         } catch (e: Exception) {
             return mapOf(
                 "success" to false,
-                "message" to "获取失败, 发生意外错误"
+                "message" to (e.message ?: "获取失败, 发生意外错误")
             )
         }
     }
@@ -809,15 +837,25 @@ class UserController {
         val list = user.user2documentations.sortedByDescending { it.lastviewedtime }
             .subList(0, min(10, user.user2documentations.size))
         val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
-        try {
+        return try {
             user2DocRepository.deleteAllById(id2DelList)
-            return mapOf(
+            mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to list.map { it.doc?.toDict() }
+                "data" to list.map {
+                    val projectId = it.doc?.pid
+                    val project = projectService.searchProjectByProjectId("$projectId")
+                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                    HashMap(it.doc?.toDict()).apply {
+                        putAll(project)
+                        putAll(team)
+                    }
+                }
             )
         } catch (e: Exception) {
-            return mapOf(
+            mapOf(
                 "success" to false,
                 "message" to "清理失败, 发生意外错误"
             )
