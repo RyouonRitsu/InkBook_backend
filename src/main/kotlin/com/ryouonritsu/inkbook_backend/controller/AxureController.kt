@@ -58,7 +58,9 @@ class AxureController {
                     user.username
                 } else it
             }
-            var axure = Axure(axure_name ?: "", axure_info ?: "" , project_id, "", "", "", 0, "", name)
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val time = LocalDateTime.now().format(formatter)
+            val axure = Axure(axure_name ?: "", axure_info ?: "" , project_id, "", "", "", 0, time, name)
             axureService.createNewAxure(axure)
             mapOf(
                 "success" to true,
