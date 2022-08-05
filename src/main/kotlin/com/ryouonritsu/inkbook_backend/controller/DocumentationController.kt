@@ -1,7 +1,9 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Documentation
+import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
@@ -26,6 +28,9 @@ class DocumentationController {
 
     @Autowired
     lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -122,7 +127,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "更新文档信息",
-        description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作不会刷新文档的最后编辑时间"
+        description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作**不会刷新**文档的最后编辑时间和最后浏览时间"
     )
     fun updateDocInfo(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -168,7 +173,10 @@ class DocumentationController {
 
     @PostMapping("/save")
     @Tag(name = "文档接口")
-    @Operation(summary = "保存文档", description = "保存文档内容, 此操作会刷新文档最后编辑时间和最后浏览时间")
+    @Operation(
+        summary = "保存文档",
+        description = "保存文档内容, 此操作会**刷新**文档**最后编辑时间**和**最后浏览时间**"
+    )
     fun save(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?,
@@ -183,6 +191,10 @@ class DocumentationController {
             doc.dcontent = doc_content
             doc.lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             docRepository.save(doc)
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+            val record = user2DocRepository.findByUserAndDoc(user, doc) ?: User2Documentation(user, doc)
+            record.lastviewedtime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+            user2DocRepository.save(record)
             mapOf(
                 "success" to true,
                 "message" to "文档保存成功"
@@ -203,7 +215,7 @@ class DocumentationController {
 
     @GetMapping("/getDocInfo")
     @Tag(name = "文档接口")
-    @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息, 此操作会刷新最后浏览时间")
+    @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息, 此操作会**刷新最后浏览时间**")
     fun getDocContent(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?
@@ -215,6 +227,10 @@ class DocumentationController {
             )
             val doc = docRepository.findById(doc_id).get()
             val creator = doc.creator
+            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+            val record = user2DocRepository.findByUserAndDoc(user, doc) ?: User2Documentation(user, doc)
+            record.lastviewedtime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+            user2DocRepository.save(record)
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
@@ -238,7 +254,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "获取文档列表",
-        description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表, 此操作不会刷新文档最后浏览时间"
+        description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表, 此操作**不会刷新**文档最后浏览时间"
     )
     fun getDocList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,

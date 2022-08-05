@@ -2,6 +2,8 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
@@ -26,6 +28,7 @@ import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import kotlin.io.path.Path
+import kotlin.math.min
 
 @RestController
 @RequestMapping("/user")
@@ -33,6 +36,12 @@ import kotlin.io.path.Path
 class UserController {
     @Autowired
     lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var docRepository: DocumentationRepository
+
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -665,5 +674,153 @@ class UserController {
                 "message" to "修改失败, 发生意外错误"
             )
         )
+    }
+
+    @PostMapping("/favorite")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "收藏",
+        description = "将指定的内容加入收藏夹, undo为true时取消收藏, 默认为false"
+    )
+    fun favorite(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("undo", defaultValue = "false") @Parameter(description = "是否取消收藏") undo: Boolean,
+        @RequestParam("doc_id") @Parameter(description = "要收藏的文档id") docId: Long
+    ): Map<String, Any> {
+        val userId = TokenUtils.verify(token).second
+        val user = try {
+            userRepository.findById(userId).get()
+        } catch (e: NoSuchElementException) {
+            redisUtils - "$userId"
+            return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+            )
+        }
+        val doc = try {
+            docRepository.findById(docId).get()
+        } catch (e: NoSuchElementException) {
+            return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此文档, 请检查文档Id是否正确"
+            )
+        }
+        if (undo) {
+            if (!user.favoritedocuments.remove(doc)) return mapOf(
+                "success" to false,
+                "message" to "收藏夹中没有此文档, 取消收藏失败"
+            )
+        } else {
+            if (doc !in user.favoritedocuments) user.favoritedocuments.add(doc)
+            else return mapOf(
+                "success" to false,
+                "message" to "收藏夹中已有此文档, 收藏失败"
+            )
+        }
+        return try {
+            userRepository.save(user)
+            mapOf(
+                "success" to true,
+                "message" to "${if (undo) "取消" else ""}收藏成功"
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to "${if (undo) "取消" else ""}收藏失败, 发生意外错误"
+            )
+        }
+    }
+
+    @GetMapping("/favoriteList")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "收藏列表",
+        description = "获取指定用户的收藏列表, 如不指定用户, 则获取当前登录用户的收藏列表"
+    )
+    fun favoriteList(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("user_id", defaultValue = "-1") @Parameter(description = "用户id") userId: Long
+    ): Map<String, Any> {
+        return try {
+            if (userId != -1L) {
+                mapOf(
+                    "success" to true,
+                    "message" to "获取成功",
+                    "data" to userRepository.findById(userId).get().favoritedocuments.map { it.toDict() }
+                )
+            } else {
+                val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                mapOf(
+                    "success" to true,
+                    "message" to "获取成功",
+                    "data" to user.favoritedocuments.map { it.toDict() }
+                )
+            }
+        } catch (e: NoSuchElementException) {
+            if (userId != -1L) return mapOf(
+                "success" to false,
+                "message" to "数据库中没有此用户, 获取失败"
+            )
+            else {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+        } catch (e: Exception) {
+            return mapOf(
+                "success" to false,
+                "message" to "获取失败, 发生意外错误"
+            )
+        }
+    }
+
+    @GetMapping("/recentlyViewedList")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "最近浏览列表",
+        description = "获取指定用户的最近浏览列表, 如不指定用户, 则获取当前登录用户的最近浏览列表"
+    )
+    fun recentlyViewedList(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("user_id", defaultValue = "-1") @Parameter(description = "用户id") userId: Long
+    ): Map<String, Any> {
+        val user = if (userId == -1L) {
+            try {
+                userRepository.findById(TokenUtils.verify(token).second).get()
+            } catch (e: NoSuchElementException) {
+                redisUtils - "${TokenUtils.verify(token).second}"
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
+                )
+            }
+        } else {
+            try {
+                userRepository.findById(userId).get()
+            } catch (e: NoSuchElementException) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此用户, 获取失败"
+                )
+            }
+        }
+        val list = user.user2documentations.sortedByDescending { it.lastviewedtime }
+            .subList(0, min(10, user.user2documentations.size))
+        val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
+        try {
+            user2DocRepository.deleteAllById(id2DelList)
+            return mapOf(
+                "success" to true,
+                "message" to "获取成功",
+                "data" to list.map { it.doc?.toDict() }
+            )
+        } catch (e: Exception) {
+            return mapOf(
+                "success" to false,
+                "message" to "清理失败, 发生意外错误"
+            )
+        }
     }
 }

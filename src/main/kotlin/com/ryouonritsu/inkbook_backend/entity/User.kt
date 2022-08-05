@@ -1,9 +1,6 @@
 package com.ryouonritsu.inkbook_backend.entity
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
 class User {
@@ -16,13 +13,16 @@ class User {
     var realname: String? = null
     var avatar: String? = null
 
-//    @OneToMany(targetEntity = Documentation::class, cascade = [CascadeType.ALL])
-//    @JoinColumn(name = "doc_id")
-//    var favorite_documents = mutableListOf<Documentation>()
-//
-//    @OneToMany(targetEntity = Documentation::class, cascade = [CascadeType.ALL])
-//    @JoinColumn(name = "doc_id")
-//    var recently_viewed_documents = mutableListOf<Documentation>()
+    @ManyToMany(
+        targetEntity = Documentation::class,
+        fetch = FetchType.EAGER,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
+    )
+    var favoritedocuments = mutableListOf<Documentation>()
+
+    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user")
+    var user2documentations = mutableListOf<User2Documentation>()
+
 
     constructor(email: String, username: String, password: String, real_name: String?, avatar: String?) {
         this.email = email
