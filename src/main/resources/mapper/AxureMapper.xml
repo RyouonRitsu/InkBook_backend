@@ -29,4 +29,10 @@
         FROM `axure`
         WHERE axure_id = #{axure_id}
     </delete>
+    <update id="updateAxureInfo" parameterType="String">
+        UPDATE `axure`
+        SET axure_name = #{axure_name},
+            axure_info = #{axure_info}
+        WHERE axure_id = #{axure_id}
+    </update>
 </mapper>

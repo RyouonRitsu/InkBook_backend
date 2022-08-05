@@ -74,13 +74,8 @@ class AxureController {
 
     @PostMapping("/update")
     @Tag(name = "原型接口")
-    @Operation(summary = "更新原型页面信息", description = "在原型页面中点击保存时，将config中的信息上传于此\n" +
-            "并根据提供的axure_id更新对应的原型\n" +
-            "{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"更新原型页面信息成功！\"\n" +
-            "}")
-    fun updateAxure (
+    @Operation(summary = "更新原型页面信息", description = "")
+    fun updateAxureInfo (
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
         @RequestParam("title", required = false) @Parameter(description = "页面信息中的title") title: String?,
@@ -99,6 +94,30 @@ class AxureController {
             mapOf(
                 "success" to false,
                 "message" to "更新原型页面信息失败！"
+            )
+        )
+    }
+
+    @PostMapping("/updateInfo")
+    @Tag(name = "原型接口")
+    @Operation(summary = "更新原型信息", description = "为空白符或者不传则会清空，若要保持不变则传回相同数据\n" +
+            "不会更新最后编辑时间以及configID")
+    fun updateAxure (
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
+        @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
+        @RequestParam("axure_info", required = false) @Parameter(description = "原型简介") axure_info: String?,
+    ): Map<String, Any> {
+        return runCatching {
+            axureService.updateAxureInfo(axure_id, axure_name ?: "", axure_info ?: "")
+            mapOf(
+                "success" to true,
+                "message" to "更新原型信息成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "更新原型信息失败！"
             )
         )
     }

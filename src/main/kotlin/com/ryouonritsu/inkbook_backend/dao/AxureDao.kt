@@ -14,4 +14,5 @@ interface AxureDao {
     fun selectAxureByAxureId(axure_id: String): Axure?
     fun searchAxureByProjectId(project_id: String): List<Map<String, String>>?
     fun deleteAxureByAxureId(axure_id: String)
+    fun updateAxureInfo(axure_id: String, axure_name: String, axure_info: String)
 }
