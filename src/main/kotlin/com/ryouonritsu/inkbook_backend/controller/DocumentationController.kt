@@ -5,6 +5,8 @@ import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -31,6 +33,12 @@ class DocumentationController {
 
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
+
+    @Autowired
+    lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var teamService: TeamService
 
     @Autowired
     lateinit var redisUtils: RedisUtils
@@ -233,7 +241,18 @@ class DocumentationController {
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
-                "data" to doc.toDict()
+                "data" to let {
+                    val projectId = doc.pid
+                    val project = projectService.searchProjectByProjectId("$projectId")
+                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                    HashMap(doc.toDict()).apply {
+                        this["is_favorite"] = doc in user.favoritedocuments
+                        putAll(project)
+                        putAll(team)
+                    }
+                }
             )
         }.onFailure {
             if (it is NoSuchElementException) return mapOf(
@@ -266,8 +285,15 @@ class DocumentationController {
                     .map { HashMap(it.toDict()).apply { this["is_favorite"] = it in user.favoritedocuments } }
             } else {
                 docRepository.findByPid(project_id).map {
+                    val projectId = it.pid
+                    val project = projectService.searchProjectByProjectId("$projectId")
+                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.toDict()).apply {
                         this["is_favorite"] = it in user.favoritedocuments
+                        putAll(project)
+                        putAll(team)
                     }
                 }
             }
@@ -282,11 +308,63 @@ class DocumentationController {
                 "message" to "用户不存在, 请检查数据库数据"
             )
             it.printStackTrace()
+            return mapOf(
+                "success" to false,
+                "message" to (it.message ?: "文档列表获取失败, 发生意外错误")
+            )
         }.getOrDefault(
             mapOf(
                 "success" to false,
                 "message" to "文档列表获取失败, 发生意外错误"
             )
         )
+    }
+
+    @GetMapping("searchDoc")
+    @Tag(name = "文档接口")
+    @Operation(summary = "搜索文档", description = "根据关键字搜索文档")
+    fun searchDoc(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?
+    ): Map<String, Any> {
+        if (keyword.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "关键字不能为空"
+        )
+        val userId = TokenUtils.verify(token).second
+        val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
+        val projects = mutableListOf<Map<String, String>>()
+        teams.forEach {
+            projects.addAll(projectService.searchProjectByTeamId("${it["team_id"]}") ?: listOf())
+        }
+        val pIds = projects.map { "${it["project_id"]}".toInt() }
+        var docs = mutableListOf<Documentation>()
+        pIds.forEach { docs.addAll(docRepository.findByPid(it)) }
+        docs = docs.filter {
+            keyword in it.dname!! || keyword in it.dcontent!! || keyword in it.ddescription!!
+        }.toMutableList()
+        return try {
+            mapOf(
+                "success" to true,
+                "message" to "搜索成功",
+                "data" to docs.map {
+                    val projectId = it.pid
+                    val project = projectService.searchProjectByProjectId("$projectId")
+                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                    HashMap(it.toDict()).apply {
+                        this["is_favorite"] = it in userRepository.findById(userId).get().favoritedocuments
+                        putAll(project)
+                        putAll(team)
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "搜索失败, 发生意外错误")
+            )
+        }
     }
 }
