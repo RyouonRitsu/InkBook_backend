@@ -3,6 +3,8 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.*
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -39,6 +41,12 @@ class TeamController {
 
     @Autowired
     lateinit var docRepository: DocumentationRepository
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
@@ -106,8 +114,12 @@ class TeamController {
                     println(docList)
                     if (docList != null) {
                         docList.forEach {
-                            println(it.did)
-                            docRepository.deleteById(it.did ?: -1)
+                            val doc_id = it.did ?: -1
+                            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                            user.favoritedocuments.removeAll { it.did == doc_id }
+                            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+                            user2DocRepository.deleteAllById(records)
+                            docRepository.deleteById(doc_id)
                         }
                     }
                     val axureList = axureService.searchAxureByProjectId(project_id)
