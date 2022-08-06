@@ -317,7 +317,7 @@ class UserController {
                 "data" to listOf(
                     mapOf(
                         "token" to token,
-                        "user_id" to user.uid
+                        "user_id" to "${user.uid}"
                     )
                 )
             )
