@@ -41,6 +41,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.auth0:java-jwt:4.0.0")
     implementation("org.json:json:20220320")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("com.google.code.gson:gson")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
