@@ -41,6 +41,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.auth0:java-jwt:4.0.0")
     implementation("org.json:json:20220320")
+    implementation("com.alibaba.fastjson2:fastjson2:2.0.10")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
