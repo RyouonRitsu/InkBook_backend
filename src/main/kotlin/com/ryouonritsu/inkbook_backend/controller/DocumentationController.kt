@@ -109,10 +109,14 @@ class DocumentationController {
 
     @PostMapping("/deleteDoc")
     @Tag(name = "文档接口")
-    @Operation(summary = "删除文档", description = "使用文档Id删除文档")
+    @Operation(
+        summary = "删除文档",
+        description = "使用文档Id删除文档, recycle参数代表是否放入回收站, 默认为true, 填写false会不可逆的删除文档"
+    )
     fun deleteDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("doc_id") @Parameter(description = "文档Id") doc_id: Long?
+        @RequestParam("doc_id") @Parameter(description = "文档Id") doc_id: Long?,
+        @RequestParam("recycle", defaultValue = "true") @Parameter(description = "是否放入回收站") recycle: Boolean
     ): Map<String, Any> {
         return runCatching {
             if (doc_id == null) return@runCatching mapOf(
@@ -127,13 +131,16 @@ class DocumentationController {
                     "message" to "文档不存在"
                 )
             }
-            doc.deprecated = true
-            docRepository.save(doc)
-//            val user = userRepository.findById(TokenUtils.verify(token).second).get()
-//            user.favoritedocuments.removeAll { it.did == doc_id }
-//            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
-//            user2DocRepository.deleteAllById(records)
-//            docRepository.deleteById(doc_id)
+            if (recycle) {
+                doc.deprecated = true
+                docRepository.save(doc)
+            } else {
+                val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                user.favoritedocuments.removeAll { it.did == doc_id }
+                val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+                user2DocRepository.deleteAllById(records)
+                docRepository.deleteById(doc_id)
+            }
             mapOf(
                 "success" to true,
                 "message" to "文档删除成功"
@@ -151,6 +158,40 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to "文档删除失败, 发生意外错误"
+            )
+        )
+    }
+
+    @PostMapping("/recoverDoc")
+    @Tag(name = "文档接口")
+    @Operation(summary = "恢复文档", description = "使用文档Id恢复文档")
+    fun recoverDoc(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("doc_id") @Parameter(description = "文档Id") doc_id: Long?
+    ): Map<String, Any> {
+        return runCatching {
+            if (doc_id == null) return@runCatching mapOf(
+                "success" to false,
+                "message" to "文档Id不能为空"
+            )
+            val doc = try {
+                docRepository.findById(doc_id).get()
+            } catch (e: NoSuchElementException) {
+                return@runCatching mapOf(
+                    "success" to false,
+                    "message" to "文档不存在"
+                )
+            }
+            doc.deprecated = false
+            docRepository.save(doc)
+            return mapOf(
+                "success" to true,
+                "message" to "文档恢复成功"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "文档恢复失败, 发生意外错误"
             )
         )
     }
@@ -176,6 +217,10 @@ class DocumentationController {
                 "message" to "文档Id不能为空"
             )
             val doc = docRepository.findById(doc_id).get()
+            if (doc.deprecated) return mapOf(
+                "success" to false,
+                "message" to "文档已被删除, 请恢复后再进行此操作"
+            )
             if (doc_name.isNotBlank()) {
                 if (doc_name.length > 200) return@runCatching mapOf(
                     "success" to false,
@@ -220,6 +265,10 @@ class DocumentationController {
                 "message" to "文档Id不能为空"
             )
             val doc = docRepository.findById(doc_id).get()
+            if (doc.deprecated) return mapOf(
+                "success" to false,
+                "message" to "文档已被删除, 请恢复后再进行此操作"
+            )
             doc.dcontent = doc_content
             doc.lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             docRepository.save(doc)
@@ -299,6 +348,7 @@ class DocumentationController {
         summary = "获取文档列表",
         description = "获取文档列表, 默认返回当前用户创建的所有文档列表, 若提供了项目Id, 则返回该项目下的所有文档列表, 此操作**不会刷新**文档最后浏览时间"
     )
+    @Recycle
     fun getDocList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int
@@ -348,6 +398,7 @@ class DocumentationController {
     @GetMapping("searchDoc")
     @Tag(name = "文档接口")
     @Operation(summary = "搜索文档", description = "根据关键字搜索文档")
+    @Recycle
     fun searchDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?
@@ -389,6 +440,43 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to (e.message ?: "搜索失败, 发生意外错误")
+            )
+        }
+    }
+
+    @GetMapping("/getDocRecycleBin")
+    @Tag(name = "文档接口")
+    @Operation(summary = "获取文档回收站", description = "根据团队Id获取团队的文档回收站")
+    fun getDocRecycleBin(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("team_id") @Parameter(description = "团队id") team_id: String
+    ): Map<String, Any> {
+        val userId = TokenUtils.verify(token).second
+        val projects = projectService.searchProjectByTeamId(team_id) ?: listOf()
+        val pIds = projects.map { "${it["project_id"]}".toInt() }
+        val docs = mutableListOf<Documentation>()
+        pIds.forEach { docs.addAll(docRepository.findByPidAndDeprecated(it, deprecated = true)) }
+        return try {
+            mapOf(
+                "success" to true,
+                "message" to "获取成功",
+                "data" to docs.map {
+                    val projectId = it.pid
+                    val project = projectService.searchProjectByProjectId("$projectId")
+                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
+                    val team = teamService.searchTeamByTeamId(team_id)
+                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                    HashMap(it.toDict()).apply {
+                        this["is_favorite"] = it in userRepository.findById(userId).get().favoritedocuments
+                        putAll(project)
+                        putAll(team)
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "获取失败, 发生意外错误")
             )
         }
     }

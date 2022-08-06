@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository
 interface DocumentationRepository : JpaRepository<Documentation, Long> {
     fun findByCreator(creator: User): List<Documentation>
     fun findByPid(pId: Int): List<Documentation>
+    fun findByPidAndDeprecated(pId: Int, deprecated: Boolean): List<Documentation>
 }
