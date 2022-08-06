@@ -314,10 +314,12 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
-                "data" to listOf(mapOf(
-                    "token" to token,
-                    "user_id" to user.uid
-                ))
+                "data" to listOf(
+                    mapOf(
+                        "token" to token,
+                        "user_id" to user.uid
+                    )
+                )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -553,9 +555,11 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
-                "data" to listOf(mapOf(
-                    "url" to fileUrl
-                ))
+                "data" to listOf(
+                    mapOf(
+                        "url" to fileUrl
+                    )
+                )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
