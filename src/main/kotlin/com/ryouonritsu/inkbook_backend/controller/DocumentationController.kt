@@ -131,6 +131,10 @@ class DocumentationController {
                     "message" to "文档不存在"
                 )
             }
+            if (doc.deprecated) return mapOf(
+                "success" to false,
+                "message" to "文档已被删除"
+            )
             if (recycle) {
                 doc.deprecated = true
                 docRepository.save(doc)
@@ -182,6 +186,10 @@ class DocumentationController {
                     "message" to "文档不存在"
                 )
             }
+            if (!doc.deprecated) return mapOf(
+                "success" to false,
+                "message" to "文档未被删除"
+            )
             doc.deprecated = false
             docRepository.save(doc)
             return mapOf(
@@ -297,7 +305,6 @@ class DocumentationController {
     @GetMapping("/getDocInfo")
     @Tag(name = "文档接口")
     @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息, 此操作会**刷新最后浏览时间**")
-    @Recycle
     fun getDocContent(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?

@@ -52,11 +52,6 @@ class RecycleAspect {
                 }
                 doc?.deprecated ?: true
             }
-            if (data.isEmpty()) {
-                jsonObj["success"] = false
-                jsonObj["message"] = "没有找到可用的文档, 文档已被回收"
-                jsonObj.remove("data")
-            }
             result = jsonObj
         }
         return result
