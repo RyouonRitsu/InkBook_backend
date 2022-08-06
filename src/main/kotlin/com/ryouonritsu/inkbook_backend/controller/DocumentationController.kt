@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Documentation
 import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
@@ -118,7 +119,7 @@ class DocumentationController {
                 "success" to false,
                 "message" to "文档Id不能为空"
             )
-            try {
+            val doc = try {
                 docRepository.findById(doc_id).get()
             } catch (e: NoSuchElementException) {
                 return@runCatching mapOf(
@@ -126,11 +127,13 @@ class DocumentationController {
                     "message" to "文档不存在"
                 )
             }
-            val user = userRepository.findById(TokenUtils.verify(token).second).get()
-            user.favoritedocuments.removeAll { it.did == doc_id }
-            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
-            user2DocRepository.deleteAllById(records)
-            docRepository.deleteById(doc_id)
+            doc.deprecated = true
+            docRepository.save(doc)
+//            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+//            user.favoritedocuments.removeAll { it.did == doc_id }
+//            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+//            user2DocRepository.deleteAllById(records)
+//            docRepository.deleteById(doc_id)
             mapOf(
                 "success" to true,
                 "message" to "文档删除成功"
@@ -245,6 +248,7 @@ class DocumentationController {
     @GetMapping("/getDocInfo")
     @Tag(name = "文档接口")
     @Operation(summary = "获取文档信息", description = "根据文档Id获取文档的所有信息, 此操作会**刷新最后浏览时间**")
+    @Recycle
     fun getDocContent(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("doc_id") @Parameter(description = "要操作的文档Id") doc_id: Long?
@@ -262,7 +266,7 @@ class DocumentationController {
             mapOf(
                 "success" to true,
                 "message" to "文档获取成功",
-                "data" to let {
+                "data" to listOf(let {
                     val projectId = doc.pid
                     val project = projectService.searchProjectByProjectId("$projectId")
                         ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
@@ -273,7 +277,7 @@ class DocumentationController {
                         putAll(project)
                         putAll(team)
                     }
-                }
+                })
             )
         }.onFailure {
             if (it is NoSuchElementException) return mapOf(

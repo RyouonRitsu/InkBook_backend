@@ -26,6 +26,7 @@ class Documentation {
 
     @OneToMany(targetEntity = User2Documentation::class, mappedBy = "doc")
     var user2documentations = mutableListOf<User2Documentation>()
+    var deprecated = false
 
     constructor(
         doc_name: String,
@@ -43,14 +44,14 @@ class Documentation {
 
     constructor()
 
-    fun toDict() = mapOf(
-        "doc_id" to did,
+    fun toDict(): Map<String, Any?> = mapOf(
+        "doc_id" to "$did",
         "doc_name" to dname,
         "doc_description" to ddescription,
         "doc_content" to dcontent,
         "last_edit_time" to lastedittime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-        "creator_id" to creator?.uid,
+        "creator_id" to "${creator?.uid}",
         "creator_name" to creator?.username,
-        "project_id" to pid
+        "project_id" to "$pid"
     )
 }

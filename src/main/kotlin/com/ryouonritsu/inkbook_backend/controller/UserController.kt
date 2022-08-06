@@ -314,10 +314,10 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
-                "data" to mapOf(
+                "data" to listOf(mapOf(
                     "token" to token,
                     "user_id" to user.uid
-                )
+                ))
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -351,7 +351,7 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to user.toDict()
+                "data" to listOf(user.toDict())
             )
         }.onFailure {
             if (it is NoSuchElementException) {
@@ -379,7 +379,7 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to user.toDict()
+                "data" to listOf(user.toDict())
             )
         }.onFailure {
             if (it is NoSuchElementException) return mapOf(
@@ -553,9 +553,9 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
-                "data" to mapOf(
+                "data" to listOf(mapOf(
                     "url" to fileUrl
-                )
+                ))
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
