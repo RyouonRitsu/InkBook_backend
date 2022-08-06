@@ -181,7 +181,8 @@ class AxureController {
     @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
     @Operation(
-        summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息，isFavorite为0表示未收藏，为1表示收藏\n{\n" +
+        summary = "展示项目所有原型",
+        description = "根据提供的项目ID查询该项目下所有原型并返回信息，isFavorite为0表示未收藏，为1表示收藏\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询项目原型列表成功！\",\n" +
                 "    \"data\": [\n" +

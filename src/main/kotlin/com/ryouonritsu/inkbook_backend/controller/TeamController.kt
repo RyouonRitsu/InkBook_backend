@@ -1,6 +1,5 @@
 package com.ryouonritsu.inkbook_backend.controller
 
-import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
@@ -250,7 +249,8 @@ class TeamController {
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
     @Operation(
-        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
+        summary = "获得团队成员列表",
+        description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队成员成功！\",\n" +
                 "    \"data\": [\n" +
@@ -549,20 +549,22 @@ class TeamController {
 
     @GetMapping("/getRecentViewList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得最近访问团队", description = "{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"查看最近访问团队成功！\",\n" +
-            "    \"data\": [\n" +
-            "        {\n" +
-            "            \"team_info\": \"123\",\n" +
-            "            \"user_id\": \"3\",\n" +
-            "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
-            "            \"team_id\": \"51\",\n" +
-            "            \"team_name\": \"123\"\n" +
-            "        }\n" +
-            "    ]\n" +
-            "}")
-    fun getRecentViewList (
+    @Operation(
+        summary = "获得最近访问团队", description = "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查看最近访问团队成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"user_id\": \"3\",\n" +
+                "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
+                "            \"team_id\": \"51\",\n" +
+                "            \"team_name\": \"123\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
+    fun getRecentViewList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
