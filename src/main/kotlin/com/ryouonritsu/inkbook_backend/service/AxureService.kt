@@ -12,9 +12,13 @@ interface AxureService {
     fun updateAxureInfo(axure_id: String, axure_name: String, axure_info: String)
     fun selectAxureByAxureId(axure_id: String): Axure?
     fun searchAxureByProjectId(project_id: String): List<Map<String, String>>?
-    fun deleteAxureByAxureId(axure_id: String)
+    fun deleteAxureByAxureId(user_id: String, axure_id: String)
     fun addRecentView(user_id: String, axure_id: String, time: String)
     fun getRecentViewList(user_id: String): List<Map<String, String>>?
     fun checkRecentView(user_id: String, axure_id: String): String
     fun updateRecentView(user_id: String, axure_id: String, time: String)
+    fun addFavoriteAxure(user_id: String, axure_id: String)
+    fun checkFavoriteAxure(user_id: String, axure_id: String): Map<String, String>?
+    fun deleteFavoriteAxure(user_id: String, axure_id: String)
+    fun searchFavoriteAxure(user_id: String): List<Map<String, String>>?
 }

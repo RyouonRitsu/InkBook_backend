@@ -1,16 +1,19 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.entity.Team
-import com.ryouonritsu.inkbook_backend.service.TeamService
-import com.ryouonritsu.inkbook_backend.service.UserService
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.service.*
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletRequest
 
 /**
@@ -26,6 +29,24 @@ class TeamController {
 
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var documentationService: DocumentationService
+
+    @Autowired
+    lateinit var axureService: AxureService
+
+    @Autowired
+    lateinit var docRepository: DocumentationRepository
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
 
     @PostMapping("/create")
     @Tag(name = "团队接口")
@@ -83,7 +104,34 @@ class TeamController {
             "success" to false,
             "message" to "非团队创建者！"
         )
-        teamService.deleteTeam(teamId)
+        val projectList = projectService.searchProjectByTeamId(teamId)
+        if (projectList != null) {
+            projectList.forEach {
+                val project_id = it["project_id"].toString()
+                if (project_id != null) {
+                    projectService.deleteProject(project_id)
+                    val docList = documentationService.findByProjectId(project_id.toInt())
+                    println(docList)
+                    if (docList != null) {
+                        docList.forEach {
+                            val doc_id = it.did ?: -1
+                            val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                            user.favoritedocuments.removeAll { it.did == doc_id }
+                            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+                            user2DocRepository.deleteAllById(records)
+                            docRepository.deleteById(doc_id)
+                        }
+                    }
+                    val axureList = axureService.searchAxureByProjectId(project_id)
+                    if (axureList != null) {
+                        axureList.forEach {
+                            axureService.deleteAxureByAxureId(user_id, it["axure_id"].toString())
+                        }
+                    }
+                }
+            }
+        }
+        teamService.deleteTeam(user_id, teamId)
         return mapOf(
             "success" to true,
             "message" to "解散团队成功！"
@@ -202,7 +250,7 @@ class TeamController {
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
     @Operation(
-        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表\n{\n" +
+        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队成员成功！\",\n" +
                 "    \"data\": [\n" +
@@ -234,6 +282,14 @@ class TeamController {
             "message" to "团队id为空！"
         )
         var memberList = teamService.searchMemberByTeamId(teamId)
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val lastViewedTime = LocalDateTime.now().format(formatter)
+        val isViewed = teamService.checkRecentView(user_id.toString(), teamId)
+        if (!isViewed.isNullOrBlank()) {
+            teamService.updateRecentView(user_id.toString(), teamId, lastViewedTime)
+        } else {
+            teamService.addRecentView(user_id.toString(), teamId, lastViewedTime)
+        }
         if (memberList.isNullOrEmpty()) {
             return mapOf(
                 "success" to false,
@@ -442,7 +498,7 @@ class TeamController {
             "message" to "非当前团队成员！"
         )
         if (perm == "0") {
-            teamService.deleteTeam(teamId)
+            teamService.deleteTeam(user_id, teamId)
             return mapOf(
                 "success" to true,
                 "message" to "解散团队成功！"
@@ -488,6 +544,44 @@ class TeamController {
             "success" to true,
             "message" to "查询团队信息成功！",
             "data" to team
+        )
+    }
+
+    @GetMapping("/getRecentViewList")
+    @Tag(name = "团队接口")
+    @Operation(summary = "获得最近访问团队", description = "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查看最近访问团队成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"team_info\": \"123\",\n" +
+            "            \"user_id\": \"3\",\n" +
+            "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
+            "            \"team_id\": \"51\",\n" +
+            "            \"team_name\": \"123\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getRecentViewList (
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            val info = teamService.getRecentViewList(user_id.toString())
+            if (info.isNullOrEmpty()) return mapOf(
+                "success" to false,
+                "message" to "最近访问团队为空！"
+            )
+            return mapOf(
+                "success" to true,
+                "message" to "查看最近访问团队成功！",
+                "data" to info
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查看最近访问团队失败！"
+            )
         )
     }
 }

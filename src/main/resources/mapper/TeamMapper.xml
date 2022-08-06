@@ -34,6 +34,9 @@
         DELETE
         FROM `team_member`
         WHERE team_id = #{teamId};
+        DELETE
+        FROM `user_team`
+        WHERE team_id = #{teamId};
     </delete>
     <select id="searchTeamByUserId" resultType="Map">
         SELECT DISTINCT *
@@ -59,4 +62,29 @@
         FROM `team`
         WHERE team_id = #{teamId}
     </select>
+    <insert id="addRecentView">
+        INSERT INTO `user_team`(`user_id`, `team_id`, `lastViewedTime`)
+        VALUES (#{user_id}, #{teamId}, #{lastViewedTime})
+    </insert>
+    <select id="getRecentViewList" resultType="Map">
+        SELECT *
+        FROM `user_team` u
+                 JOIN `team` t
+        ON u.team_id = t.team_id
+        WHERE u.user_id = #{user_id}
+        ORDER BY lastViewedTime DESC
+        LIMIT 0, 10
+    </select>
+    <select id="checkRecentView" resultType="String">
+        SELECT lastViewedTime
+        FROM `user_team`
+        WHERE user_id = #{user_id}
+          AND team_id = #{teamId}
+    </select>
+    <update id="updateRecentView" parameterType="String">
+        UPDATE `user_team`
+        SET lastViewedTime = #{lastViewedTime}
+        WHERE user_id = #{user_id}
+          AND team_id = #{teamId}
+    </update>
 </mapper>
