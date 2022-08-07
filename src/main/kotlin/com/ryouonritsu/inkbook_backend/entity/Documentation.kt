@@ -20,11 +20,11 @@ class Documentation {
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
     var pid: Int? = null
 
-    @OneToOne(targetEntity = User::class, fetch = FetchType.LAZY)
+    @OneToOne(targetEntity = User::class)
     @JoinColumn(name = "creator")
     var creator: User? = null
 
-    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "doc")
+    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "doc", cascade = [CascadeType.ALL])
     var user2documentations = mutableListOf<User2Documentation>()
     var deprecated = false
 
