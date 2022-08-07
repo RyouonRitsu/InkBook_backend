@@ -15,12 +15,11 @@ class User {
 
     @ManyToMany(
         targetEntity = Documentation::class,
-        fetch = FetchType.LAZY,
         cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
     )
     var favoritedocuments = mutableListOf<Documentation>()
 
-    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user")
+    @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user", cascade = [CascadeType.ALL])
     var user2documentations = mutableListOf<User2Documentation>()
 
 

@@ -113,8 +113,6 @@ class TeamController {
                     val doc_id = it.did ?: -1
                     val user = userRepository.findById(TokenUtils.verify(token).second).get()
                     user.favoritedocuments.removeAll { it.did == doc_id }
-                    val records = user2DocRepository.findByDocId(doc_id).map { it.id }
-                    user2DocRepository.deleteAllById(records)
                     docRepository.deleteById(doc_id)
                 }
             }

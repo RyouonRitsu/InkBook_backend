@@ -1,7 +1,5 @@
 package com.ryouonritsu.inkbook_backend
 
-import com.ryouonritsu.inkbook_backend.entity.Documentation
-import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
