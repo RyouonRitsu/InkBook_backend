@@ -1,8 +1,13 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Project
+import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.service.DocumentationService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
+import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,6 +30,18 @@ class ProjectController {
 
     @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var documentationService: DocumentationService
+
+    @Autowired
+    lateinit var docRepository: DocumentationRepository
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var user2DocRepository: User2DocumentationRepository
 
     @PostMapping("/create")
     @Tag(name = "项目接口")
@@ -96,6 +113,16 @@ class ProjectController {
                 "success" to false,
                 "message" to "非该项目所在团队成员！"
             )
+            projectService.deleteProject(project_id)
+            val docList = documentationService.findByProjectId(project_id.toInt())
+            docList.forEach {
+                val doc_id = it.did ?: -1
+                val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                user.favoritedocuments.removeAll { it.did == doc_id }
+                val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+                user2DocRepository.deleteAllById(records)
+                docRepository.deleteById(doc_id)
+            }
             projectService.deleteProject(project_id)
             mapOf(
                 "success" to true,

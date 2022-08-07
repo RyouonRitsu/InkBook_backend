@@ -434,7 +434,7 @@ class DocumentationController {
                     val projectId = it.pid
                     val project = projectService.searchProjectByProjectId("$projectId")
                         ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
                         ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.toDict()).apply {
                         this["is_favorite"] = it in userRepository.findById(userId).get().favoritedocuments

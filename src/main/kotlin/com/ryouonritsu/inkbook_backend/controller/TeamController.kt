@@ -117,12 +117,6 @@ class TeamController {
                     user2DocRepository.deleteAllById(records)
                     docRepository.deleteById(doc_id)
                 }
-                val axureList = axureService.searchAxureByProjectId(project_id)
-                if (axureList != null) {
-                    axureList.forEach {
-                        axureService.deleteAxureByAxureId(user_id, it["axure_id"].toString())
-                    }
-                }
             }
         }
         teamService.deleteTeam(user_id, teamId)

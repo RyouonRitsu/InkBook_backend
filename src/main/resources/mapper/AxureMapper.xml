@@ -27,13 +27,7 @@
     <delete id="deleteAxureByAxureId">
         DELETE
         FROM `axure`
-        WHERE axure_id = #{axure_id};
-        DELETE
-        FROM `user_axure`
-        WHERE axure_id = #{axure_id};
-        DELETE
-        FROM `user_favoritedaxure`
-        WHERE axure_id = #{axure_id};
+        WHERE axure_id = #{axure_id}
     </delete>
     <update id="updateAxureInfo" parameterType="String">
         UPDATE `axure`
