@@ -18,6 +18,7 @@ class Project(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var project_id = 0
+    var deprecated = false
 
     constructor() : this("", "", -1)
 }

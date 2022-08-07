@@ -24,6 +24,7 @@ class Axure(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var axure_id = 0
+    var deprecated = false
 
     constructor() : this("", "", -1, "", "", "", 0, "", "")
 

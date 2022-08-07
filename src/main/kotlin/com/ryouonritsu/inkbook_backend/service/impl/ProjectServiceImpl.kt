@@ -30,4 +30,9 @@ class ProjectServiceImpl : ProjectService {
     override fun searchProjectByTeamId(team_id: String) = projectDao.searchProjectByTeamId(team_id)
 
     override fun searchProjectByProjectId(project_id: String) = projectDao.searchProjectByProjectId(project_id)
+
+    override fun deprecateProjectByProjectId(
+        project_id: String,
+        deprecated: Boolean
+    ) = projectDao.deprecateProjectByProjectId(project_id, deprecated)
 }

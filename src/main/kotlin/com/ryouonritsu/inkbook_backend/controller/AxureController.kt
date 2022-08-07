@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.UserService
@@ -301,6 +302,7 @@ class AxureController {
                 "    ]\n" +
                 "}"
     )
+    @Recycle
     fun getRecentViewList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
@@ -399,6 +401,7 @@ class AxureController {
                 "    ]\n" +
                 "}"
     )
+    @Recycle
     fun getFavoriteAxureList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {

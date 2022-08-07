@@ -85,6 +85,58 @@ class ProjectController {
         )
     }
 
+    @PostMapping("/deprecate")
+    @Tag(name = "项目接口")
+    @Operation(
+        summary = "弃置或恢复项目", description = "先检查是否为该项目团队成员根据传入的项目ID将对应项目放入或拿出回收站，\n" +
+                "相应的文档和原型也会被回收或拿出，并隐藏或显示相关的最近访问记录和收藏\n" +
+                "deprecated默认为true，即放入回收站，若要启动，则传入deprecated为false即可\n" +
+                "即文档和对应的\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"删除项目成功！\"\n" +
+                "}"
+    )
+    fun deprecateProject(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("project_id") @Parameter(description = "项目ID") project_id: String?,
+        @RequestParam("deprecated", required = false) @Parameter(description = "是否弃置") deprecated: Boolean?
+    ): Map<String, Any> {
+        val isDeprecated = deprecated ?: true
+        if (project_id.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "项目id为空！"
+        )
+        return runCatching {
+            val teamId = projectService.searchTeamIdByProjectId(project_id)
+            if (teamId.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "找不到该项目所在团队！"
+            )
+            val perm = teamService.checkPerm(user_id, teamId)
+            if (perm.isNullOrBlank()) return mapOf(
+                "success" to false,
+                "message" to "非该项目所在团队成员！"
+            )
+            projectService.deprecateProjectByProjectId(project_id, isDeprecated)
+            if (isDeprecated) {
+                return mapOf(
+                    "success" to true,
+                    "message" to "项目弃置成功！"
+                )
+            }
+            mapOf(
+                "success" to true,
+                "message" to "项目恢复成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "项目操作失败！"
+            )
+        )
+    }
+
     @PostMapping("/delete")
     @Tag(name = "项目接口")
     @Operation(
@@ -113,7 +165,6 @@ class ProjectController {
                 "success" to false,
                 "message" to "非该项目所在团队成员！"
             )
-            projectService.deleteProject(project_id)
             val docList = documentationService.findByProjectId(project_id.toInt())
             docList.forEach {
                 val doc_id = it.did ?: -1
@@ -190,7 +241,7 @@ class ProjectController {
     @PostMapping("/getProjectList")
     @Tag(name = "项目接口")
     @Operation(
-        summary = "获得团队项目列表", description = "返回团队ID对应团队的所有项目" +
+        summary = "获得团队项目列表", description = "返回团队ID对应团队的所有项目，deprecated为1（true）表示已被弃置，放入回收站" +
                 "\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队项目成功！\",\n" +
@@ -199,19 +250,22 @@ class ProjectController {
                 "            \"project_id\": 2,\n" +
                 "            \"team_id\": \"1\",\n" +
                 "            \"project_name\": \"55555\",\n" +
-                "            \"project_info\": \"\"\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"deprecated\": \"0\"\n" +
                 "        },\n" +
                 "        {\n" +
                 "            \"project_id\": 3,\n" +
                 "            \"team_id\": \"1\",\n" +
                 "            \"project_name\": \"123\",\n" +
-                "            \"project_info\": \"\"\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"deprecated\": \"1\"\n" +
                 "        },\n" +
                 "        {\n" +
                 "            \"project_id\": 4,\n" +
                 "            \"team_id\": \"1\",\n" +
                 "            \"project_name\": \"1234\",\n" +
-                "            \"project_info\": \"\"\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"deprecated\": \"1\"\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}"
