@@ -88,7 +88,8 @@ class ProjectController {
     @PostMapping("/deprecate")
     @Tag(name = "项目接口")
     @Operation(
-        summary = "弃置或恢复项目", description = "先检查是否为该项目团队成员根据传入的项目ID将对应项目放入或拿出回收站，\n" +
+        summary = "弃置或恢复项目",
+        description = "先检查是否为该项目团队成员根据传入的项目ID将对应项目放入或拿出回收站，\n" +
                 "相应的文档和原型也会被回收或拿出，并隐藏或显示相关的最近访问记录和收藏\n" +
                 "deprecated默认为true，即放入回收站，若要启动，则传入deprecated为false即可\n" +
                 "即文档和对应的\n{\n" +
@@ -241,7 +242,8 @@ class ProjectController {
     @PostMapping("/getProjectList")
     @Tag(name = "项目接口")
     @Operation(
-        summary = "获得团队项目列表", description = "返回团队ID对应团队的所有项目，deprecated为1（true）表示已被弃置，放入回收站" +
+        summary = "获得团队项目列表",
+        description = "返回团队ID对应团队的所有项目，deprecated为1（true）表示已被弃置，放入回收站" +
                 "\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队项目成功！\",\n" +

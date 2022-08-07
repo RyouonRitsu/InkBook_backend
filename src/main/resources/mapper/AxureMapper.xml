@@ -2,14 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ryouonritsu.inkbook_backend.dao.AxureDao">
     <insert id="createNewAxure" parameterType="Axure" useGeneratedKeys="true" keyProperty="axure_id">
-        INSERT INTO `axure`(`axure_info`, `axure_name`, `project_id`,`title`, `items`, `config`, `config_id`, `create_user`, `last_edit`)
-        VALUES (#{axure_info}, #{axure_name}, #{project_id}, #{title}, #{items}, #{config}, #{config_id}, #{create_user}, #{last_edit})
+        INSERT INTO `axure`(`axure_info`, `axure_name`, `project_id`, `title`, `items`, `config`, `config_id`,
+                            `create_user`, `last_edit`)
+        VALUES (#{axure_info}, #{axure_name}, #{project_id}, #{title}, #{items}, #{config}, #{config_id},
+                #{create_user}, #{last_edit})
     </insert>
     <update id="updateAxure" parameterType="String">
         UPDATE `axure`
-        SET title = #{title},
-            items = #{items},
-            config = #{config},
+        SET title     = #{title},
+            items     = #{items},
+            config    = #{config},
             config_id = config_id + 1,
             last_edit = #{last_edit}
         WHERE axure_id = #{axure_id}
@@ -42,12 +44,12 @@
     <select id="getRecentViewList" resultType="Map">
         SELECT *
         FROM `user_axure` u
-            JOIN `axure` a
-            JOIN `project` p
-            JOIN `team` t
-        ON u.axure_id = a.axure_id
-            AND a.project_id = p.project_id
-            AND p.team_id = t.team_id
+                 JOIN `axure` a
+                 JOIN `project` p
+                 JOIN `team` t
+                      ON u.axure_id = a.axure_id
+                          AND a.project_id = p.project_id
+                          AND p.team_id = t.team_id
         WHERE u.user_id = #{user_id}
         ORDER BY time DESC
         LIMIT 0, 10
@@ -72,7 +74,7 @@
         SELECT *
         FROM `user_favoritedaxure`
         WHERE user_id = #{user_id}
-            AND axure_id = #{axure_id}
+          AND axure_id = #{axure_id}
     </select>
     <delete id="deleteFavoriteAxure">
         DELETE
@@ -83,12 +85,12 @@
     <select id="searchFavoriteAxure" resultType="Map">
         SELECT *
         FROM `user_favoritedaxure` u
-            JOIN `axure` a
-            JOIN `project` p
-            JOIN `team` t
-        ON u.axure_id = a.axure_id
-            AND a.project_id = p.project_id
-            AND p.team_id = t.team_id
+                 JOIN `axure` a
+                 JOIN `project` p
+                 JOIN `team` t
+                      ON u.axure_id = a.axure_id
+                          AND a.project_id = p.project_id
+                          AND p.team_id = t.team_id
         WHERE user_id = #{user_id}
     </select>
 </mapper>
