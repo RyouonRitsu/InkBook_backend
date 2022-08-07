@@ -6,7 +6,9 @@ import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import org.springframework.stereotype.Repository
 
+@Repository
 interface User2DocumentationRepository : JpaRepository<User2Documentation, Long> {
     fun findByUserAndDoc(user: User, doc: Documentation): User2Documentation?
 

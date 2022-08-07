@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
@@ -314,9 +315,11 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "登录成功",
-                "data" to mapOf(
-                    "token" to token,
-                    "user_id" to user.uid
+                "data" to listOf(
+                    mapOf(
+                        "token" to token,
+                        "user_id" to "${user.uid}"
+                    )
                 )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
@@ -351,7 +354,7 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to user.toDict()
+                "data" to listOf(user.toDict())
             )
         }.onFailure {
             if (it is NoSuchElementException) {
@@ -379,7 +382,7 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
-                "data" to user.toDict()
+                "data" to listOf(user.toDict())
             )
         }.onFailure {
             if (it is NoSuchElementException) return mapOf(
@@ -553,8 +556,10 @@ class UserController {
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
-                "data" to mapOf(
-                    "url" to fileUrl
+                "data" to listOf(
+                    mapOf(
+                        "url" to fileUrl
+                    )
                 )
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
@@ -713,6 +718,10 @@ class UserController {
                 "message" to "数据库中没有此文档, 请检查文档Id是否正确"
             )
         }
+        if (doc.deprecated) return mapOf(
+            "success" to false,
+            "message" to "文档已被删除, 请恢复后再进行此操作"
+        )
         if (undo) {
             if (!user.favoritedocuments.remove(doc)) return mapOf(
                 "success" to false,
@@ -745,6 +754,7 @@ class UserController {
         summary = "收藏列表",
         description = "获取指定用户的收藏列表, 如不指定用户, 则获取当前登录用户的收藏列表"
     )
+    @Recycle
     fun favoriteList(
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
         @RequestParam("user_id", defaultValue = "-1") @Parameter(description = "用户id") userId: Long
@@ -810,6 +820,7 @@ class UserController {
         summary = "最近浏览列表",
         description = "获取指定用户的最近浏览列表, 如不指定用户, 则获取当前登录用户的最近浏览列表"
     )
+    @Recycle
     fun recentlyViewedList(
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
         @RequestParam("user_id", defaultValue = "-1") @Parameter(description = "用户id") userId: Long

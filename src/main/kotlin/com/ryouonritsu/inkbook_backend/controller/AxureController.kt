@@ -160,7 +160,7 @@ class AxureController {
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val time = LocalDateTime.now().format(formatter)
             val isViewed = axureService.checkRecentView(user_id.toString(), axure_id)
-            if (!isViewed.isNullOrBlank()) {
+            if (!isViewed.isBlank()) {
                 axureService.updateRecentView(user_id.toString(), axure_id, time)
             } else {
                 axureService.addRecentView(user_id.toString(), axure_id, time)
@@ -181,7 +181,8 @@ class AxureController {
     @PostMapping("/getAxureList")
     @Tag(name = "原型接口")
     @Operation(
-        summary = "展示项目所有原型", description = "根据提供的项目ID查询该项目下所有原型并返回信息，isFavorite为0表示未收藏，为1表示收藏\n{\n" +
+        summary = "展示项目所有原型",
+        description = "根据提供的项目ID查询该项目下所有原型并返回信息，isFavorite为0表示未收藏，为1表示收藏\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询项目原型列表成功！\",\n" +
                 "    \"data\": [\n" +
@@ -227,9 +228,9 @@ class AxureController {
                 )
             }
             val user_id = TokenUtils.verify(token).second
-            var newAxureList = mutableListOf<Map<String, String>>()
+            val newAxureList = mutableListOf<Map<String, String>>()
             for (axure: Map<String, String> in axureList) {
-                var a = axure.toMutableMap()
+                val a = axure.toMutableMap()
                 if (axureService.checkFavoriteAxure(user_id.toString(), axure["axure_id"].toString()) != null) {
                     a["isFavorite"] = "1"
                 } else {

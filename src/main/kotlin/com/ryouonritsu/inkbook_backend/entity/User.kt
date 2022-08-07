@@ -34,8 +34,8 @@ class User {
 
     constructor()
 
-    fun toDict() = mapOf(
-        "user_id" to uid,
+    fun toDict(): Map<String, Any?> = mapOf(
+        "user_id" to "$uid",
         "email" to email,
         "username" to username,
         "password" to password,

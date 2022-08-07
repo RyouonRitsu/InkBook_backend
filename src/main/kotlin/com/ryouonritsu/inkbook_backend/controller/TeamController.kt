@@ -1,6 +1,5 @@
 package com.ryouonritsu.inkbook_backend.controller
 
-import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.entity.Team
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
@@ -63,7 +62,7 @@ class TeamController {
             "message" to "团队名为空！"
         )
         return runCatching {
-            var team = Team(teamName, teamInfo.let {
+            val team = Team(teamName, teamInfo.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
@@ -95,7 +94,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(user_id, teamId)
+        val perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非团队成员！"
@@ -108,25 +107,20 @@ class TeamController {
         if (projectList != null) {
             projectList.forEach {
                 val project_id = it["project_id"].toString()
-                if (project_id != null) {
-                    projectService.deleteProject(project_id)
-                    val docList = documentationService.findByProjectId(project_id.toInt())
-                    println(docList)
-                    if (docList != null) {
-                        docList.forEach {
-                            val doc_id = it.did ?: -1
-                            val user = userRepository.findById(TokenUtils.verify(token).second).get()
-                            user.favoritedocuments.removeAll { it.did == doc_id }
-                            val records = user2DocRepository.findByDocId(doc_id).map { it.id }
-                            user2DocRepository.deleteAllById(records)
-                            docRepository.deleteById(doc_id)
-                        }
-                    }
-                    val axureList = axureService.searchAxureByProjectId(project_id)
-                    if (axureList != null) {
-                        axureList.forEach {
-                            axureService.deleteAxureByAxureId(user_id, it["axure_id"].toString())
-                        }
+                projectService.deleteProject(project_id)
+                val docList = documentationService.findByProjectId(project_id.toInt())
+                docList.forEach {
+                    val doc_id = it.did ?: -1
+                    val user = userRepository.findById(TokenUtils.verify(token).second).get()
+                    user.favoritedocuments.removeAll { it.did == doc_id }
+                    val records = user2DocRepository.findByDocId(doc_id).map { it.id }
+                    user2DocRepository.deleteAllById(records)
+                    docRepository.deleteById(doc_id)
+                }
+                val axureList = axureService.searchAxureByProjectId(project_id)
+                if (axureList != null) {
+                    axureList.forEach {
+                        axureService.deleteAxureByAxureId(user_id, it["axure_id"].toString())
                     }
                 }
             }
@@ -157,7 +151,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(user_id, teamId)
+        val perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -227,13 +221,13 @@ class TeamController {
         @RequestParam("other_id", required = false) @Parameter(description = "需要查询的用户ID") other_id: String?,
         request: HttpServletRequest
     ): Map<String, Any> {
-        var userId = other_id.let {
+        val userId = other_id.let {
             if (it.isNullOrBlank())
                 user_id
             else
                 it
         }
-        var teamList = teamService.searchTeamByUserId(userId)
+        val teamList = teamService.searchTeamByUserId(userId)
         if (teamList.isNullOrEmpty()) {
             return mapOf(
                 "success" to false,
@@ -250,7 +244,8 @@ class TeamController {
     @PostMapping("/getMemberList")
     @Tag(name = "团队接口")
     @Operation(
-        summary = "获得团队成员列表", description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
+        summary = "获得团队成员列表",
+        description = "0为超管，1为管理，2为成员。根据团队ID来获得对应的成员列表，并更新最近浏览时间。\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队成员成功！\",\n" +
                 "    \"data\": [\n" +
@@ -281,14 +276,14 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var memberList = teamService.searchMemberByTeamId(teamId)
+        val memberList = teamService.searchMemberByTeamId(teamId)
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val lastViewedTime = LocalDateTime.now().format(formatter)
-        val isViewed = teamService.checkRecentView(user_id.toString(), teamId)
-        if (!isViewed.isNullOrBlank()) {
-            teamService.updateRecentView(user_id.toString(), teamId, lastViewedTime)
+        val isViewed = teamService.checkRecentView(user_id, teamId)
+        if (!isViewed.isBlank()) {
+            teamService.updateRecentView(user_id, teamId, lastViewedTime)
         } else {
-            teamService.addRecentView(user_id.toString(), teamId, lastViewedTime)
+            teamService.addRecentView(user_id, teamId, lastViewedTime)
         }
         if (memberList.isNullOrEmpty()) {
             return mapOf(
@@ -398,7 +393,7 @@ class TeamController {
             "success" to false,
             "message" to "成员非当前团队成员！"
         )
-        if (perm.isNullOrBlank()) return mapOf(
+        if (perm.isBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
         )
@@ -447,7 +442,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(user_id, teamId)
+        val perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -492,7 +487,7 @@ class TeamController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var perm = teamService.checkPerm(user_id, teamId)
+        val perm = teamService.checkPerm(user_id, teamId)
         if (perm.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "非当前团队成员！"
@@ -549,20 +544,22 @@ class TeamController {
 
     @GetMapping("/getRecentViewList")
     @Tag(name = "团队接口")
-    @Operation(summary = "获得最近访问团队", description = "{\n" +
-            "    \"success\": true,\n" +
-            "    \"message\": \"查看最近访问团队成功！\",\n" +
-            "    \"data\": [\n" +
-            "        {\n" +
-            "            \"team_info\": \"123\",\n" +
-            "            \"user_id\": \"3\",\n" +
-            "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
-            "            \"team_id\": \"51\",\n" +
-            "            \"team_name\": \"123\"\n" +
-            "        }\n" +
-            "    ]\n" +
-            "}")
-    fun getRecentViewList (
+    @Operation(
+        summary = "获得最近访问团队", description = "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查看最近访问团队成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"user_id\": \"3\",\n" +
+                "            \"lastViewedTime\": \"2022-08-05 11:12:58\",\n" +
+                "            \"team_id\": \"51\",\n" +
+                "            \"team_name\": \"123\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
+    fun getRecentViewList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
     ): Map<String, Any> {
         return runCatching {
