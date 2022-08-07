@@ -10,17 +10,11 @@ class User2Documentation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
 
-    @ManyToOne(
-        targetEntity = User::class,
-        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
-    )
+    @ManyToOne(targetEntity = User::class)
     @JoinColumn(name = "uid")
     var user: User? = null
 
-    @ManyToOne(
-        targetEntity = Documentation::class,
-        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
-    )
+    @ManyToOne(targetEntity = Documentation::class)
     @JoinColumn(name = "did")
     var doc: Documentation? = null
 
