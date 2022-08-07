@@ -13,7 +13,7 @@ import javax.persistence.Id
 class Axure(
     var axure_name: String,
     var axure_info: String?,
-    var project_id: String,
+    var project_id: Int,
     var title: String?,
     var items: String?,
     var config: String?,
@@ -25,7 +25,7 @@ class Axure(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var axure_id = 0
 
-    constructor() : this("", "", "", "", "", "", 0, "", "")
+    constructor() : this("", "", -1, "", "", "", 0, "", "")
 
     fun toDict() = mapOf(
         "axure_id" to axure_id,

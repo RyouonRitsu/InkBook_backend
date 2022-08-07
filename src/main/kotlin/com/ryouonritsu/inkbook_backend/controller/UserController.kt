@@ -768,7 +768,7 @@ class UserController {
                         val projectId = it.pid
                         val project = projectService.searchProjectByProjectId("$projectId")
                             ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                        val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        val team = teamService.searchTeamByTeamId(project["team_id"].toString())
                             ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                         HashMap(it.toDict()).apply {
                             putAll(project)
@@ -785,7 +785,7 @@ class UserController {
                         val projectId = it.pid
                         val project = projectService.searchProjectByProjectId("$projectId")
                             ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                        val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                        val team = teamService.searchTeamByTeamId(project["team_id"].toString())
                             ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                         HashMap(it.toDict()).apply {
                             putAll(project)
@@ -857,7 +857,7 @@ class UserController {
                     val projectId = it.doc?.pid
                     val project = projectService.searchProjectByProjectId("$projectId")
                         ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(project["team_id"]!!)
+                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
                         ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.doc?.toDict()).apply {
                         putAll(project)
@@ -868,7 +868,7 @@ class UserController {
         } catch (e: Exception) {
             mapOf(
                 "success" to false,
-                "message" to (e.message ?: "清理失败, 发生意外错误")
+                "message" to (e.message ?: "获取失败, 发生意外错误")
             )
         }
     }

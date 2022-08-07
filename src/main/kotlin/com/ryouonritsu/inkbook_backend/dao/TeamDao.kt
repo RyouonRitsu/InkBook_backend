@@ -21,6 +21,6 @@ interface TeamDao {
     fun searchTeamByTeamId(teamId: String): Map<String, String>?
     fun addRecentView(user_id: String, teamId: String, lastViewedTime: String)
     fun getRecentViewList(user_id: String): List<Map<String, String>>?
-    fun checkRecentView(user_id: String, teamId: String): String
+    fun checkRecentView(user_id: String, teamId: String): String?
     fun updateRecentView(user_id: String, teamId: String, lastViewedTime: String)
 }

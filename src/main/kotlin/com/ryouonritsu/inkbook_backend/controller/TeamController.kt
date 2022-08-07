@@ -280,7 +280,7 @@ class TeamController {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val lastViewedTime = LocalDateTime.now().format(formatter)
         val isViewed = teamService.checkRecentView(user_id, teamId)
-        if (!isViewed.isBlank()) {
+        if (!isViewed.isNullOrBlank()) {
             teamService.updateRecentView(user_id, teamId, lastViewedTime)
         } else {
             teamService.addRecentView(user_id, teamId, lastViewedTime)
@@ -510,14 +510,16 @@ class TeamController {
     @Tag(name = "团队接口")
     @Operation(
         summary = "获得指定团队信息",
-        description = "可由指定团队ID获得对应团队信息\n{\n" +
+        description = "可由指定团队ID获得对应团队信息\n" +
+                "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队信息成功！\",\n" +
-                "    \"data\": {\n" +
+                "    \"data\": [\n{\n" +
                 "        \"team_info\": \"123\",\n" +
                 "        \"team_id\": 5,\n" +
                 "        \"team_name\": \"123\"\n" +
                 "    }\n" +
+                "   ]\n" +
                 "}"
     )
     fun getTeam(
@@ -538,7 +540,7 @@ class TeamController {
         return mapOf(
             "success" to true,
             "message" to "查询团队信息成功！",
-            "data" to team
+            "data" to listOf(team)
         )
     }
 

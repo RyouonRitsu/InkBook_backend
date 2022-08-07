@@ -58,7 +58,7 @@ class AxureController {
             }
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val time = LocalDateTime.now().format(formatter)
-            val axure = Axure(axure_name ?: "", axure_info ?: "", project_id, "", "", "", 0, time, name)
+            val axure = Axure(axure_name ?: "", axure_info ?: "", project_id.toInt(), "", "", "", 0, time, name)
             axureService.createNewAxure(axure)
             mapOf(
                 "success" to true,
@@ -130,7 +130,8 @@ class AxureController {
         summary = "获得原型页面信息", description = "通过原型ID获取对应原型，并更新最后访问时间\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询原型页面信息成功！\",\n" +
-                "    \"data\": {\n" +
+                "    \"data\": [\n" +
+                "{\n" +
                 "        \"axure_id\": 7,\n" +
                 "        \"axure_name\": \"新版本\",\n" +
                 "        \"axure_info\": \"\",\n" +
@@ -142,6 +143,7 @@ class AxureController {
                 "        \"last_edit\": \"2022-08-05 02:10:41\",\n" +
                 "        \"create_user\": \"2\"\n" +
                 "    }\n" +
+                "]\n" +
                 "}"
     )
     fun getAxureInfo(
@@ -160,7 +162,7 @@ class AxureController {
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val time = LocalDateTime.now().format(formatter)
             val isViewed = axureService.checkRecentView(user_id.toString(), axure_id)
-            if (!isViewed.isBlank()) {
+            if (!isViewed.isNullOrBlank()) {
                 axureService.updateRecentView(user_id.toString(), axure_id, time)
             } else {
                 axureService.addRecentView(user_id.toString(), axure_id, time)
@@ -168,7 +170,7 @@ class AxureController {
             mapOf(
                 "success" to true,
                 "message" to "查询原型页面信息成功！",
-                "data" to axure.toDict()
+                "data" to listOf(axure.toDict())
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
@@ -190,26 +192,18 @@ class AxureController {
                 "            \"axure_info\": \"\",\n" +
                 "            \"axure_id\": 22,\n" +
                 "            \"project_id\": \"51\",\n" +
-                "            \"config_id\": 0,\n" +
                 "            \"axure_name\": \"favortest\",\n" +
                 "            \"last_edit\": \"2022-08-05 12:25:14\",\n" +
                 "            \"create_user\": \"wkc\",\n" +
-                "            \"title\": \"\",\n" +
-                "            \"config\": \"\",\n" +
-                "            \"items\": \"\",\n" +
                 "            \"isFavorite\": \"0\"\n" +
                 "        },\n" +
                 "        {\n" +
                 "            \"axure_info\": \"\",\n" +
                 "            \"axure_id\": 23,\n" +
                 "            \"project_id\": \"51\",\n" +
-                "            \"config_id\": 0,\n" +
                 "            \"axure_name\": \"favortest2\",\n" +
                 "            \"last_edit\": \"2022-08-05 12:26:52\",\n" +
                 "            \"create_user\": \"wkc\",\n" +
-                "            \"title\": \"\",\n" +
-                "            \"config\": \"\",\n" +
-                "            \"items\": \"\",\n" +
                 "            \"isFavorite\": \"1\"\n" +
                 "        }\n" +
                 "    ]\n" +

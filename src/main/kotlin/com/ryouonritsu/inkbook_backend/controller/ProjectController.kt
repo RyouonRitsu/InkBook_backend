@@ -34,7 +34,7 @@ class ProjectController {
                 "    \"message\": \"创建项目成功！\"\n" +
                 "}"
     )
-    fun createNewTeam(
+    fun createNewProject(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("project_name") @Parameter(description = "项目名") project_name: String?,
@@ -50,11 +50,11 @@ class ProjectController {
             "message" to "团队id为空！"
         )
         return runCatching {
-            var project = Project(project_name, project_info.let {
+            val project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
-            }, team_id)
+            }, team_id.toLong())
             projectService.createNewProject(project)
             mapOf(
                 "success" to true,
@@ -76,7 +76,7 @@ class ProjectController {
                 "    \"message\": \"删除项目成功！\"\n" +
                 "}"
     )
-    fun deleteTeam(
+    fun deleteProject(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("project_id") @Parameter(description = "项目ID") project_id: String?
@@ -86,12 +86,12 @@ class ProjectController {
             "message" to "项目id为空！"
         )
         return runCatching {
-            var teamId = projectService.searchTeamIdByProjectId(project_id)
+            val teamId = projectService.searchTeamIdByProjectId(project_id)
             if (teamId.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "找不到该项目所在团队！"
             )
-            var perm = teamService.checkPerm(user_id, teamId)
+            val perm = teamService.checkPerm(user_id, teamId)
             if (perm.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "非该项目所在团队成员！"
@@ -117,7 +117,7 @@ class ProjectController {
                 "    \"message\": \"更新项目成功！\"\n" +
                 "}"
     )
-    fun updateTeam(
+    fun updateProject(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("project_id") @Parameter(description = "项目ID") project_id: String?,
@@ -133,12 +133,12 @@ class ProjectController {
             "message" to "项目名不可为空！"
         )
         return runCatching {
-            var teamId = projectService.searchTeamIdByProjectId(project_id)
+            val teamId = projectService.searchTeamIdByProjectId(project_id)
             if (teamId.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "找不到该项目所在团队！"
             )
-            var perm = teamService.checkPerm(user_id, teamId)
+            val perm = teamService.checkPerm(user_id, teamId)
             if (perm.isNullOrBlank()) return mapOf(
                 "success" to false,
                 "message" to "非该项目所在团队成员！"
@@ -189,7 +189,7 @@ class ProjectController {
                 "    ]\n" +
                 "}"
     )
-    fun getTeamList(
+    fun getProjectList(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("team_id") @Parameter(description = "团队id") team_id: String?
@@ -198,7 +198,7 @@ class ProjectController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        var projectList = projectService.searchProjectByTeamId(team_id)
+        val projectList = projectService.searchProjectByTeamId(team_id)
         if (projectList.isNullOrEmpty()) {
             return mapOf(
                 "success" to false,
@@ -216,18 +216,20 @@ class ProjectController {
     @Tag(name = "项目接口")
     @Operation(
         summary = "获得指定项目信息",
-        description = "可由指定项目ID获得对应项目信息\n{\n" +
+        description = "可由指定项目ID获得对应项目信息\n" +
+                "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队信息成功！\",\n" +
-                "    \"data\": {\n" +
+                "    \"data\": [\n{\n" +
                 "        \"project_id\": 3,\n" +
                 "        \"team_id\": \"1\",\n" +
                 "        \"project_name\": \"新名字\",\n" +
                 "        \"project_info\": \"\"\n" +
                 "    }\n" +
+                "   ]\n" +
                 "}"
     )
-    fun getTeam(
+    fun getProject(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
         @RequestParam("project_id") @Parameter(description = "项目ID") project_id: String?
@@ -245,7 +247,7 @@ class ProjectController {
         return mapOf(
             "success" to true,
             "message" to "查询团队信息成功！",
-            "data" to project
+            "data" to listOf(project)
         )
     }
 }
