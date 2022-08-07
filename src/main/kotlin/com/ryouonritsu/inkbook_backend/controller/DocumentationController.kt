@@ -141,8 +141,6 @@ class DocumentationController {
             } else {
                 val user = userRepository.findById(TokenUtils.verify(token).second).get()
                 user.favoritedocuments.removeAll { it.did == doc_id }
-                val records = user2DocRepository.findByDocId(doc_id).map { it.id }
-                user2DocRepository.deleteAllById(records)
                 docRepository.deleteById(doc_id)
             }
             mapOf(
