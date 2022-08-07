@@ -847,9 +847,9 @@ class UserController {
         }
         val list = user.user2documentations.sortedByDescending { it.lastviewedtime }
             .subList(0, min(10, user.user2documentations.size))
-        val id2DelList = user.user2documentations.filter { it !in list }.map { it.id }
+        val id2DelList = user.user2documentations.filter { it !in list }.map { Pair(it.user!!.uid!!, it.doc!!.did!!) }
         return try {
-            if (id2DelList.isNotEmpty()) user2DocRepository.deleteAllById(id2DelList)
+            id2DelList.forEach { user2DocRepository.deleteByUidAndDid(it.first, it.second) }
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
