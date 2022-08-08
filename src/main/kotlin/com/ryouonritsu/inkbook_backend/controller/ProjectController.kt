@@ -318,6 +318,74 @@ class ProjectController {
         )
     }
 
+    @PostMapping("/search")
+    @Tag(name = "项目接口")
+    @Operation(
+        summary = "搜索项目", description = "根据项目名字或简介在所在团队由关键字进行模糊搜索\n" +
+                "没有对应项目时将会返回一个空data即[]\n" +
+                "{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"搜索项目成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"project_name\": \"Project\",\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"team_id\": 104,\n" +
+                "            \"project_id\": 83,\n" +
+                "            \"deprecated\": false\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"project_name\": \"Project2\",\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"team_id\": 104,\n" +
+                "            \"project_id\": 85,\n" +
+                "            \"deprecated\": false\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"project_name\": \"Project3\",\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"team_id\": 104,\n" +
+                "            \"project_id\": 86,\n" +
+                "            \"deprecated\": false\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
+    fun searchProject(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("team_id") @Parameter(description = "团队ID") team_id: String?,
+        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
+    ): Map<String, Any> {
+        if (team_id.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        if (keyword == null) return mapOf(
+            "success" to false,
+            "message" to "关键字为空！"
+        )
+        return runCatching {
+            val projectList = projectService.searchProjectByKeyWord(team_id, keyword)?:arrayListOf<Project>()
+            mapOf(
+                "success" to true,
+                "message" to "搜索项目成功！",
+                "data" to projectList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "搜索项目失败！"
+            )
+        )
+    }
+
     @PostMapping("/getProjectList")
     @Tag(name = "项目接口")
     @Operation(

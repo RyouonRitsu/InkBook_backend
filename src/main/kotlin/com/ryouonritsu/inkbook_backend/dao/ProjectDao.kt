@@ -17,4 +17,5 @@ interface ProjectDao {
     fun searchProjectByProjectId(project_id: String): Map<String, String>?
     fun deprecateProjectByProjectId(project_id: String, deprecated: Boolean)
     fun updateProjectLastEditTime(project_id: String, time: String)
+    fun searchProjectByKeyWord(team_id: String, keyword: String): List<Project>?
 }

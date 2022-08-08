@@ -40,4 +40,9 @@ class ProjectServiceImpl : ProjectService {
         project_id: String,
         time: String
     ) = projectDao.updateProjectLastEditTime(project_id, time)
+
+    override fun searchProjectByKeyWord(
+        team_id: String,
+        keyword: String
+    ) = projectDao.searchProjectByKeyWord(team_id, keyword)
 }

@@ -2,7 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ryouonritsu.inkbook_backend.dao.ProjectDao">
     <insert id="createNewProject" parameterType="Project" useGeneratedKeys="true" keyProperty="project_id">
-        INSERT INTO `project`(`project_name`, `project_info`, `team_id`, `deprecated`, `prj_last_edit_time`, `prj_create_time`)
+        INSERT INTO `project`(`project_name`, `project_info`, `team_id`, `deprecated`, `prj_last_edit_time`,
+                              `prj_create_time`)
         VALUES (#{project_name}, #{project_info}, #{team_id}, false, #{prj_last_edit_time}, #{prj_create_time})
     </insert>
     <select id="searchTeamIdByProjectId" resultType="String">
@@ -47,4 +48,10 @@
         SET prj_last_edit_time = #{time}
         WHERE project_id = #{project_id}
     </update>
+    <select id="searchProjectByKeyWord" resultType="Project">
+        SELECT *
+        FROM `project`
+        WHERE team_id = #{team_id} AND project_name LIKE CONCAT('%', #{keyword}, '%')
+           OR project_info LIKE CONCAT('%', #{keyword}, '%')
+    </select>
 </mapper>
