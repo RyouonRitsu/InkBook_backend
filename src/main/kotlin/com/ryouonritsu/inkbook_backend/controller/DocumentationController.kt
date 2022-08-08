@@ -455,29 +455,17 @@ class DocumentationController {
         )
         val userId = TokenUtils.verify(token).second
         val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
-        val projects = mutableListOf<Map<String, String>>()
-        teams.forEach {
-            projects.addAll(projectService.searchProjectByTeamId("${it["team_id"]}") ?: listOf())
-        }
-        val pIds = projects.map { "${it["project_id"]}".toInt() }
+        val tIds = teams.map { "${it["team_id"]}".toInt() }
         val docs = mutableListOf<Documentation>()
-        pIds.forEach { docs.addAll(docRepository.findByKeyword(keyword, it)) }
-//        docs = docs.filter {
-//            keyword in it.dname!! || keyword in it.dcontent!! || keyword in it.ddescription!!
-//        }.toMutableList()
+        tIds.forEach { docs.addAll(docRepository.findByKeywordAndTeamId(keyword, it)) }
         return try {
             mapOf(
                 "success" to true,
                 "message" to "搜索成功",
                 "data" to docs.map {
-//                    val projectId = it.project?.project_id
-//                    val project = projectService.searchProjectByProjectId("$projectId")
-//                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-//                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-//                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.toDict()).apply {
                         this["is_favorite"] = it in userRepository.findById(userId).get().favoritedocuments
-                        putAll(it.project?.toDict() ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确"))
+                        putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
                         putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                     }
                 }

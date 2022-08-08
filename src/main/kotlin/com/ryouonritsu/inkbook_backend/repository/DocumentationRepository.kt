@@ -18,8 +18,8 @@ interface DocumentationRepository : JpaRepository<Documentation, Long> {
     @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?1 AND d.deprecated = ?2")
     fun findByPidAndDeprecated(pId: Int, deprecated: Boolean): List<Documentation>
 
-    @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?2 AND (d.dname LIKE %?1% OR d.ddescription LIKE %?1% OR d.dcontent LIKE %?1%)")
-    fun findByKeyword(keyword: String, projectId: Int): List<Documentation>
+    @Query("SELECT d FROM Documentation d WHERE d.team.teamId = ?2 AND (d.dname LIKE %?1% OR d.ddescription LIKE %?1% OR d.dcontent LIKE %?1%)")
+    fun findByKeywordAndTeamId(keyword: String, teamId: Int): List<Documentation>
 
     @Transactional
     @Modifying
