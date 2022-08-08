@@ -287,28 +287,48 @@ class AxureController {
     @PostMapping("/getRecentViewList")
     @Tag(name = "原型接口")
     @Operation(
-        summary = "获得最近访问原型", description = "{\n" +
+        summary = "获得最近访问原型", description = "不返回原型页面信息\n" +
+                "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查看最近访问原型成功！\",\n" +
                 "    \"data\": [\n" +
                 "        {\n" +
-                "            \"axure_info\": \"\",\n" +
-                "            \"axure_name\": \"新版本\",\n" +
-                "            \"last_edit\": \"2022-08-05 02:10:41\",\n" +
-                "            \"team_id\": \"1\",\n" +
-                "            \"title\": \"123\",\n" +
-                "            \"project_name\": \"新名字\",\n" +
-                "            \"team_name\": \"4\",\n" +
-                "            \"project_info\": \"\",\n" +
-                "            \"team_info\": \"4\",\n" +
-                "            \"axure_id\": \"7\",\n" +
+                "            \"axure_info\": \"copyTest\",\n" +
+                "            \"axure_name\": \"copyTest\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"deprecated\": false 项目是否被弃置,\n" +
+                "            \"last_edit\": \"2022-08-08 13:43:00\",\n" +
+                "            \"team_id\": 103,\n" +
+                "            \"project_name\": \"copyTest\",\n" +
+                "            \"team_name\": \"123\",\n" +
+                "            \"project_info\": \"copyTest\",\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"axure_id\": 44,\n" +
                 "            \"user_id\": \"3\",\n" +
-                "            \"project_id\": \"3\",\n" +
-                "            \"config_id\": 2,\n" +
-                "            \"time\": \"2022-08-05 10:28:04\",\n" +
-                "            \"create_user\": \"2\",\n" +
-                "            \"config\": \"123\",\n" +
-                "            \"items\": \"123\"\n" +
+                "            \"project_id\": 89,\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"time\": \"2022-08-08 14:35:44\" 最近访问时间,\n" +
+                "            \"create_user\": \"wkc\" 原型创建者,\n" +
+                "            \"axure_deprecated\": false 原型是否被弃置\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"axure_info\": \"\",\n" +
+                "            \"axure_name\": \"123\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 11:08:48\",\n" +
+                "            \"deprecated\": false,\n" +
+                "            \"last_edit\": \"2022-08-08 09:29:09\",\n" +
+                "            \"team_id\": 103,\n" +
+                "            \"project_name\": \"123\",\n" +
+                "            \"team_name\": \"123\",\n" +
+                "            \"project_info\": \"\",\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"axure_id\": 43,\n" +
+                "            \"user_id\": \"3\",\n" +
+                "            \"project_id\": 87,\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"time\": \"2022-08-08 09:28:38\",\n" +
+                "            \"create_user\": \"wkc\",\n" +
+                "            \"axure_deprecated\": false\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}"
@@ -388,26 +408,28 @@ class AxureController {
     @GetMapping("/getFavoriteAxureList")
     @Tag(name = "原型接口")
     @Operation(
-        summary = "展示当前用户所有收藏原型", description = "{\n" +
+        summary = "展示当前用户所有收藏原型", description = "" +
+                "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询收藏原型成功！\",\n" +
                 "    \"data\": [\n" +
                 "        {\n" +
-                "            \"axure_info\": \"\",\n" +
-                "            \"axure_name\": \"favortest\",\n" +
-                "            \"last_edit\": \"2022-08-05 12:25:14\",\n" +
-                "            \"team_id\": \"1\",\n" +
-                "            \"title\": \"\",\n" +
-                "            \"project_name\": \"favortestProject\",\n" +
-                "            \"team_name\": \"4\",\n" +
-                "            \"team_info\": \"4\",\n" +
-                "            \"axure_id\": \"22\",\n" +
+                "            \"axure_info\": \"copyTest\",\n" +
+                "            \"axure_name\": \"copyTest\",\n" +
+                "            \"prj_last_edit_time\": \"2022-08-08 13:43:00\",\n" +
+                "            \"deprecated\": false,\n" +
+                "            \"last_edit\": \"2022-08-08 13:43:00\",\n" +
+                "            \"team_id\": 103,\n" +
+                "            \"project_name\": \"copyTest\",\n" +
+                "            \"team_name\": \"123\",\n" +
+                "            \"project_info\": \"copyTest\",\n" +
+                "            \"team_info\": \"123\",\n" +
+                "            \"axure_id\": 44,\n" +
                 "            \"user_id\": \"3\",\n" +
-                "            \"project_id\": \"51\",\n" +
-                "            \"config_id\": 0,\n" +
+                "            \"project_id\": 89,\n" +
+                "            \"prj_create_time\": \"2022-08-08 13:43:00\",\n" +
                 "            \"create_user\": \"wkc\",\n" +
-                "            \"config\": \"\",\n" +
-                "            \"items\": \"\"\n" +
+                "            \"axure_deprecated\": false\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}"

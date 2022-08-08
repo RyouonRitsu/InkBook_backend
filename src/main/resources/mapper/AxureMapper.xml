@@ -26,6 +26,11 @@
         FROM `axure`
         WHERE project_id = #{project_id}
     </select>
+    <select id="searchAxureAllByProjectId" resultType="Axure">
+        SELECT *
+        FROM `axure`
+        WHERE project_id = #{project_id}
+    </select>
     <delete id="deleteAxureByAxureId">
         DELETE
         FROM `axure`
@@ -42,14 +47,27 @@
         VALUES (#{user_id}, #{axure_id}, #{time})
     </insert>
     <select id="getRecentViewList" resultType="Map">
-        SELECT *
+        SELECT user_id,
+               time,
+               axure_id,
+               axure_info,
+               axure_name,
+               create_user,
+               last_edit,
+               axure_deprecated,
+               project_id,
+               project_info,
+               project_name,
+               deprecated,
+               prj_last_edit_time,
+               prj_create_time,
+               team_id,
+               team_info,
+               team_name
         FROM `user_axure` u
-                 JOIN `axure` a
-                 JOIN `project` p
-                 JOIN `team` t
-                      ON u.axure_id = a.axure_id
-                          AND a.project_id = p.project_id
-                          AND p.team_id = t.team_id
+                 NATURAL JOIN `axure` a
+                 NATURAL JOIN `project` p
+                 NATURAL JOIN `team` t
         WHERE u.user_id = #{user_id}
         ORDER BY time DESC
         LIMIT 0, 10
@@ -83,14 +101,26 @@
           AND axure_id = #{axure_id}
     </delete>
     <select id="searchFavoriteAxure" resultType="Map">
-        SELECT *
+        SELECT user_id,
+               axure_id,
+               axure_info,
+               axure_name,
+               create_user,
+               last_edit,
+               axure_deprecated,
+               project_id,
+               project_info,
+               project_name,
+               deprecated,
+               prj_last_edit_time,
+               prj_create_time,
+               team_id,
+               team_info,
+               team_name
         FROM `user_favoritedaxure` u
-                 JOIN `axure` a
-                 JOIN `project` p
-                 JOIN `team` t
-                      ON u.axure_id = a.axure_id
-                          AND a.project_id = p.project_id
-                          AND p.team_id = t.team_id
+                 NATURAL JOIN `axure` a
+                 NATURAL JOIN `project` p
+                 NATURAL JOIN `team` t
         WHERE user_id = #{user_id}
     </select>
 </mapper>

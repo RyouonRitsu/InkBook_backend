@@ -1,9 +1,12 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.entity.Axure
+import com.ryouonritsu.inkbook_backend.entity.Documentation
 import com.ryouonritsu.inkbook_backend.entity.Project
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.DocumentationService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
@@ -33,6 +36,9 @@ class ProjectController {
 
     @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var axureService: AxureService
 
     @Autowired
     lateinit var documentationService: DocumentationService
@@ -70,7 +76,8 @@ class ProjectController {
             "message" to "团队id为空！"
         )
         return runCatching {
-            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
             val project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
@@ -85,6 +92,76 @@ class ProjectController {
             mapOf(
                 "success" to false,
                 "message" to "创建项目失败！"
+            )
+        )
+    }
+
+    @PostMapping("/copy")
+    @Tag(name = "项目接口")
+    @Operation(
+        summary = "创建项目副本", description = "复制项目，及其下所属的文档和原型。在三者名称后添加 副本 字样，\n" +
+                "并更新项目创建时间和更新时间，更新文档和原型所属的项目ID，其余保持不变。\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"复制项目成功！\"\n" +
+                "}"
+    )
+    fun copyNewProject(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
+        @RequestParam("project_id") @Parameter(description = "母本项目的项目id") project_id: String,
+        @RequestParam("team_id") @Parameter(description = "创建该项目的团队id") team_id: String?
+    ): Map<String, Any> {
+        val project = projectService.searchProjectByProjectId(project_id) ?: return mapOf(
+            "success" to false,
+            "message" to "项目不存在！"
+        )
+        if (team_id.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "团队id为空！"
+        )
+        val project_name = project.get("project_name")!! + " 副本"
+        val project_info = project.get("project_info")!!
+        var msg = "复制项目失败！"
+        return runCatching {
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val project = Project(project_name, project_info.let {
+                if (it.isNullOrBlank()) {
+                    ""
+                } else it
+            }, time, time, team_id.toLong())
+            projectService.createNewProject(project)
+            val newProjectId = project.project_id
+            msg = "复制原型失败！"
+            axureService.searchAxureAllByProjectId(project_id)?.forEach {
+                val axure = Axure(
+                    it.axure_name + " 副本",
+                    it.axure_info,
+                    newProjectId,
+                    it.title,
+                    it.items,
+                    it.config,
+                    it.config_id,
+                    it.last_edit,
+                    it.create_user
+                )
+                axureService.createNewAxure(axure)
+            }
+
+            msg = "复制文档失败！"
+            docRepository.findByPid(project_id.toInt()).forEach {
+                val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, newProjectId, it.creator!!)
+                docRepository.save(doc)
+            }
+
+            mapOf(
+                "success" to true,
+                "message" to "复制项目成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to msg
             )
         )
     }

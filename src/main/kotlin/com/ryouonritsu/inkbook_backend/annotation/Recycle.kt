@@ -71,7 +71,7 @@ class RecycleAspect {
                         e.printStackTrace()
                         null
                     }
-                    axure?.deprecated ?: true
+                    axure?.axure_deprecated ?: true
                 }
             }
             result = jsonObj
