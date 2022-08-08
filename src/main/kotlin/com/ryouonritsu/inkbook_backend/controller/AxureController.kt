@@ -63,7 +63,7 @@ class AxureController {
                 } else it
             }
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val time = LocalDateTime.now().format(formatter)
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(formatter)
             val axure = Axure(axure_name ?: "", axure_info ?: "", project_id.toInt(), "", "", "", 0, time, name)
             axureService.createNewAxure(axure)
             mapOf(
@@ -253,6 +253,75 @@ class AxureController {
             mapOf(
                 "success" to false,
                 "message" to "查询项目原型列表失败！"
+            )
+        )
+    }
+
+    @PostMapping("/getAxureTemplateInfo")
+    @Tag(name = "原型接口")
+    @Operation(summary = "获得原型模板页面信息", description = "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询原型模板列表成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"axure_template_cover\": \"测试样例\",\n" +
+            "            \"axure_name\": \"测试样例\",\n" +
+            "            \"axure_info\": \"测试样例\",\n" +
+            "            \"title\": \"测试样例\",\n" +
+            "            \"items\": \"测试样例\",\n" +
+            "            \"config\": \"测试样例\",\n" +
+            "            \"config_id\": 0,\n" +
+            "            \"axure_template_id\": 1\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getAxureTemplateInfo(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("axure_template_id") @Parameter(description = "原型模板id") axure_template_id: String
+    ): Map<String, Any> {
+        return runCatching {
+            val axureTemplate = axureService.getAxureTemplateByAxureId(axure_template_id)
+            return mapOf(
+                "success" to true,
+                "message" to "查询原型模板列表成功！",
+                "data" to listOf(axureTemplate)
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查询原型模板列表失败！"
+            )
+        )
+    }
+
+    @PostMapping("/getAxureTemplateList")
+    @Tag(name = "原型接口")
+    @Operation(summary = "展示所有原型模板", description = "{\n" +
+            "    \"success\": true,\n" +
+            "    \"message\": \"查询原型模板列表成功！\",\n" +
+            "    \"data\": [\n" +
+            "        {\n" +
+            "            \"axure_info\": \"测试样例\",\n" +
+            "            \"axure_template_id\": 1,\n" +
+            "            \"axure_name\": \"测试样例\",\n" +
+            "            \"axure_template_cover\": \"测试样例\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}")
+    fun getAxureTemplateList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return runCatching {
+            val axureList = axureService.getAxureTemplateList() ?: arrayListOf()
+            return mapOf(
+                "success" to true,
+                "message" to "查询原型模板列表成功！",
+                "data" to axureList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查询原型模板列表失败！"
             )
         )
     }

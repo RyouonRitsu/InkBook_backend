@@ -64,4 +64,9 @@ class AxureServiceImpl : AxureService {
         axureDao.deleteFavoriteAxure(user_id, axure_id)
 
     override fun searchFavoriteAxure(user_id: String) = axureDao.searchFavoriteAxure(user_id)
+
+    override fun getAxureTemplateList() = axureDao.getAxureTemplateList()
+
+    override fun getAxureTemplateByAxureId(axure_template_id: String) =
+        axureDao.getAxureTemplateByAxureId(axure_template_id)
 }

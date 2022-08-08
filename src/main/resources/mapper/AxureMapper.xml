@@ -123,4 +123,13 @@
                  NATURAL JOIN `team` t
         WHERE user_id = #{user_id}
     </select>
+    <select id="getAxureTemplateList" resultType="Map">
+        SELECT axure_template_id, axure_info, axure_name, axure_template_cover
+        FROM `axure_template`
+    </select>
+    <select id="getAxureTemplateByAxureId" resultType="AxureTemplate">
+        SELECT *
+        FROM `axure_template`
+        WHERE axure_template_id = #{axure_template_id}
+    </select>
 </mapper>

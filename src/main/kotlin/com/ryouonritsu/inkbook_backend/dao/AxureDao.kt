@@ -1,6 +1,7 @@
 package com.ryouonritsu.inkbook_backend.dao
 
 import com.ryouonritsu.inkbook_backend.entity.Axure
+import com.ryouonritsu.inkbook_backend.entity.AxureTemplate
 import org.apache.ibatis.annotations.Mapper
 
 /**
@@ -24,4 +25,6 @@ interface AxureDao {
     fun checkFavoriteAxure(user_id: String, axure_id: String): Map<String, String>?
     fun deleteFavoriteAxure(user_id: String, axure_id: String)
     fun searchFavoriteAxure(user_id: String): List<Map<String, String>>?
+    fun getAxureTemplateList(): List<Map<String, Any>>?
+    fun getAxureTemplateByAxureId(axure_template_id: String): AxureTemplate?
 }
