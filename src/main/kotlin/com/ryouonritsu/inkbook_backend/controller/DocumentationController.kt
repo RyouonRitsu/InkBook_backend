@@ -89,7 +89,10 @@ class DocumentationController {
             defaultValue = ""
         ) @Parameter(description = "文档描述") doc_description: String,
         @RequestParam("doc_content", defaultValue = "") @Parameter(description = "文档内容") doc_content: String,
-        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "项目Id, 项目文档必填此项") project_id: Int,
+        @RequestParam(
+            "project_id",
+            defaultValue = "-1"
+        ) @Parameter(description = "项目Id, 项目文档必填此项") project_id: Int,
         @RequestParam("team_id", defaultValue = "-1") @Parameter(description = "团队Id, 团队文档必填此项") team_id: Int,
         @RequestParam(
             "dest_folder_id",
