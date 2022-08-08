@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
@@ -94,7 +95,7 @@ class AxureController {
                     "message" to "对应原型不存在！"
                 )
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val time = LocalDateTime.now().format(formatter)
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(formatter)
             axureService.updateAxure(axure_id, title ?: "", items ?: "", config ?: "", time)
             projectService.updateProjectLastEditTime(axure.project_id.toString(), time)
             mapOf(
@@ -171,7 +172,7 @@ class AxureController {
             }
             val user_id = TokenUtils.verify(token).second
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val time = LocalDateTime.now().format(formatter)
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(formatter)
             val isViewed = axureService.checkRecentView(user_id.toString(), axure_id)
             if (!isViewed.isNullOrBlank()) {
                 axureService.updateRecentView(user_id.toString(), axure_id, time)

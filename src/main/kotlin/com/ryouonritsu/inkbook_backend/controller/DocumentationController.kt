@@ -284,7 +284,7 @@ class DocumentationController {
             record.lastviewedtime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             user2DocRepository.save(record)
 
-            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             projectService.updateProjectLastEditTime(doc.pid.toString(), time)
 
             mapOf(
