@@ -56,6 +56,9 @@ class ProjectController {
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
 
+    @Autowired
+    lateinit var docDictRepository: DocumentationDictRepository
+
     @PostMapping("/create")
     @Tag(name = "项目接口")
     @Operation(
@@ -87,6 +90,19 @@ class ProjectController {
                     ""
                 } else it
             }, time, time, team_id.toLong())
+            // add project to dict
+            // to 吴: 新增加的文档中心创建项目根目录逻辑(删除应仿照此处改写), 并在填写完毕后解除以下代码部分的注释
+//            val team = /*select team info*/
+//            val prjDict = docDictRepository.save(DocumentationDict(name = project_name))
+//            val prjRoot = docDictRepository.findById(/*team.prjRootId*/).get()
+//            prjRoot.children.add(prjDict)
+//            prjRoot.hasChildren = true
+//            prjDict.parent = prjRoot
+//            docDictRepository.save(prjDict)
+//            docDictRepository.save(prjRoot)
+            // to 吴: 此处应该将${prjDict.id}放入到project实体中保存, 并在每次返回project信息的时候携带上
+//            project.prjDictId = prjDict.id
+            // end add to dict
             projectService.createNewProject(project)
             mapOf(
                 "success" to true,

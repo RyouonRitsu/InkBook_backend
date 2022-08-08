@@ -19,6 +19,6 @@ interface User2DocumentationRepository : JpaRepository<User2Documentation, Long>
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM User2Documentation u WHERE u.user.uid = :userId AND u.doc.did = :docId")
-    fun deleteByUidAndDid(@Param("userId") userId: Long, @Param("docId") docId: Long)
+    @Query("DELETE FROM User2Documentation u WHERE u = ?1")
+    override fun delete(u2d: User2Documentation)
 }

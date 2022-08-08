@@ -3,8 +3,10 @@ package com.ryouonritsu.inkbook_backend.repository
 import com.ryouonritsu.inkbook_backend.entity.Documentation
 import com.ryouonritsu.inkbook_backend.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import javax.transaction.Transactional
 
 @Repository
 interface DocumentationRepository : JpaRepository<Documentation, Long> {
@@ -18,4 +20,9 @@ interface DocumentationRepository : JpaRepository<Documentation, Long> {
 
     @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?2 AND (d.dname LIKE %?1% OR d.ddescription LIKE %?1% OR d.dcontent LIKE %?1%)")
     fun findByKeyword(keyword: String, projectId: Int): List<Documentation>
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM Documentation d WHERE d.did = ?1")
+    override fun deleteById(id: Long)
 }

@@ -1,6 +1,8 @@
 package com.ryouonritsu.inkbook_backend.controller
 
+import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
 import com.ryouonritsu.inkbook_backend.entity.Team
+import com.ryouonritsu.inkbook_backend.repository.DocumentationDictRepository
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
@@ -47,6 +49,9 @@ class TeamController {
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
 
+    @Autowired
+    lateinit var docDictRepository: DocumentationDictRepository
+
     @PostMapping("/create")
     @Tag(name = "团队接口")
     @Operation(summary = "创建新团队", description = "0为超管，1为管理，2为成员。团队信息为可选项")
@@ -67,6 +72,19 @@ class TeamController {
                     ""
                 } else it
             })
+            // add root
+            // to 吴: 新增加的文档中心创建团队根目录逻辑（删除应仿照此处改写）
+            val root = docDictRepository.save(DocumentationDict(name = team.teamName))
+            val prjRoot = docDictRepository.save(DocumentationDict(name = "项目文档区"))
+            root.children.add(prjRoot)
+            root.hasChildren = true
+            prjRoot.parent = root
+            docDictRepository.save(root)
+            docDictRepository.save(prjRoot)
+            // to 吴: 此处应该将${root.id}和${prjRoot.id}放入到team实体中保存, 并在每次返回team信息的时候携带上
+            team.rootId = root.id
+            team.prjRootId = prjRoot.id
+            // end add root
             teamService.createNewTeam(team)
             teamService.addMemberIntoTeam(user_id, team.teamId.toString(), "0")
             mapOf(

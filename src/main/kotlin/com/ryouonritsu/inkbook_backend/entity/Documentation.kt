@@ -34,6 +34,12 @@ class Documentation {
     var user2documentations = mutableListOf<User2Documentation>()
     var deprecated = false
 
+    @ManyToOne(
+        targetEntity = DocumentationDict::class,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH]
+    )
+    var dict: DocumentationDict? = null
+
     constructor(
         doc_name: String,
         doc_description: String?,
@@ -62,6 +68,7 @@ class Documentation {
         "creator_name" to creator?.username,
         "project_id" to "${project?.project_id}",
         "team_id" to "${team?.teamId}",
-        "deprecated" to deprecated
+        "deprecated" to deprecated,
+        "dict_id" to "${dict?.id}"
     )
 }

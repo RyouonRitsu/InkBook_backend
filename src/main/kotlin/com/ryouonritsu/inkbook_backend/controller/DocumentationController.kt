@@ -29,6 +29,9 @@ class DocumentationController {
     lateinit var docRepository: DocumentationRepository
 
     @Autowired
+    lateinit var docDictRepository: DocumentationDictRepository
+
+    @Autowired
     lateinit var userRepository: UserRepository
 
     @Autowired
@@ -75,7 +78,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "新建文档",
-        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id"
+        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id;\n文档存放目录Id如果不填写, 默认存放在项目的文档目录下"
     )
     fun newDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -86,7 +89,11 @@ class DocumentationController {
         ) @Parameter(description = "文档描述") doc_description: String,
         @RequestParam("doc_content", defaultValue = "") @Parameter(description = "文档内容") doc_content: String,
         @RequestParam("project_id") @Parameter(description = "项目Id, 项目文档必填此项") project_id: Int?,
-        @RequestParam("team_id") @Parameter(description = "团队Id, 团队文档必填此项") team_id: Int?
+        @RequestParam("team_id") @Parameter(description = "团队Id, 团队文档必填此项") team_id: Int?,
+        @RequestParam(
+            "destination_folder_id",
+            defaultValue = "-1"
+        ) @Parameter(description = "文档存放目录Id") destination_folder_id: Long
     ): Map<String, Any> {
         val (result, message) = check(doc_name, project_id, team_id)
         if (!result && message != null) return message
@@ -97,7 +104,15 @@ class DocumentationController {
             val team = if (team_id == null && project != null) teamRepository.findById(project.team_id.toInt()).get()
             else if (team_id != null) teamRepository.findById(team_id).get()
             else throw Exception("缺少必填参数, 无法创建文档, 请检查后重试")
-            val doc = Documentation(doc_name!!, doc_description, doc_content, project, team, creator)
+            val doc =
+                docRepository.save(Documentation(doc_name!!, doc_description, doc_content, project, team, creator))
+            val dest = if (destination_folder_id != -1L) docDictRepository.findById(destination_folder_id).get()
+            else docDictRepository.findById(
+                project?.prjDictId ?: throw Exception("无法找到project, 故无法放置文档到项目文件夹")
+            ).get()
+            dest.documents.add(doc)
+            doc.dict = dest
+            docDictRepository.save(dest)
             docRepository.save(doc)
             mapOf(
                 "success" to true,
