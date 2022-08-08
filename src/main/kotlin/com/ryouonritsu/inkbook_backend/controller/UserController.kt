@@ -532,7 +532,7 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(
         summary = "上传文件",
-        description = "将用户上传的文件保存在静态文件目录static/user/\${user_id}/\${file_name}下"
+        description = "将用户上传的文件保存在静态文件目录static/file/\${user_id}/\${file_name}下"
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
