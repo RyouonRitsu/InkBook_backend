@@ -372,7 +372,7 @@ class ProjectController {
             "message" to "关键字为空！"
         )
         return runCatching {
-            val projectList = projectService.searchProjectByKeyWord(team_id, keyword)?:arrayListOf<Project>()
+            val projectList = projectService.searchProjectByKeyWord(team_id, keyword) ?: arrayListOf<Project>()
             mapOf(
                 "success" to true,
                 "message" to "搜索项目成功！",
