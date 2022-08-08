@@ -47,6 +47,6 @@ class DocumentationDict(
         "dir_deprecated" to deprecated,
         "dir_hasChildren" to hasChildren,
         "dir_parent_id" to parent?.id,
-        "dir_documents" to documents.map { it.toDict() }
+        "dir_documents" to documents.filterNot { it.deprecated }.map { it.toDict() }
     )
 }
