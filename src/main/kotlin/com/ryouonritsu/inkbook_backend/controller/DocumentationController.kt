@@ -551,7 +551,7 @@ class DocumentationController {
                 "message" to "文档目录名称不能为空"
             )
         }
-        return try {
+        docDictRepository.findByName(dictName) ?: return try {
             val dest = docDictRepository.findById(dest_folder_id).get()
             val dir = docDictRepository.save(DocumentationDict(dictName, dictDescription))
             dest.children.add(dir)
@@ -575,6 +575,10 @@ class DocumentationController {
                 "message" to (e.message ?: "文档目录创建失败, 发生意外错误")
             )
         }
+        return mapOf(
+            "success" to false,
+            "message" to "同名目录已存在"
+        )
     }
 
     fun walkDir(dir: DocumentationDict): Map<String, Any?> {

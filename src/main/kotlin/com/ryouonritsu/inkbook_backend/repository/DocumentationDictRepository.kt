@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query
 import javax.transaction.Transactional
 
 interface DocumentationDictRepository : JpaRepository<DocumentationDict, Long> {
+    fun findByName(name: String): DocumentationDict?
+
     @Transactional
     @Modifying
     @Query("DELETE FROM DocumentationDict d WHERE d = ?1")
