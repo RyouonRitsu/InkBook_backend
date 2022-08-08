@@ -3,9 +3,7 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.entity.Documentation
 import com.ryouonritsu.inkbook_backend.entity.Project
-import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.DocumentationService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
@@ -35,7 +33,13 @@ class ProjectController {
     lateinit var projectService: ProjectService
 
     @Autowired
+    lateinit var projectRepository: ProjectRepository
+
+    @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var teamRepository: TeamRepository
 
     @Autowired
     lateinit var axureService: AxureService
@@ -150,7 +154,9 @@ class ProjectController {
 
             msg = "复制文档失败！"
             docRepository.findByPid(project_id.toInt()).forEach {
-                val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, newProjectId, it.creator!!)
+                val prj = projectRepository.findById(newProjectId).get()
+                val team = teamRepository.findById(prj.team_id.toInt()).get()
+                val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, prj, team, it.creator!!)
                 docRepository.save(doc)
             }
 

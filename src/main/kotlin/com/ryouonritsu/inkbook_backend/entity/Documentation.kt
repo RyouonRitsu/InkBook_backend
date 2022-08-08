@@ -18,7 +18,13 @@ class Documentation {
     @Column(columnDefinition = "LONGTEXT")
     var dcontent: String? = null
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-    var pid: Int? = null
+//    var pid: Int? = null
+
+    @OneToOne(targetEntity = Project::class)
+    var project: Project? = null
+
+    @OneToOne(targetEntity = Team::class)
+    var team: Team? = null
 
     @OneToOne(targetEntity = User::class)
     @JoinColumn(name = "creator")
@@ -32,13 +38,15 @@ class Documentation {
         doc_name: String,
         doc_description: String?,
         doc_content: String?,
-        project_id: Int,
+        project: Project?,
+        team: Team?,
         creator: User
     ) {
         this.dname = doc_name
         this.ddescription = doc_description
         this.dcontent = doc_content
-        this.pid = project_id
+        this.project = project
+        this.team = team
         this.creator = creator
     }
 
@@ -52,7 +60,8 @@ class Documentation {
         "last_edit_time" to lastedittime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "creator_id" to "${creator?.uid}",
         "creator_name" to creator?.username,
-        "project_id" to "$pid",
+        "project_id" to "${project?.project_id}",
+        "team_id" to "${team?.teamId}",
         "deprecated" to deprecated
     )
 }
