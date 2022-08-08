@@ -21,6 +21,18 @@ class Project(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var project_id = 0
     var deprecated = false
+    var prjDictId = -1L
 
     constructor() : this("", "", "", "", -1)
+
+    fun toDict(): Map<String, Any?> = mapOf(
+        "project_id" to project_id,
+        "project_name" to project_name,
+        "project_info" to project_info,
+        "prj_create_time" to prj_create_time,
+        "prj_last_edit_time" to prj_last_edit_time,
+        "team_id" to team_id,
+        "prj_deprecated" to deprecated,
+        "prj_dict_id" to prjDictId
+    )
 }
