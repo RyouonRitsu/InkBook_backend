@@ -3,6 +3,7 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.service.AxureService
+import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.UserService
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -23,6 +24,9 @@ import java.time.format.DateTimeFormatter
 class AxureController {
     @Autowired
     lateinit var axureService: AxureService
+
+    @Autowired
+    lateinit var projectService: ProjectService
 
     @Autowired
     lateinit var userService: UserService
@@ -75,7 +79,7 @@ class AxureController {
 
     @PostMapping("/update")
     @Tag(name = "原型接口")
-    @Operation(summary = "更新原型页面信息", description = "")
+    @Operation(summary = "更新原型页面信息", description = "保存原型中的页面信息，并更新原型和项目最后编辑时间")
     fun updateAxureInfo(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String,
@@ -84,9 +88,15 @@ class AxureController {
         @RequestParam("items", required = false) @Parameter(description = "页面信息中的items") items: String?,
     ): Map<String, Any> {
         return runCatching {
+            val axure = axureService.selectAxureByAxureId(axure_id)
+                ?: return mapOf(
+                    "success" to false,
+                    "message" to "对应原型不存在！"
+                )
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val time = LocalDateTime.now().format(formatter)
             axureService.updateAxure(axure_id, title ?: "", items ?: "", config ?: "", time)
+            projectService.updateProjectLastEditTime(axure.project_id.toString(), time)
             mapOf(
                 "success" to true,
                 "message" to "更新原型页面信息成功！"

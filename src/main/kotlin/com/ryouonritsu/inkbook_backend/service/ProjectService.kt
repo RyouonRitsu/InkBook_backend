@@ -14,4 +14,5 @@ interface ProjectService {
     fun searchProjectByTeamId(team_id: String): List<Map<String, String>>?
     fun searchProjectByProjectId(project_id: String): Map<String, String>?
     fun deprecateProjectByProjectId(project_id: String, deprecated: Boolean)
+    fun updateProjectLastEditTime(project_id: String, time: String)
 }

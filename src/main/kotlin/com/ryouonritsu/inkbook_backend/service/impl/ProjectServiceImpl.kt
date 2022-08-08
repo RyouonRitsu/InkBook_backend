@@ -35,4 +35,9 @@ class ProjectServiceImpl : ProjectService {
         project_id: String,
         deprecated: Boolean
     ) = projectDao.deprecateProjectByProjectId(project_id, deprecated)
+
+    override fun updateProjectLastEditTime(
+        project_id: String,
+        time: String
+    ) = projectDao.updateProjectLastEditTime(project_id, time)
 }

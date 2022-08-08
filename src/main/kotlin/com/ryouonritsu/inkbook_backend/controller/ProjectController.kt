@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  *
@@ -67,11 +69,12 @@ class ProjectController {
             "message" to "团队id为空！"
         )
         return runCatching {
+            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
             val project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
-            }, team_id.toLong())
+            }, time, time, team_id.toLong())
             projectService.createNewProject(project)
             mapOf(
                 "success" to true,
@@ -241,31 +244,28 @@ class ProjectController {
     @Tag(name = "项目接口")
     @Operation(
         summary = "获得团队项目列表",
-        description = "返回团队ID对应团队的所有项目，deprecated为1（true）表示已被弃置，放入回收站" +
+        description = "返回团队ID对应团队的所有项目，deprecated为true表示已被弃置，放入回收站" +
                 "\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队项目成功！\",\n" +
                 "    \"data\": [\n" +
                 "        {\n" +
-                "            \"project_id\": 2,\n" +
-                "            \"team_id\": \"1\",\n" +
-                "            \"project_name\": \"55555\",\n" +
-                "            \"project_info\": \"\",\n" +
-                "            \"deprecated\": \"0\"\n" +
+                "            \"create_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"project_id\": 62,\n" +
+                "            \"last_edit_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"deprecated\": false,\n" +
+                "            \"team_id\": 5,\n" +
+                "            \"project_name\": \"hgh\",\n" +
+                "            \"project_info\": \"v\"\n" +
                 "        },\n" +
                 "        {\n" +
-                "            \"project_id\": 3,\n" +
-                "            \"team_id\": \"1\",\n" +
-                "            \"project_name\": \"123\",\n" +
-                "            \"project_info\": \"\",\n" +
-                "            \"deprecated\": \"1\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"project_id\": 4,\n" +
-                "            \"team_id\": \"1\",\n" +
-                "            \"project_name\": \"1234\",\n" +
-                "            \"project_info\": \"\",\n" +
-                "            \"deprecated\": \"1\"\n" +
+                "            \"create_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"project_id\": 80,\n" +
+                "            \"last_edit_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"deprecated\": false,\n" +
+                "            \"team_id\": 5,\n" +
+                "            \"project_name\": \"asas\",\n" +
+                "            \"project_info\": \"sa\"\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}"
@@ -301,13 +301,17 @@ class ProjectController {
                 "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"查询团队信息成功！\",\n" +
-                "    \"data\": [\n{\n" +
-                "        \"project_id\": 3,\n" +
-                "        \"team_id\": \"1\",\n" +
-                "        \"project_name\": \"新名字\",\n" +
-                "        \"project_info\": \"\"\n" +
-                "    }\n" +
-                "   ]\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"create_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"project_id\": 13,\n" +
+                "            \"last_edit_time\": \"2022-08-08 09:29:09\",\n" +
+                "            \"deprecated\": false,\n" +
+                "            \"team_id\": 20,\n" +
+                "            \"project_name\": \"我是谁啊\",\n" +
+                "            \"project_info\": \"皮卡丘\"\n" +
+                "        }\n" +
+                "    ]\n" +
                 "}"
     )
     fun getProject(

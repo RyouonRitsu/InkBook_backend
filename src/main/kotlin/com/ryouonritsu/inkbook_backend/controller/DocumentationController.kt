@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/doc")
@@ -206,7 +207,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "更新文档信息",
-        description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作**不会刷新**文档的最后编辑时间和最后浏览时间"
+        description = "更新文档信息, 留空表示不更新此参数对应的信息, 此操作**不会刷新**文档和项目的最后编辑时间和最后浏览时间"
     )
     fun updateDocInfo(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -258,7 +259,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "保存文档",
-        description = "保存文档内容, 此操作会**刷新**文档**最后编辑时间**和**最后浏览时间**"
+        description = "保存文档内容, 此操作会**刷新**文档和项目**最后编辑时间**和**最后浏览时间**"
     )
     fun save(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -282,6 +283,10 @@ class DocumentationController {
             val record = user2DocRepository.findByUserAndDoc(user, doc) ?: User2Documentation(user, doc)
             record.lastviewedtime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
             user2DocRepository.save(record)
+
+            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            projectService.updateProjectLastEditTime(doc.pid.toString(), time)
+
             mapOf(
                 "success" to true,
                 "message" to "文档保存成功"

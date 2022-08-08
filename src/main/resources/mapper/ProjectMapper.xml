@@ -42,4 +42,9 @@
         FROM `project`
         WHERE project_id = #{project_id}
     </select>
+    <update id="updateProjectLastEditTime" parameterType="String">
+        UPDATE `project`
+        SET last_edit_time = #{time}
+        WHERE project_id = #{project_id}
+    </update>
 </mapper>
