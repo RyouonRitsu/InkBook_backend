@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 class DocumentationDict(
-    var name: String,
+    @Column(unique = true) var name: String,
     var description: String = ""
 ) {
     @Id
