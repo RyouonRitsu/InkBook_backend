@@ -13,7 +13,7 @@ import javax.persistence.Id
 class Project(
     var project_name: String,
     var project_info: String?,
-    var create_time: String,
+    var prj_create_time: String,
     var prj_last_edit_time: String,
     var team_id: Long,
 ) {
