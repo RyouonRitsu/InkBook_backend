@@ -67,7 +67,9 @@ class Documentation {
         "creator_id" to "${creator?.uid}",
         "creator_name" to creator?.username,
         "project_id" to "${project?.project_id}",
+        "project_name" to project?.project_name,
         "team_id" to "${team?.teamId}",
+        "team_name" to team?.teamName,
         "deprecated" to deprecated,
         "dict_id" to "${dict?.id}"
     )

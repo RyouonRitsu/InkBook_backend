@@ -2,6 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Documentation
+import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
 import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.ProjectService
@@ -52,14 +53,14 @@ class DocumentationController {
     @Autowired
     lateinit var redisUtils: RedisUtils
 
-    fun check(doc_name: String?, project_id: Int?, team_id: Int?): Pair<Boolean, Map<String, Any>?> {
+    fun check(doc_name: String?, project_id: Int, team_id: Int): Pair<Boolean, Map<String, Any>?> {
         if (doc_name.isNullOrBlank()) return Pair(
             false, mapOf(
                 "success" to false,
                 "message" to "文档名称不能为空"
             )
         )
-        if (project_id == null && team_id == null) return Pair(
+        if (project_id == -1 && team_id == -1) return Pair(
             false, mapOf(
                 "success" to false,
                 "message" to "项目Id和团队Id至少其一不能为空"
@@ -78,7 +79,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "新建文档",
-        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id;\n文档存放目录Id如果不填写, 默认存放在项目的文档目录下"
+        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id;\n目标文档目录Id如果不填写, 默认存放在项目的文档目录下"
     )
     fun newDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -88,25 +89,25 @@ class DocumentationController {
             defaultValue = ""
         ) @Parameter(description = "文档描述") doc_description: String,
         @RequestParam("doc_content", defaultValue = "") @Parameter(description = "文档内容") doc_content: String,
-        @RequestParam("project_id") @Parameter(description = "项目Id, 项目文档必填此项") project_id: Int?,
-        @RequestParam("team_id") @Parameter(description = "团队Id, 团队文档必填此项") team_id: Int?,
+        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "项目Id, 项目文档必填此项") project_id: Int,
+        @RequestParam("team_id", defaultValue = "-1") @Parameter(description = "团队Id, 团队文档必填此项") team_id: Int,
         @RequestParam(
-            "destination_folder_id",
+            "dest_folder_id",
             defaultValue = "-1"
-        ) @Parameter(description = "文档存放目录Id") destination_folder_id: Long
+        ) @Parameter(description = "目标文档目录Id") dest_folder_id: Long
     ): Map<String, Any> {
         val (result, message) = check(doc_name, project_id, team_id)
         if (!result && message != null) return message
         return runCatching {
             val creator_id = TokenUtils.verify(token).second
             val creator = userRepository.findById(creator_id).get()
-            val project = if (project_id != null) projectRepository.findById(project_id).get() else null
-            val team = if (team_id == null && project != null) teamRepository.findById(project.team_id.toInt()).get()
-            else if (team_id != null) teamRepository.findById(team_id).get()
+            val project = if (project_id != -1) projectRepository.findById(project_id).get() else null
+            val team = if (team_id == -1 && project != null) teamRepository.findById(project.team_id.toInt()).get()
+            else if (team_id != -1) teamRepository.findById(team_id).get()
             else throw Exception("缺少必填参数, 无法创建文档, 请检查后重试")
             val doc =
                 docRepository.save(Documentation(doc_name!!, doc_description, doc_content, project, team, creator))
-            val dest = if (destination_folder_id != -1L) docDictRepository.findById(destination_folder_id).get()
+            val dest = if (dest_folder_id != -1L) docDictRepository.findById(dest_folder_id).get()
             else docDictRepository.findById(
                 project?.prjDictId ?: throw Exception("无法找到project, 故无法放置文档到项目文件夹")
             ).get()
@@ -519,6 +520,104 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to (e.message ?: "获取失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/mkdir")
+    @Tag(name = "文档接口")
+    @Operation(summary = "创建文档目录", description = "创建文档目录在指定dest_folder_id下")
+    fun mkdir(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("dest_folder_id") @Parameter(description = "目标文档目录Id") dest_folder_id: Long?,
+        @RequestParam("dict_name") @Parameter(description = "文档目录名称") dictName: String?,
+        @RequestParam(
+            "dict_description",
+            defaultValue = ""
+        ) @Parameter(description = "文档目录描述") dictDescription: String
+    ): Map<String, Any> {
+        if (dest_folder_id == null) {
+            return mapOf(
+                "success" to false,
+                "message" to "目标文档目录Id不能为空"
+            )
+        }
+        if (dictName.isNullOrBlank()) {
+            return mapOf(
+                "success" to false,
+                "message" to "文档目录名称不能为空"
+            )
+        }
+        return try {
+            val dest = docDictRepository.findById(dest_folder_id).get()
+            val dir = docDictRepository.save(DocumentationDict(dictName, dictDescription))
+            dest.children.add(dir)
+            dest.hasChildren = true
+            dir.parent = dest
+            docDictRepository.save(dest)
+            docDictRepository.save(dir)
+            mapOf(
+                "success" to true,
+                "message" to "文档目录创建成功"
+            )
+        } catch (e: NoSuchElementException) {
+            mapOf(
+                "success" to false,
+                "message" to "目标文档目录不存在"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档目录创建失败, 发生意外错误")
+            )
+        }
+    }
+
+    fun walkDir(dir: DocumentationDict): Map<String, Any?> {
+        val result = HashMap(dir.toDict()).apply {
+            if (dir.hasChildren || dir.children.isNotEmpty()) {
+                this["children"] = dir.children.map { walkDir(it) }
+                if (!dir.hasChildren) {
+                    this["dir_hasChildren"] = true
+                    dir.hasChildren = true
+                    docDictRepository.save(dir)
+                }
+            }
+        }
+        return result
+    }
+
+    @PostMapping("/walkDir")
+    @Tag(name = "文档接口")
+    @Operation(summary = "遍历文档目录", description = "遍历指定的文档目录")
+    fun traverseDir(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("folder_id") @Parameter(description = "文档目录Id") folder_id: Long?
+    ): Map<String, Any> {
+        if (folder_id == null) {
+            return mapOf(
+                "success" to false,
+                "message" to "文档目录Id不能为空"
+            )
+        }
+        return try {
+            val dir = docDictRepository.findById(folder_id).get()
+            mapOf(
+                "success" to true,
+                "message" to "文档目录遍历成功",
+                "data" to listOf(walkDir(dir))
+            )
+        } catch (e: NoSuchElementException) {
+            mapOf(
+                "success" to false,
+                "message" to "文档目录不存在"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档目录遍历失败, 发生意外错误")
             )
         }
     }

@@ -2,10 +2,7 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
 import com.ryouonritsu.inkbook_backend.entity.Team
-import com.ryouonritsu.inkbook_backend.repository.DocumentationDictRepository
-import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.*
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -27,6 +24,9 @@ import javax.servlet.http.HttpServletRequest
 class TeamController {
     @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var teamRepository: TeamRepository
 
     @Autowired
     lateinit var userService: UserService
@@ -85,7 +85,8 @@ class TeamController {
             team.rootId = root.id
             team.prjRootId = prjRoot.id
             // end add root
-            teamService.createNewTeam(team)
+//            teamService.createNewTeam(team) to 吴: 此处为了测试展示注释掉了, 你后续再改你的Mapper
+            teamRepository.save(team)
             teamService.addMemberIntoTeam(user_id, team.teamId.toString(), "0")
             mapOf(
                 "success" to true,
