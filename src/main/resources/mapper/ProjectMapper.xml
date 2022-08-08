@@ -44,7 +44,7 @@
     </select>
     <update id="updateProjectLastEditTime" parameterType="String">
         UPDATE `project`
-        SET last_edit_time = #{time}
+        SET prj_last_edit_time = #{time}
         WHERE project_id = #{project_id}
     </update>
 </mapper>
