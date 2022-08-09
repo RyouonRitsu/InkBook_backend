@@ -36,7 +36,8 @@ class AxureController {
     @Tag(name = "原型接口")
     @Operation(
         summary = "创建新原型",
-        description = "原型简介为可选项，同时会将发起请求的用户作为原型创建者，若有真名则展示真名，否则展示用户名。\n{\n" +
+        description = "原型简介为可选项，同时会将发起请求的用户作为原型创建者，若有真名则展示真名，否则展示用户名。\n" +
+                "原型模板id为可选项，不填或为0表示不用模板\n{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"创建原型成功！\"\n" +
                 "}"
@@ -46,11 +47,13 @@ class AxureController {
         @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
         @RequestParam("axure_info", required = false) @Parameter(description = "原型简介") axure_info: String?,
         @RequestParam("project_id") @Parameter(description = "所在项目id") project_id: String?,
+        @RequestParam("axure_template_id", required = false) @Parameter(description = "原型模板id") axure_template_id: Int?,
     ): Map<String, Any> {
         if (project_id.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "项目id为空！"
         )
+        val axureTemplateId = axure_template_id ?: 0
         return runCatching {
             val user_id = TokenUtils.verify(token).second
             val user = userService.get(user_id) ?: return mapOf(
@@ -66,6 +69,21 @@ class AxureController {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(formatter)
             val axure = Axure(axure_name ?: "", axure_info ?: "", project_id.toInt(), "", "", "", 0, time, name)
             axureService.createNewAxure(axure)
+            if (axureTemplateId > 0) {
+                val axureTemplate = axureService.getAxureTemplateByAxureId(axureTemplateId.toString())
+                if (axureTemplate != null) {
+                    axureService.updateAxure(
+                        axure.axure_id.toString(),
+                        axureTemplate.title ?: "",
+                        axureTemplate.items ?: "",
+                        axureTemplate.config ?: "",
+                        time
+                    )
+                } else return mapOf(
+                    "success" to false,
+                    "message" to "模板不存在！"
+                )
+            }
             mapOf(
                 "success" to true,
                 "message" to "创建原型成功！"
