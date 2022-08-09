@@ -14,10 +14,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -368,7 +365,7 @@ class ProjectController {
         )
     }
 
-    @PostMapping("/search")
+    @GetMapping("/search")
     @Tag(name = "项目接口")
     @Operation(
         summary = "搜索项目", description = "根据项目名字或简介在所在团队由关键字进行模糊搜索\n" +
