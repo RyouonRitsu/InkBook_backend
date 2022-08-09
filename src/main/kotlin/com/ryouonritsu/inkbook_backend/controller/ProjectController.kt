@@ -85,16 +85,15 @@ class ProjectController {
         )
         return runCatching {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             var project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
             }, time, time, team_id.toLong())
             project = projectRepository.save(project)
-            // add project to dict
-            // to 吴: 新增加的文档中心创建项目根目录逻辑(删除应仿照此处改写)
-            val team = teamRepository.findById(team_id.toInt()).get() // 此处可能有bug
+
+            val team = teamRepository.findById(team_id.toInt()).get()
             val prjDict = docDictRepository.save(
                 DocumentationDict(
                     name = project_name,
@@ -153,13 +152,33 @@ class ProjectController {
         return runCatching {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            val project = Project(project_name, project_info.let {
+            var newProject = Project(project_name, project_info.let {
                 it.ifBlank {
                     ""
                 }
             }, time, time, team_id.toLong())
-            projectService.createNewProject(project)
-            val newProjectId = project.project_id
+            newProject = projectRepository.save(newProject)
+
+            val team = teamRepository.findById(team_id.toInt()).get()
+            val prjDict = docDictRepository.save(
+                DocumentationDict(
+                    name = project_name,
+                    pid = newProject.project_id,
+                    tid = team.teamId
+                )
+            )
+            val prjRoot = docDictRepository.findById(team.prjRootId).get()
+            prjRoot.children.add(prjDict)
+            prjRoot.hasChildren = true
+            prjDict.parent = prjRoot
+            docDictRepository.save(prjDict)
+            docDictRepository.save(prjRoot)
+
+            newProject.prjDictId = prjDict.id
+
+            projectRepository.save(newProject)
+
+            val newProjectId = newProject.project_id
             msg = "复制原型失败！"
             axureService.searchAxureAllByProjectId(project_id)?.forEach {
                 val axure = Axure(

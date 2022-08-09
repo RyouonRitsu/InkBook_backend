@@ -3,8 +3,8 @@
 <mapper namespace="com.ryouonritsu.inkbook_backend.dao.ProjectDao">
     <insert id="createNewProject" parameterType="Project" useGeneratedKeys="true" keyProperty="project_id">
         INSERT INTO `project`(`project_name`, `project_info`, `team_id`, `deprecated`, `prj_last_edit_time`,
-                              `prj_create_time`)
-        VALUES (#{project_name}, #{project_info}, #{team_id}, false, #{prj_last_edit_time}, #{prj_create_time})
+                              `prj_create_time`, `prj_dict_id`)
+        VALUES (#{project_name}, #{project_info}, #{team_id}, false, #{prj_last_edit_time}, #{prj_create_time}, -1)
     </insert>
     <select id="searchTeamIdByProjectId" resultType="String">
         SELECT team_id
@@ -21,6 +21,9 @@
         UPDATE `documentation`
         SET deprecated = #{deprecated}
         WHERE project_project_id = #{project_id};
+        UPDATE `documentation_dict`
+        SET deprecated = #{deprecated}
+        WHERE pid = #{project_id};
     </update>
     <delete id="deleteProject">
         DELETE
