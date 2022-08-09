@@ -539,9 +539,22 @@ class DocumentationController {
                 "message" to "文档目录名称不能为空"
             )
         }
-        docDictRepository.findByName(dictName) ?: return try {
-            val dest = docDictRepository.findById(dest_folder_id).get()
-            val dir = docDictRepository.save(DocumentationDict(dictName, dictDescription))
+        val dest = try {
+            docDictRepository.findById(dest_folder_id).get()
+        } catch (e: NoSuchElementException) {
+            return mapOf(
+                "success" to false,
+                "message" to "目标文档目录不存在"
+            )
+        }
+        docDictRepository.findByNameAndTid(dictName, dest.tid) ?: return try {
+            val dir = docDictRepository.save(
+                DocumentationDict(
+                    name = dictName,
+                    description = dictDescription,
+                    tid = dest.tid
+                )
+            )
             dest.children.add(dir)
             dest.hasChildren = true
             dir.parent = dest
@@ -550,11 +563,6 @@ class DocumentationController {
             mapOf(
                 "success" to true,
                 "message" to "文档目录创建成功"
-            )
-        } catch (e: NoSuchElementException) {
-            mapOf(
-                "success" to false,
-                "message" to "目标文档目录不存在"
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -585,7 +593,7 @@ class DocumentationController {
         return result
     }
 
-    @PostMapping("/walkDir")
+    @GetMapping("/walkDir")
     @Tag(name = "文档接口")
     @Operation(summary = "遍历文档目录", description = "遍历指定的文档目录")
     fun traverseDir(

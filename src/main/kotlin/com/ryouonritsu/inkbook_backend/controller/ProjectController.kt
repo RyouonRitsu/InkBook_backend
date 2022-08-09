@@ -86,15 +86,22 @@ class ProjectController {
         return runCatching {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
-            val project = Project(project_name, project_info.let {
+            var project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
             }, time, time, team_id.toLong())
+            project = projectRepository.save(project)
             // add project to dict
             // to 吴: 新增加的文档中心创建项目根目录逻辑(删除应仿照此处改写)
             val team = teamRepository.findById(team_id.toInt()).get() // 此处可能有bug
-            val prjDict = docDictRepository.save(DocumentationDict(name = project_name))
+            val prjDict = docDictRepository.save(
+                DocumentationDict(
+                    name = project_name,
+                    pid = project.project_id,
+                    tid = team.teamId
+                )
+            )
             val prjRoot = docDictRepository.findById(team.prjRootId).get()
             prjRoot.children.add(prjDict)
             prjRoot.hasChildren = true
@@ -140,16 +147,16 @@ class ProjectController {
             "success" to false,
             "message" to "团队id为空！"
         )
-        val project_name = project.get("project_name")!! + " 副本"
-        val project_info = project.get("project_info")!!
+        val project_name = project["project_name"]!! + " 副本"
+        val project_info = project["project_info"]!!
         var msg = "复制项目失败！"
         return runCatching {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             val project = Project(project_name, project_info.let {
-                if (it.isNullOrBlank()) {
+                it.ifBlank {
                     ""
-                } else it
+                }
             }, time, time, team_id.toLong())
             projectService.createNewProject(project)
             val newProjectId = project.project_id
@@ -395,7 +402,7 @@ class ProjectController {
             "message" to "关键字为空！"
         )
         return runCatching {
-            val projectList = projectService.searchProjectByKeyWord(team_id, keyword) ?: arrayListOf<Project>()
+            val projectList = projectService.searchProjectByKeyWord(team_id, keyword) ?: arrayListOf()
             mapOf(
                 "success" to true,
                 "message" to "搜索项目成功！",

@@ -7,8 +7,10 @@ import javax.persistence.*
 
 @Entity
 class DocumentationDict(
-    @Column(unique = true) var name: String,
-    var description: String = ""
+    var name: String,
+    var description: String = "",
+    var pid: Int = 0,
+    var tid: Int
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +38,7 @@ class DocumentationDict(
     @OneToMany(targetEntity = Documentation::class, mappedBy = "dict", cascade = [CascadeType.ALL])
     var documents = mutableListOf<Documentation>()
 
-    constructor() : this(name = "")
+    constructor() : this(name = "", tid = -1)
 
     fun toDict() = mapOf(
         "dir_id" to id,
