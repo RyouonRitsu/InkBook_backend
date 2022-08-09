@@ -85,7 +85,7 @@ class TeamController {
             team.rootId = root.id
             team.prjRootId = prjRoot.id
             // end add root
-//            teamService.createNewTeam(team) to 吴: 此处为了测试展示注释掉了, 你后续再改你的Mapper
+//            teamService.createNewTeam(team) to 吴: 此处为了测试暂时注释掉了, 你后续再改你的Mapper
             teamRepository.save(team)
             teamService.addMemberIntoTeam(user_id, team.teamId.toString(), "0")
             mapOf(
