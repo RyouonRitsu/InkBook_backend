@@ -20,7 +20,7 @@
         WHERE project_id = #{project_id};
         UPDATE `documentation`
         SET deprecated = #{deprecated}
-        WHERE pid = #{project_id};
+        WHERE project_project_id = #{project_id};
     </update>
     <delete id="deleteProject">
         DELETE

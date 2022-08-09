@@ -257,7 +257,7 @@ class AxureController {
         )
     }
 
-    @PostMapping("/getAxureTemplateInfo")
+    @GetMapping("/getAxureTemplateInfo")
     @Tag(name = "原型接口")
     @Operation(summary = "获得原型模板页面信息", description = "{\n" +
             "    \"success\": true,\n" +
@@ -295,7 +295,7 @@ class AxureController {
         )
     }
 
-    @PostMapping("/getAxureTemplateList")
+    @GetMapping("/getAxureTemplateList")
     @Tag(name = "原型接口")
     @Operation(summary = "展示所有原型模板", description = "{\n" +
             "    \"success\": true,\n" +

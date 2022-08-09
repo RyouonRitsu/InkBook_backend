@@ -81,12 +81,11 @@ class TeamController {
             prjRoot.parent = root
             docDictRepository.save(root)
             docDictRepository.save(prjRoot)
-            // to 吴: 此处应该将${root.id}和${prjRoot.id}放入到team实体中保存, 并在每次返回team信息的时候携带上
+
             team.rootId = root.id
             team.prjRootId = prjRoot.id
-            // end add root
-//            teamService.createNewTeam(team) to 吴: 此处为了测试暂时注释掉了, 你后续再改你的Mapper
             teamRepository.save(team)
+
             teamService.addMemberIntoTeam(user_id, team.teamId.toString(), "0")
             mapOf(
                 "success" to true,

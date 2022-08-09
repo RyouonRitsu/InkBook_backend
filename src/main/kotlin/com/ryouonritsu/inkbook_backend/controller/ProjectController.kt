@@ -101,10 +101,9 @@ class ProjectController {
             prjDict.parent = prjRoot
             docDictRepository.save(prjDict)
             docDictRepository.save(prjRoot)
-            // to 吴: 此处应该将${prjDict.id}放入到project实体中保存, 并在每次返回project信息的时候携带上
+
             project.prjDictId = prjDict.id
-            // end add to dict
-//            projectService.createNewProject(project) to 吴: 此处为了测试暂时注释掉了, 你后续再改你的Mapper
+
             projectRepository.save(project)
             mapOf(
                 "success" to true,
