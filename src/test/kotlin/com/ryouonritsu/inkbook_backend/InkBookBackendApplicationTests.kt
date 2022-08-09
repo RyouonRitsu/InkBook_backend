@@ -25,8 +25,8 @@ class InkBookBackendApplicationTests {
 
     @Test
     fun test1() {
-        var d1 = docDictRepository.save(DocumentationDict(name = "d1"))
-        var d2 = docDictRepository.save(DocumentationDict(name = "d2"))
+        var d1 = docDictRepository.save(DocumentationDict(name = "d1", tid = 0))
+        var d2 = docDictRepository.save(DocumentationDict(name = "d2", tid = 0))
         println(d1.id)
         val id1 = d1.id
         println(d2.id)

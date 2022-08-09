@@ -74,8 +74,8 @@ class TeamController {
             })
             // add root
             // to 吴: 新增加的文档中心创建团队根目录逻辑（删除应仿照此处改写）
-            val root = docDictRepository.save(DocumentationDict(name = team.teamName))
-            val prjRoot = docDictRepository.save(DocumentationDict(name = "项目文档区"))
+            val root = docDictRepository.save(DocumentationDict(name = team.teamName, tid = team.teamId))
+            val prjRoot = docDictRepository.save(DocumentationDict(name = "项目文档区", tid = team.teamId))
             root.children.add(prjRoot)
             root.hasChildren = true
             prjRoot.parent = root
