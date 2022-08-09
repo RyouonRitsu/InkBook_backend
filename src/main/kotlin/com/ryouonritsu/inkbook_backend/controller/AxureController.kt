@@ -261,10 +261,11 @@ class AxureController {
     @Tag(name = "原型接口")
     @Operation(summary = "获得原型模板页面信息", description = "{\n" +
             "    \"success\": true,\n" +
-            "    \"message\": \"查询原型模板列表成功！\",\n" +
+            "    \"message\": \"查询原型模板页面信息成功！\",\n" +
             "    \"data\": [\n" +
             "        {\n" +
-            "            \"axure_template_cover\": \"测试样例\",\n" +
+            "            \"axure_template_cover\": \"封面url\",\n" +
+            "            \"axure_template_preview\": \"预览url\",\n" +
             "            \"axure_name\": \"测试样例\",\n" +
             "            \"axure_info\": \"测试样例\",\n" +
             "            \"title\": \"测试样例\",\n" +
@@ -283,13 +284,13 @@ class AxureController {
             val axureTemplate = axureService.getAxureTemplateByAxureId(axure_template_id)
             return mapOf(
                 "success" to true,
-                "message" to "查询原型模板列表成功！",
+                "message" to "查询原型模板页面信息成功！",
                 "data" to listOf(axureTemplate)
             )
         }.onFailure { it.printStackTrace() }.getOrDefault(
             mapOf(
                 "success" to false,
-                "message" to "查询原型模板列表失败！"
+                "message" to "查询原型模板页面信息失败！"
             )
         )
     }
@@ -301,10 +302,11 @@ class AxureController {
             "    \"message\": \"查询原型模板列表成功！\",\n" +
             "    \"data\": [\n" +
             "        {\n" +
+            "            \"axure_template_preview\": \"预览url\",\n" +
             "            \"axure_info\": \"测试样例\",\n" +
             "            \"axure_template_id\": 1,\n" +
             "            \"axure_name\": \"测试样例\",\n" +
-            "            \"axure_template_cover\": \"测试样例\"\n" +
+            "            \"axure_template_cover\": \"封面url\"\n" +
             "        }\n" +
             "    ]\n" +
             "}")

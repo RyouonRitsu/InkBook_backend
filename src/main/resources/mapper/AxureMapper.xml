@@ -124,7 +124,7 @@
         WHERE user_id = #{user_id}
     </select>
     <select id="getAxureTemplateList" resultType="Map">
-        SELECT axure_template_id, axure_info, axure_name, axure_template_cover
+        SELECT axure_template_id, axure_info, axure_name, axure_template_cover, axure_template_preview
         FROM `axure_template`
     </select>
     <select id="getAxureTemplateByAxureId" resultType="AxureTemplate">
