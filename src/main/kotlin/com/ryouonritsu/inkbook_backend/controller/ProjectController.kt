@@ -104,7 +104,7 @@ class ProjectController {
             // to 吴: 此处应该将${prjDict.id}放入到project实体中保存, 并在每次返回project信息的时候携带上
             project.prjDictId = prjDict.id
             // end add to dict
-//            projectService.createNewProject(project) to 吴: 此处为了测试展示注释掉了, 你后续再改你的Mapper
+//            projectService.createNewProject(project) to 吴: 此处为了测试暂时注释掉了, 你后续再改你的Mapper
             projectRepository.save(project)
             mapOf(
                 "success" to true,
@@ -271,7 +271,7 @@ class ProjectController {
                 "success" to false,
                 "message" to "非该项目所在团队成员！"
             )
-            val docList = documentationService.findByProjectId(project_id.toInt())
+            val docList = docRepository.findByPid(project_id.toInt())
             docList.forEach {
                 val doc_id = it.did ?: -1
                 val user = userRepository.findById(TokenUtils.verify(token).second).get()
