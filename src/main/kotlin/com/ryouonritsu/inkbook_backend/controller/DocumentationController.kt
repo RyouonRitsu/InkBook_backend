@@ -35,6 +35,7 @@ class DocumentationController {
 
     @Autowired
     lateinit var docTemplateRepository: DocumentationTemplateRepository
+
     @Autowired
     lateinit var userRepository: UserRepository
 
@@ -128,14 +129,16 @@ class DocumentationController {
                         "message" to "模板不存在"
                     )
                 }
-                docRepository.save(Documentation(
-                    docTemplate = template,
-                    name = doc_name,
-                    description = doc_description.ifBlank { null },
-                    project = project,
-                    team = team,
-                    creator = creator
-                ))
+                docRepository.save(
+                    Documentation(
+                        docTemplate = template,
+                        name = doc_name,
+                        description = doc_description.ifBlank { null },
+                        project = project,
+                        team = team,
+                        creator = creator
+                    )
+                )
             }
             val dest = if (dest_folder_id != -1L) docDictRepository.findById(dest_folder_id).get()
             else docDictRepository.findById(
@@ -644,9 +647,11 @@ class DocumentationController {
 
     @PostMapping("/editTemplate")
     @Tag(name = "文档接口")
-    @Operation(summary = "编辑文档模板", description = "编辑文档模板, 如不提供模版Id, 则为新建模版操作, " +
-            "各种封面和预览文件url可以通过用户的上传文件接口获得;\n" +
-            "如果提供模板Id, 则对对应模板进行更新操作, 留空参数表示此参数不做修改")
+    @Operation(
+        summary = "编辑文档模板",
+        description = "编辑文档模板, 如不提供模版Id, 则为新建模版操作, 各种封面和预览文件url可以通过用户的上传文件接口获得;\n" +
+                "如果提供模板Id, 则对对应模板进行更新操作, 留空参数表示此参数不做修改"
+    )
     fun editTemplate(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("template_id", defaultValue = "-1") @Parameter(description = "模版Id") template_id: Long,
@@ -697,6 +702,34 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to (e.message ?: "文档模板编辑失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/deleteTemplate")
+    @Tag(name = "文档接口")
+    @Operation(summary = "删除文档模板", description = "删除指定Id的文档模板")
+    fun deleteTemplate(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("template_id") @Parameter(description = "文档模板Id") template_id: Long
+    ): Map<String, Any> {
+        return try {
+            docTemplateRepository.findById(template_id).get()
+            docTemplateRepository.deleteById(template_id)
+            mapOf(
+                "success" to true,
+                "message" to "文档模板删除成功"
+            )
+        } catch (e: NoSuchElementException) {
+            mapOf(
+                "success" to false,
+                "message" to "文档模板不存在"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档模板删除失败, 发生意外错误")
             )
         }
     }
