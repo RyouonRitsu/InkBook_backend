@@ -18,7 +18,6 @@ class Documentation {
     @Column(columnDefinition = "LONGTEXT")
     var dcontent: String? = null
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
-//    var pid: Int? = null
 
     @OneToOne(targetEntity = Project::class)
     var project: Project? = null
