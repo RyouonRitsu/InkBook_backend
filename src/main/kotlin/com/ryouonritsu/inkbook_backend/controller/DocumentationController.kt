@@ -585,7 +585,7 @@ class DocumentationController {
         return result
     }
 
-    @PostMapping("/walkDir")
+    @GetMapping("/walkDir")
     @Tag(name = "文档接口")
     @Operation(summary = "遍历文档目录", description = "遍历指定的文档目录")
     fun traverseDir(

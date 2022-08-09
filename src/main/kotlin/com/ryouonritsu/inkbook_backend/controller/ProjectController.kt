@@ -86,15 +86,16 @@ class ProjectController {
         return runCatching {
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_"))
-            val project = Project(project_name, project_info.let {
+            var project = Project(project_name, project_info.let {
                 if (it.isNullOrBlank()) {
                     ""
                 } else it
             }, time, time, team_id.toLong())
+            project = projectRepository.save(project)
             // add project to dict
             // to 吴: 新增加的文档中心创建项目根目录逻辑(删除应仿照此处改写)
             val team = teamRepository.findById(team_id.toInt()).get() // 此处可能有bug
-            val prjDict = docDictRepository.save(DocumentationDict(name = project_name))
+            val prjDict = docDictRepository.save(DocumentationDict(name = project_name, pid = project.project_id))
             val prjRoot = docDictRepository.findById(team.prjRootId).get()
             prjRoot.children.add(prjDict)
             prjRoot.hasChildren = true

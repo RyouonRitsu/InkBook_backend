@@ -8,7 +8,8 @@ import javax.persistence.*
 @Entity
 class DocumentationDict(
     @Column(unique = true) var name: String,
-    var description: String = ""
+    var description: String = "",
+    var pid: Int = 0
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
