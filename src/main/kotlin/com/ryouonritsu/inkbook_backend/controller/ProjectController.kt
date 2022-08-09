@@ -200,6 +200,7 @@ class ProjectController {
                 val prj = projectRepository.findById(newProjectId).get()
                 val team = teamRepository.findById(prj.team_id.toInt()).get()
                 val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, prj, team, it.creator!!)
+                doc.dict = prjDict
                 docRepository.save(doc)
             }
 
