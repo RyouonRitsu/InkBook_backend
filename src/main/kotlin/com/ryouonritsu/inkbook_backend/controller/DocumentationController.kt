@@ -580,7 +580,7 @@ class DocumentationController {
     fun walkDir(dir: DocumentationDict): Map<String, Any?> {
         if (dir.deprecated) return mapOf()
         val result = HashMap(dir.toDict()).apply {
-            if (dir.hasChildren || dir.children.isNotEmpty()) {
+            if (dir.hasChildren || dir.children.isNotEmpty() || dir.documents.isNotEmpty()) {
                 val children = dir.children.map { walkDir(it) }.filterNot { it.isEmpty() }.toMutableList()
                 children.addAll(dir.documentsList())
                 if (children.isNotEmpty()) this["children"] = children
