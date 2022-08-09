@@ -2,10 +2,9 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.entity.Documentation
+import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
 import com.ryouonritsu.inkbook_backend.entity.Project
-import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.DocumentationService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
@@ -35,7 +34,13 @@ class ProjectController {
     lateinit var projectService: ProjectService
 
     @Autowired
+    lateinit var projectRepository: ProjectRepository
+
+    @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var teamRepository: TeamRepository
 
     @Autowired
     lateinit var axureService: AxureService
@@ -51,6 +56,9 @@ class ProjectController {
 
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
+
+    @Autowired
+    lateinit var docDictRepository: DocumentationDictRepository
 
     @PostMapping("/create")
     @Tag(name = "项目接口")
@@ -83,7 +91,21 @@ class ProjectController {
                     ""
                 } else it
             }, time, time, team_id.toLong())
-            projectService.createNewProject(project)
+            // add project to dict
+            // to 吴: 新增加的文档中心创建项目根目录逻辑(删除应仿照此处改写)
+            val team = teamRepository.findById(team_id.toInt()).get() // 此处可能有bug
+            val prjDict = docDictRepository.save(DocumentationDict(name = project_name))
+            val prjRoot = docDictRepository.findById(team.prjRootId).get()
+            prjRoot.children.add(prjDict)
+            prjRoot.hasChildren = true
+            prjDict.parent = prjRoot
+            docDictRepository.save(prjDict)
+            docDictRepository.save(prjRoot)
+            // to 吴: 此处应该将${prjDict.id}放入到project实体中保存, 并在每次返回project信息的时候携带上
+            project.prjDictId = prjDict.id
+            // end add to dict
+//            projectService.createNewProject(project) to 吴: 此处为了测试展示注释掉了, 你后续再改你的Mapper
+            projectRepository.save(project)
             mapOf(
                 "success" to true,
                 "message" to "创建项目成功！"
@@ -150,7 +172,9 @@ class ProjectController {
 
             msg = "复制文档失败！"
             docRepository.findByPid(project_id.toInt()).forEach {
-                val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, newProjectId, it.creator!!)
+                val prj = projectRepository.findById(newProjectId).get()
+                val team = teamRepository.findById(prj.team_id.toInt()).get()
+                val doc = Documentation(it.dname!! + " 副本", it.ddescription, it.dcontent, prj, team, it.creator!!)
                 docRepository.save(doc)
             }
 

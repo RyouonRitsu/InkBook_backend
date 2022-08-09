@@ -10,7 +10,7 @@ import javax.persistence.Id
  * @author WuKunchao
  */
 @Entity
-class AxureTemplate (
+class AxureTemplate(
     var axure_template_cover: String,
     var axure_template_preview: String,
     var axure_name: String,

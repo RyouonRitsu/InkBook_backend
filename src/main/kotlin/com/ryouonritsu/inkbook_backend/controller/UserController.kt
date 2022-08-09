@@ -5,10 +5,10 @@ import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
 import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
 import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
+import com.ryouonritsu.inkbook_backend.repository.UserFileRepository
 import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
-import com.ryouonritsu.inkbook_backend.service.UserFileService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -56,7 +56,7 @@ class UserController {
     lateinit var redisUtils: RedisUtils
 
     @Autowired
-    lateinit var userFileService: UserFileService
+    lateinit var userFileRepository: UserFileRepository
 
     fun getHtml(url: String): Pair<Int, String?> {
         val client = OkHttpClient()
@@ -532,7 +532,7 @@ class UserController {
     @Tag(name = "用户接口")
     @Operation(
         summary = "上传文件",
-        description = "将用户上传的文件保存在静态文件目录static/user/\${user_id}/\${file_name}下"
+        description = "将用户上传的文件保存在静态文件目录static/file/\${user_id}/\${file_name}下"
     )
     fun uploadFile(
         @RequestParam("file") @Parameter(description = "文件") file: MultipartFile,
@@ -552,7 +552,7 @@ class UserController {
             if (!File(fileDir).exists()) File(fileDir).mkdirs()
             file.transferTo(Path(filePath))
             val fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
-            userFileService.saveFile(UserFile(fileUrl))
+            userFileRepository.save(UserFile(fileUrl, filePath, fileName, user_id))
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
@@ -568,6 +568,36 @@ class UserController {
                 "message" to "上传失败, 发生意外错误"
             )
         )
+    }
+
+    @PostMapping("/deleteFile")
+    @Tag(name = "用户接口")
+    @Operation(
+        summary = "删除文件",
+        description = "删除用户上传的文件, 使分享链接失效"
+    )
+    fun deleteFile(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("url") @Parameter(description = "文件分享链接") url: String
+    ): Map<String, Any> {
+        return try {
+            val file = userFileRepository.findByUrl(url) ?: return mapOf(
+                "success" to false,
+                "message" to "文件不存在"
+            )
+            File(file.filePath).delete()
+            userFileRepository.delete(file)
+            mapOf(
+                "success" to true,
+                "message" to "删除成功"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to "删除失败, 发生意外错误"
+            )
+        }
     }
 
     @PostMapping("/modifyUserInfo")
@@ -765,7 +795,7 @@ class UserController {
                     "success" to true,
                     "message" to "获取成功",
                     "data" to userRepository.findById(userId).get().favoritedocuments.map {
-                        val projectId = it.pid
+                        val projectId = it.project?.project_id
                         val project = projectService.searchProjectByProjectId("$projectId")
                             ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
                         val team = teamService.searchTeamByTeamId(project["team_id"].toString())
@@ -782,7 +812,7 @@ class UserController {
                     "success" to true,
                     "message" to "获取成功",
                     "data" to user.favoritedocuments.map {
-                        val projectId = it.pid
+                        val projectId = it.project?.project_id
                         val project = projectService.searchProjectByProjectId("$projectId")
                             ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
                         val team = teamService.searchTeamByTeamId(project["team_id"].toString())
@@ -847,14 +877,14 @@ class UserController {
         }
         val list = user.user2documentations.sortedByDescending { it.lastviewedtime }
             .subList(0, min(10, user.user2documentations.size))
-        val id2DelList = user.user2documentations.filter { it !in list }.map { Pair(it.user!!.uid!!, it.doc!!.did!!) }
+        val id2DelList = user.user2documentations.filter { it !in list }
         return try {
-            id2DelList.forEach { user2DocRepository.deleteByUidAndDid(it.first, it.second) }
+            id2DelList.forEach { user2DocRepository.delete(it) }
             mapOf(
                 "success" to true,
                 "message" to "获取成功",
                 "data" to list.map {
-                    val projectId = it.doc?.pid
+                    val projectId = it.doc?.project?.project_id
                     val project = projectService.searchProjectByProjectId("$projectId")
                         ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
                     val team = teamService.searchTeamByTeamId(project["team_id"].toString())
