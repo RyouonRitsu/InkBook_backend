@@ -19,13 +19,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import java.awt.Image
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.imageio.ImageIO
-import javax.imageio.ImageReader
 
 @RestController
 @RequestMapping("/doc")
@@ -792,7 +790,14 @@ class DocumentationController {
             val userId = TokenUtils.verify(token).second
             file.writeText(markdown)
             val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
-            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
+                UserFile(
+                    fileUrl,
+                    filePath,
+                    fileName,
+                    userId
+                )
+            )
             mapOf(
                 "success" to true,
                 "message" to "html转换为markdown成功",
@@ -832,7 +837,14 @@ class DocumentationController {
             val userId = TokenUtils.verify(token).second
             doc.saveToFile(filePath, FileFormat.Docx_2013)
             val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
-            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
+                UserFile(
+                    fileUrl,
+                    filePath,
+                    fileName,
+                    userId
+                )
+            )
             mapOf(
                 "success" to true,
                 "message" to "html转换为docx成功",
