@@ -733,4 +733,25 @@ class DocumentationController {
             )
         }
     }
+
+    @GetMapping("/getTemplateList")
+    @Tag(name = "文档接口")
+    @Operation(summary = "获取文档模板列表")
+    fun getTemplateList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String
+    ): Map<String, Any> {
+        return try {
+            mapOf(
+                "success" to true,
+                "message" to "文档模板列表获取成功",
+                "data" to docTemplateRepository.findAll().map { it.toDict() }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档模板列表获取失败, 发生意外错误")
+            )
+        }
+    }
 }
