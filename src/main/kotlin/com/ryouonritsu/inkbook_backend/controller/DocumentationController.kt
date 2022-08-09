@@ -7,6 +7,10 @@ import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
+import com.spire.doc.Document
+import com.spire.doc.FileFormat
+import com.spire.doc.documents.ImageType
+import com.spire.doc.documents.XHTMLValidationType
 import io.github.furstenheim.CopyDown
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -15,10 +19,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import java.awt.Image
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import javax.imageio.ImageIO
+import javax.imageio.ImageReader
 
 @RestController
 @RequestMapping("/doc")
@@ -790,6 +797,94 @@ class DocumentationController {
                 "success" to true,
                 "message" to "html转换为markdown成功",
                 "data" to listOf(mapOf("url" to fileUrl))
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文件转换失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/htmlToDocx")
+    @Tag(name = "文档接口")
+    @Operation(summary = "html2docx", description = "将html转换为docx")
+    fun htmlToDocx(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("url") @Parameter(description = "上传到后端后返回的url") url: String?
+    ): Map<String, Any> {
+        if (url.isNullOrBlank()) {
+            return mapOf(
+                "success" to false,
+                "message" to "url不能为空"
+            )
+        }
+        return try {
+            val f = userFileRepository.findByUrl(url) ?: return mapOf(
+                "success" to false,
+                "message" to "文件不存在"
+            )
+            val doc = Document()
+            doc.loadFromFile(f.filePath, FileFormat.Html, XHTMLValidationType.None)
+            val filePath = f.filePath.replace(".html", ".docx")
+            val fileName = f.fileName.replace(".html", ".docx")
+            val userId = TokenUtils.verify(token).second
+            doc.saveToFile(filePath, FileFormat.Docx_2013)
+            val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            mapOf(
+                "success" to true,
+                "message" to "html转换为docx成功",
+                "data" to listOf(mapOf("url" to fileUrl))
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文件转换失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/htmlToPNG")
+    @Tag(name = "文档接口")
+    @Operation(summary = "html2png", description = "将html转换为png")
+    fun htmlToPNG(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("url") @Parameter(description = "上传到后端后返回的url") url: String?
+    ): Map<String, Any> {
+        if (url.isNullOrBlank()) {
+            return mapOf(
+                "success" to false,
+                "message" to "url不能为空"
+            )
+        }
+        return try {
+            val f = userFileRepository.findByUrl(url) ?: return mapOf(
+                "success" to false,
+                "message" to "文件不存在"
+            )
+            val doc = Document()
+            doc.loadFromFile(f.filePath, FileFormat.Html, XHTMLValidationType.None)
+            val filePath = f.filePath.replace(".html", "")
+            val fileName = f.fileName.replace(".html", "")
+            val userId = TokenUtils.verify(token).second
+            val prefix = "http://101.42.171.88:8090/file/${userId}/"
+            var index = 0
+            val fileUrls = mutableListOf<String>()
+            doc.saveToImages(ImageType.Bitmap).forEach {
+                val path = "$filePath${index}.png"
+                val name = "$fileName${index++}.png"
+                val u = "$prefix$name"
+                ImageIO.write(it, "png", File(path))
+                userFileRepository.findByUrl(u) ?: userFileRepository.save(UserFile(u, path, name, userId))
+                fileUrls.add(u)
+            }
+            mapOf(
+                "success" to true,
+                "message" to "html转换为png成功",
+                "data" to listOf(mapOf("url" to fileUrls))
             )
         } catch (e: Exception) {
             e.printStackTrace()
