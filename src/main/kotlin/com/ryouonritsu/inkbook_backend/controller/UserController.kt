@@ -795,14 +795,9 @@ class UserController {
                     "success" to true,
                     "message" to "获取成功",
                     "data" to userRepository.findById(userId).get().favoritedocuments.map {
-                        val projectId = it.project?.project_id
-                        val project = projectService.searchProjectByProjectId("$projectId")
-                            ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                        val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                         HashMap(it.toDict()).apply {
-                            putAll(project)
-                            putAll(team)
+                            putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
+                            putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                         }
                     }
                 )
@@ -812,14 +807,9 @@ class UserController {
                     "success" to true,
                     "message" to "获取成功",
                     "data" to user.favoritedocuments.map {
-                        val projectId = it.project?.project_id
-                        val project = projectService.searchProjectByProjectId("$projectId")
-                            ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                        val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                         HashMap(it.toDict()).apply {
-                            putAll(project)
-                            putAll(team)
+                            putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
+                            putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                         }
                     }
                 )
@@ -884,14 +874,9 @@ class UserController {
                 "success" to true,
                 "message" to "获取成功",
                 "data" to list.map {
-                    val projectId = it.doc?.project?.project_id
-                    val project = projectService.searchProjectByProjectId("$projectId")
-                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.doc?.toDict()).apply {
-                        putAll(project)
-                        putAll(team)
+                        putAll(it.doc?.project?.toDict() ?: mapOf("parent_dict_id" to it.doc?.dict?.id))
+                        putAll(it.doc?.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                     }
                 }
             )
