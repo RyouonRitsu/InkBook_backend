@@ -3,6 +3,7 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Documentation
 import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
+import com.ryouonritsu.inkbook_backend.entity.DocumentationTemplate
 import com.ryouonritsu.inkbook_backend.entity.User2Documentation
 import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.ProjectService
@@ -32,6 +33,8 @@ class DocumentationController {
     @Autowired
     lateinit var docDictRepository: DocumentationDictRepository
 
+    @Autowired
+    lateinit var docTemplateRepository: DocumentationTemplateRepository
     @Autowired
     lateinit var userRepository: UserRepository
 
@@ -79,7 +82,9 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "新建文档",
-        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id;\n目标文档目录Id如果不填写, 默认存放在项目的文档目录下"
+        description = "文档描述和文档内容不是必要的, 项目Id可以不提供, 若项目Id不提供则表示该文档是团队文档, 故必须提供团队Id;\n" +
+                "目标文档目录Id如果不填写, 默认存放在项目的文档目录下\n" +
+                "可以使用模版创建, 填写模板对应Id即可, 如果留空则默认使用空白模版"
     )
     fun newDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
@@ -97,19 +102,41 @@ class DocumentationController {
         @RequestParam(
             "dest_folder_id",
             defaultValue = "-1"
-        ) @Parameter(description = "目标文档目录Id") dest_folder_id: Long
+        ) @Parameter(description = "目标文档目录Id") dest_folder_id: Long,
+        @RequestParam(
+            "template_id",
+            defaultValue = "-1"
+        ) @Parameter(description = "使用的模板Id") template_id: Long
     ): Map<String, Any> {
         val (result, message) = check(doc_name, project_id, team_id)
         if (!result && message != null) return message
         return runCatching {
-            val creator_id = TokenUtils.verify(token).second
-            val creator = userRepository.findById(creator_id).get()
+            val creatorId = TokenUtils.verify(token).second
+            val creator = userRepository.findById(creatorId).get()
             val project = if (project_id != -1) projectRepository.findById(project_id).get() else null
             val team = if (team_id == -1 && project != null) teamRepository.findById(project.team_id.toInt()).get()
             else if (team_id != -1) teamRepository.findById(team_id).get()
             else throw Exception("缺少必填参数, 无法创建文档, 请检查后重试")
-            val doc =
+            var doc = if (template_id == -1L) {
                 docRepository.save(Documentation(doc_name!!, doc_description, doc_content, project, team, creator))
+            } else {
+                val template = try {
+                    docTemplateRepository.findById(template_id).get()
+                } catch (e: NoSuchElementException) {
+                    return mapOf(
+                        "success" to false,
+                        "message" to "模板不存在"
+                    )
+                }
+                docRepository.save(Documentation(
+                    docTemplate = template,
+                    name = doc_name,
+                    description = doc_description.ifBlank { null },
+                    project = project,
+                    team = team,
+                    creator = creator
+                ))
+            }
             val dest = if (dest_folder_id != -1L) docDictRepository.findById(dest_folder_id).get()
             else docDictRepository.findById(
                 project?.prjDictId ?: throw Exception("无法找到project, 故无法放置文档到项目文件夹")
@@ -117,17 +144,17 @@ class DocumentationController {
             dest.documents.add(doc)
             doc.dict = dest
             docDictRepository.save(dest)
-            docRepository.save(doc)
+            doc = docRepository.save(doc)
             mapOf(
                 "success" to true,
-                "message" to "文档创建成功"
+                "message" to "文档创建成功",
+                "data" to listOf(doc.toDict())
             )
         }.onFailure {
             if (it is NoSuchElementException) {
-                redisUtils - "${TokenUtils.verify(token).second}"
                 return mapOf(
                     "success" to false,
-                    "message" to "数据不存在, 可能是数据库出错, 请检查后重试, 当前会话已失效"
+                    "message" to "数据不存在, 可能是数据库出错, 请检查后重试"
                 )
             }
             it.printStackTrace()
@@ -364,15 +391,10 @@ class DocumentationController {
                 "success" to true,
                 "message" to "文档获取成功",
                 "data" to listOf(let {
-                    val projectId = doc.project?.project_id
-                    val project = projectService.searchProjectByProjectId("$projectId")
-                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(doc.toDict()).apply {
                         this["is_favorite"] = doc in user.favoritedocuments
-                        putAll(project)
-                        putAll(team)
+                        putAll(doc.project?.toDict() ?: mapOf("parent_dict_id" to doc.dict?.id))
+                        putAll(doc.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                     }
                 })
             )
@@ -404,19 +426,14 @@ class DocumentationController {
         return runCatching {
             val user = userRepository.findById(TokenUtils.verify(token).second).get()
             val docList = if (project_id == -1) {
-                docRepository.findByCreator(user)
+                docRepository.findByCreatorOrderByLastedittimeDesc(user)
                     .map { HashMap(it.toDict()).apply { this["is_favorite"] = it in user.favoritedocuments } }
             } else {
                 docRepository.findByPid(project_id).map {
-                    val projectId = it.project?.project_id
-                    val project = projectService.searchProjectByProjectId("$projectId")
-                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(project["team_id"].toString())
-                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.toDict()).apply {
                         this["is_favorite"] = it in user.favoritedocuments
-                        putAll(project)
-                        putAll(team)
+                        putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
+                        putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                     }
                 }
             }
@@ -497,15 +514,10 @@ class DocumentationController {
                 "success" to true,
                 "message" to "获取成功",
                 "data" to docs.map {
-                    val projectId = it.project?.project_id
-                    val project = projectService.searchProjectByProjectId("$projectId")
-                        ?: throw Exception("数据库中没有此项目, 请检查项目id是否正确")
-                    val team = teamService.searchTeamByTeamId(team_id)
-                        ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
                     HashMap(it.toDict()).apply {
                         this["is_favorite"] = it in userRepository.findById(userId).get().favoritedocuments
-                        putAll(project)
-                        putAll(team)
+                        putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
+                        putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                     }
                 }
             )
@@ -626,6 +638,65 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to (e.message ?: "文档目录遍历失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/editTemplate")
+    @Tag(name = "文档接口")
+    @Operation(summary = "编辑文档模板", description = "编辑文档模板, 如不提供模版Id, 则为新建模版操作, " +
+            "各种封面和预览文件url可以通过用户的上传文件接口获得;\n" +
+            "如果提供模板Id, 则对对应模板进行更新操作, 留空参数表示此参数不做修改")
+    fun editTemplate(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("template_id", defaultValue = "-1") @Parameter(description = "模版Id") template_id: Long,
+        @RequestParam("name") @Parameter(description = "文档模板名称") name: String?,
+        @RequestParam("description", defaultValue = "") @Parameter(description = "文档模板描述") description: String,
+        @RequestParam("content", defaultValue = "") @Parameter(description = "文档模板内容") content: String,
+        @RequestParam("cover", defaultValue = "") @Parameter(description = "模版封面url") cover: String,
+        @RequestParam("preview", defaultValue = "") @Parameter(description = "模版预览url") preview: String
+    ): Map<String, Any> {
+        if (name.isNullOrBlank()) {
+            return mapOf(
+                "success" to false,
+                "message" to "文档模板名称不能为空"
+            )
+        }
+        return try {
+            val template = if (template_id == -1L) docTemplateRepository.save(
+                DocumentationTemplate(
+                    name = name,
+                    description = description,
+                    content = content,
+                    cover = cover.ifBlank { null },
+                    preview = preview.ifBlank { null }
+                )
+            )
+            else {
+                val t = docTemplateRepository.findById(template_id).get().apply {
+                    if (name.isNotBlank()) this.name = name
+                    if (description.isNotBlank()) this.description = description
+                    if (content.isNotBlank()) this.content = content
+                    if (cover.isNotBlank()) this.cover = cover
+                    if (preview.isNotBlank()) this.preview = preview
+                }
+                docTemplateRepository.save(t)
+            }
+            mapOf(
+                "success" to true,
+                "message" to "文档模板编辑成功",
+                "data" to listOf(template.toDict())
+            )
+        } catch (e: NoSuchElementException) {
+            mapOf(
+                "success" to false,
+                "message" to "文档模板不存在"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档模板编辑失败, 发生意外错误")
             )
         }
     }

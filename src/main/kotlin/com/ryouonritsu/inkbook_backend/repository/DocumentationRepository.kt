@@ -10,15 +10,15 @@ import javax.transaction.Transactional
 
 @Repository
 interface DocumentationRepository : JpaRepository<Documentation, Long> {
-    fun findByCreator(creator: User): List<Documentation>
+    fun findByCreatorOrderByLastedittimeDesc(creator: User): List<Documentation>
 
-    @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?1")
+    @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?1 ORDER BY d.lastedittime DESC")
     fun findByPid(pId: Int): List<Documentation>
 
-    @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?1 AND d.deprecated = ?2")
+    @Query("SELECT d FROM Documentation d WHERE d.project.project_id = ?1 AND d.deprecated = ?2 ORDER BY d.lastedittime DESC")
     fun findByPidAndDeprecated(pId: Int, deprecated: Boolean): List<Documentation>
 
-    @Query("SELECT d FROM Documentation d WHERE d.team.teamId = ?2 AND (d.dname LIKE %?1% OR d.ddescription LIKE %?1% OR d.dcontent LIKE %?1%)")
+    @Query("SELECT d FROM Documentation d WHERE d.team.teamId = ?2 AND (d.dname LIKE %?1% OR d.ddescription LIKE %?1% OR d.dcontent LIKE %?1%) ORDER BY d.lastedittime DESC")
     fun findByKeywordAndTeamId(keyword: String, teamId: Int): List<Documentation>
 
     @Transactional

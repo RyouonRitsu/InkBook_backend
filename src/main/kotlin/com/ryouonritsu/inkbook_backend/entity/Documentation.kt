@@ -56,6 +56,31 @@ class Documentation {
         this.creator = creator
     }
 
+    constructor(doc: Documentation, project: Project? = null, creator: User? = null) {
+        this.dname = "${doc.dname}_拷贝"
+        this.ddescription = doc.ddescription
+        this.dcontent = doc.dcontent
+        this.project = project ?: doc.project
+        this.team = doc.team
+        this.creator = creator ?: doc.creator
+    }
+
+    constructor(
+        docTemplate: DocumentationTemplate,
+        name: String? = null,
+        description: String? = null,
+        project: Project?,
+        team: Team,
+        creator: User
+    ) {
+        this.dname = name ?: docTemplate.name
+        this.ddescription = description ?: docTemplate.description
+        this.dcontent = docTemplate.content
+        this.project = project
+        this.team = team
+        this.creator = creator
+    }
+
     constructor()
 
     fun toDict(): Map<String, Any?> = mapOf(
