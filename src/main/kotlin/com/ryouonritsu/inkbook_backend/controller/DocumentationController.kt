@@ -321,7 +321,7 @@ class DocumentationController {
 
             val time =
                 LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            if (doc.project != null || doc.project?.project_id != 0) {
+            if (doc.project != null && doc.project?.project_id != 0) {
                 projectService.updateProjectLastEditTime(doc.project!!.project_id.toString(), time)
             }
 
