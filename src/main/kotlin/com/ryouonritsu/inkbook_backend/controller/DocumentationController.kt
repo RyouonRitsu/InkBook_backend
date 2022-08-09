@@ -1,15 +1,13 @@
 package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
-import com.ryouonritsu.inkbook_backend.entity.Documentation
-import com.ryouonritsu.inkbook_backend.entity.DocumentationDict
-import com.ryouonritsu.inkbook_backend.entity.DocumentationTemplate
-import com.ryouonritsu.inkbook_backend.entity.User2Documentation
+import com.ryouonritsu.inkbook_backend.entity.*
 import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
+import io.github.furstenheim.CopyDown
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -17,6 +15,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,6 +40,9 @@ class DocumentationController {
 
     @Autowired
     lateinit var user2DocRepository: User2DocumentationRepository
+
+    @Autowired
+    lateinit var userFileRepository: UserFileRepository
 
     @Autowired
     lateinit var projectRepository: ProjectRepository
@@ -751,6 +753,49 @@ class DocumentationController {
             mapOf(
                 "success" to false,
                 "message" to (e.message ?: "文档模板列表获取失败, 发生意外错误")
+            )
+        }
+    }
+
+    @PostMapping("/htmlToMarkdown")
+    @Tag(name = "文档接口")
+    @Operation(summary = "将html转换为markdown")
+    fun htmlToMarkdown(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("url") @Parameter(description = "上传到后端后返回的url") url: String?
+    ): Map<String, Any> {
+        if (url.isNullOrBlank()) {
+            return mapOf(
+                "success" to false,
+                "message" to "url不能为空"
+            )
+        }
+        return try {
+            val f = userFileRepository.findByUrl(url) ?: return mapOf(
+                "success" to false,
+                "message" to "文件不存在"
+            )
+//            val optionsBuilder = OptionsBuilder.anOptions()
+//            val options = optionsBuilder.withBr("").build()
+            val converter = CopyDown()
+            val markdown = converter.convert(File(f.filePath).readText())
+            val filePath = f.filePath.replace(".html", ".md")
+            val fileName = f.fileName.replace(".html", ".md")
+            val file = File(filePath)
+            val userId = TokenUtils.verify(token).second
+            file.writeText(markdown)
+            val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            mapOf(
+                "success" to true,
+                "message" to "html转换为markdown成功",
+                "data" to listOf(mapOf("url" to fileUrl))
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文件转换失败, 发生意外错误")
             )
         }
     }
