@@ -759,7 +759,7 @@ class DocumentationController {
 
     @PostMapping("/htmlToMarkdown")
     @Tag(name = "文档接口")
-    @Operation(summary = "将html转换为markdown")
+    @Operation(summary = "html2md", description = "将html转换为markdown")
     fun htmlToMarkdown(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("url") @Parameter(description = "上传到后端后返回的url") url: String?
