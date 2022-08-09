@@ -47,7 +47,10 @@ class AxureController {
         @RequestParam("axure_name") @Parameter(description = "原型名字") axure_name: String?,
         @RequestParam("axure_info", required = false) @Parameter(description = "原型简介") axure_info: String?,
         @RequestParam("project_id") @Parameter(description = "所在项目id") project_id: String?,
-        @RequestParam("axure_template_id", required = false) @Parameter(description = "原型模板id") axure_template_id: Int?,
+        @RequestParam(
+            "axure_template_id",
+            required = false
+        ) @Parameter(description = "原型模板id") axure_template_id: Int?,
     ): Map<String, Any> {
         if (project_id.isNullOrBlank()) return mapOf(
             "success" to false,

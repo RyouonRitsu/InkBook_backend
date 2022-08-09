@@ -1,7 +1,5 @@
 package com.ryouonritsu.inkbook_backend.config
 
-import com.alibaba.fastjson2.JSON
-import com.alibaba.fastjson2.JSONObject
 import com.google.gson.Gson
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.*
@@ -29,7 +27,7 @@ class DefaultHandler : WebSocketHandler {
      */
     @Throws(Exception::class)
     override fun afterConnectionEstablished(session: WebSocketSession) {
-        println("成功建立连接");
+        println("成功建立连接")
         // session.sendMessage(TextMessage("成功建立socket连接"));
         // users.add(session)
         // session.sendMessage(TextMessage("发送一波消息"));
@@ -90,9 +88,9 @@ class DefaultHandler : WebSocketHandler {
     @Throws(Exception::class)
     override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
         if (session.isOpen()) {
-            session.close();
+            session.close()
         }
-        println("连接出错");
+        println("连接出错")
     }
 
     /**
@@ -103,7 +101,7 @@ class DefaultHandler : WebSocketHandler {
      */
     @Throws(Exception::class)
     override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-        println("连接已关闭：" + closeStatus);
+        println("连接已关闭：" + closeStatus)
         users.remove(session)
     }
 
@@ -122,9 +120,11 @@ class Info {
 class Data {
     lateinit var type: String // axure of doc
     lateinit var id: String // if axure: id += 0x3f3f3f3f
+
     // 原型
     lateinit var config: String
     lateinit var items: String
+
     // lateinit var config_id: String
     // 文档
     lateinit var name: String
