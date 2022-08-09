@@ -54,7 +54,8 @@
     <select id="searchProjectByKeyWord" resultType="Project">
         SELECT *
         FROM `project`
-        WHERE team_id = #{team_id} AND (project_name LIKE CONCAT('%', #{keyword}, '%')
-           OR project_info LIKE CONCAT('%', #{keyword}, '%'))
+        WHERE team_id = #{team_id}
+          AND (project_name LIKE CONCAT('%', #{keyword}, '%')
+            OR project_info LIKE CONCAT('%', #{keyword}, '%'))
     </select>
 </mapper>
