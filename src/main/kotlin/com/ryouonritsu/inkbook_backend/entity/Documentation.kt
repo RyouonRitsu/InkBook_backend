@@ -17,6 +17,7 @@ class Documentation {
 
     @Column(columnDefinition = "LONGTEXT")
     var dcontent: String? = null
+    val createTime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
     var lastedittime = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
 
     @OneToOne(targetEntity = Project::class)
@@ -58,10 +59,15 @@ class Documentation {
     constructor()
 
     fun toDict(): Map<String, Any?> = mapOf(
+        "type" to "documentation",
+        "dir_id" to "$did",
         "doc_id" to "$did",
+        "dir_name" to dname,
         "doc_name" to dname,
         "doc_description" to ddescription,
         "doc_content" to dcontent,
+        "dir_createTime" to createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+        "create_time" to createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "last_edit_time" to lastedittime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "creator_id" to "${creator?.uid}",
         "creator_name" to creator?.username,

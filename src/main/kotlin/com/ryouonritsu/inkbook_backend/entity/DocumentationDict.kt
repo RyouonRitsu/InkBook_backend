@@ -41,14 +41,16 @@ class DocumentationDict(
     constructor() : this(name = "", tid = -1)
 
     fun toDict() = mapOf(
-        "dir_id" to id,
+        "type" to "dir",
+        "dir_id" to "$id",
         "dir_name" to name,
         "dir_description" to description,
         "dir_createTime" to createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "dir_updateTime" to updateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         "dir_deprecated" to deprecated,
         "dir_hasChildren" to hasChildren,
-        "dir_parent_id" to parent?.id,
-        "dir_documents" to documents.filterNot { it.deprecated }.map { it.toDict() }
+        "dir_parent_id" to "${parent?.id}"
     )
+
+    fun documentsList() = documents.filterNot { it.deprecated }.map { it.toDict() }
 }
