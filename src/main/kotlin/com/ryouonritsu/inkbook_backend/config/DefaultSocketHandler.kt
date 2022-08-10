@@ -66,18 +66,18 @@ class DefaultHandler : WebSocketHandler {
                 }
             } catch (e: Error) {
                 otherEditer = true
-                println("强制同步所有人")
+                // println("强制同步所有人")
             }
             if (!otherEditer) {
-                println("初始化原型：" + res.id)
+                // println("初始化原型：" + res.id)
                 syn.op = "origin"
                 session.sendMessage(TextMessage(gson.toJson(syn)))
             }
-            println("用户喜加一：" + res.user_id)
-            println("目前在线用户数：" + users.size)
+            // println("用户喜加一：" + res.user_id)
+            println(res.user_id + " 加入了，目前在线用户数：" + users.size)
             return
         }
-        println(msg)
+        // println(msg)
 
         val gson = Gson()
         val res = gson.fromJson(msg, Data::class.java)
@@ -89,7 +89,7 @@ class DefaultHandler : WebSocketHandler {
                 }
             }
         } else if (res.type == "axure") {
-            println("开始同步原型！")
+            // println("开始同步原型！")
             val axureId = res.id.toInt() + 0x3f3f3f3f
             users.forEach {
                 if (axureId == it.value && session != it.key) {
@@ -111,6 +111,7 @@ class DefaultHandler : WebSocketHandler {
             session.close()
         }
         println("连接出错")
+        users.remove(session)
     }
 
     /**
@@ -144,8 +145,8 @@ class Data {
     // 原型
     lateinit var config: String
     lateinit var item: String
-    // operation: add 增加组件, drag 拖拽组件, update 更新组件属性
-    // copy 复制组件集合, replace 去除组件, bg 背景, syn 同步所有协作者, origin 只有一位编辑者
+    // operation: add 增加组件, drag 拖拽组件, update 更新组件属性, copy 复制组件集合
+    // replace 去除组件, bg 背景, syn 同步所有协作者, origin 只有一位编辑者, canvas 画布尺寸
     lateinit var op: String
 
     // lateinit var config_id: String
