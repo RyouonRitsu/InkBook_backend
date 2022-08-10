@@ -1044,7 +1044,7 @@ class DocumentationController {
             } else {
                 mapOf(
                     "success" to false,
-                    "message" to "操作失败${result["message"]}"
+                    "message" to "操作失败, ${result["message"]}"
                 )
             }
         } catch (e: NoSuchElementException) {

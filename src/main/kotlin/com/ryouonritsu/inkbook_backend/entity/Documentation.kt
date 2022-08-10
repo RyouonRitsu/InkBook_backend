@@ -40,7 +40,8 @@ class Documentation {
     )
     var dict: DocumentationDict? = null
     var shared = false
-    @Column(columnDefinition = "TEXT") var sharedUrl = ""
+    @Column(columnDefinition = "TEXT")
+    var sharedUrl = ""
 
     constructor(
         doc_name: String,
