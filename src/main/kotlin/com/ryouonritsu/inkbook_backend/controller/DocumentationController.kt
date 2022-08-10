@@ -906,4 +906,45 @@ class DocumentationController {
             )
         }
     }
+
+    @PostMapping("/uploadDoc")
+    @Tag(name = "文档接口")
+    @Operation(
+        summary = "开启文件预览",
+        description = "上传html代码，生成html文件并返回url"
+    )
+    fun uploadDoc(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("html_code") @Parameter(description = "文档HTML代码") html_code: String,
+        @RequestParam("doc_id") @Parameter(description = "文档id") doc_id: Long,
+    ): Map<String, Any> {
+        return runCatching {
+            val userId = TokenUtils.verify(token).second
+            val fileDir = "static/file/doc/"
+            val fileName = "doc_${doc_id}.html"
+            val filePath = "$fileDir/$fileName"
+            if (!File(fileDir).exists()) File(fileDir).mkdirs()
+            val myFile = File(filePath)
+            val head =
+                "<!DOCTYPE html><html lang=\"zh-CH\"><head><meta charset=\"UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Document</title></head><body>"
+            val tail = "</body></html>"
+            myFile.writeText(head + html_code + tail)
+            val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
+            userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            mapOf(
+                "success" to true,
+                "message" to "开启预览成功！",
+                "data" to listOf(
+                    mapOf(
+                        "url" to fileUrl
+                    )
+                )
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "开启预览失败！"
+            )
+        )
+    }
 }
