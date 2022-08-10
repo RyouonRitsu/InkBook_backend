@@ -911,7 +911,7 @@ class DocumentationController {
     @Tag(name = "文档接口")
     @Operation(
         summary = "开启文件预览",
-        description = "上传html代码，生成html文件并返回url"
+        description = "上传html代码，生成html文件，并将代码嵌入body中，并返回url"
     )
     fun uploadDoc(
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
@@ -930,7 +930,7 @@ class DocumentationController {
             val tail = "</body></html>"
             myFile.writeText(head + html_code + tail)
             val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
-            userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
             mapOf(
                 "success" to true,
                 "message" to "开启预览成功！",
