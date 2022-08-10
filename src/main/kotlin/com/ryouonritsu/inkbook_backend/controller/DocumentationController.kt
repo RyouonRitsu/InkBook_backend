@@ -1039,7 +1039,7 @@ class DocumentationController {
                 docRepository.save(doc)
                 mapOf(
                     "success" to true,
-                    "message" to "此共享链接已失效"
+                    "message" to "此文档的共享链接已失效"
                 )
             } else {
                 mapOf(
