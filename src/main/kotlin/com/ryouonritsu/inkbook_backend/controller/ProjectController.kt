@@ -369,7 +369,7 @@ class ProjectController {
     @Tag(name = "项目接口")
     @Operation(
         summary = "搜索项目", description = "根据项目名字或简介在所在团队由关键字进行模糊搜索\n" +
-                "没有对应项目时将会返回一个空data即[]\n" +
+                "若不传入team_id则在所有加入的团队中搜索，没有对应项目时将会返回一个空data即[]\n" +
                 "{\n" +
                 "    \"success\": true,\n" +
                 "    \"message\": \"搜索项目成功！\",\n" +
@@ -407,19 +407,20 @@ class ProjectController {
     fun searchProject(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("user_id") @Parameter(description = "用于认证的用户id") user_id: String,
-        @RequestParam("team_id") @Parameter(description = "团队ID") team_id: String?,
+        @RequestParam("team_id", required = false) @Parameter(description = "团队ID") team_id: String?,
         @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
     ): Map<String, Any> {
-        if (team_id.isNullOrBlank()) return mapOf(
-            "success" to false,
-            "message" to "团队id为空！"
-        )
         if (keyword == null) return mapOf(
             "success" to false,
             "message" to "关键字为空！"
         )
+        var projectList: List<Project>
         return runCatching {
-            val projectList = projectService.searchProjectByKeyWord(team_id, keyword) ?: arrayListOf()
+            if (team_id.isNullOrBlank()) {
+                projectList = projectService.searchAllProjectByKeyWord(user_id, keyword) ?: arrayListOf()
+            } else {
+                projectList = projectService.searchProjectByKeyWord(team_id, keyword) ?: arrayListOf()
+            }
             mapOf(
                 "success" to true,
                 "message" to "搜索项目成功！",

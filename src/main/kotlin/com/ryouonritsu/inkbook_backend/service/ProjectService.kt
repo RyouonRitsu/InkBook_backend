@@ -16,4 +16,5 @@ interface ProjectService {
     fun deprecateProjectByProjectId(project_id: String, deprecated: Boolean)
     fun updateProjectLastEditTime(project_id: String, time: String)
     fun searchProjectByKeyWord(team_id: String, keyword: String): List<Project>?
+    fun searchAllProjectByKeyWord(user_id: String, keyword: String): List<Project>?
 }

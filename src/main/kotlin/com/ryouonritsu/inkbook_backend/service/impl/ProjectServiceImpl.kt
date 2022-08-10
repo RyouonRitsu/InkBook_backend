@@ -45,4 +45,9 @@ class ProjectServiceImpl : ProjectService {
         team_id: String,
         keyword: String
     ) = projectDao.searchProjectByKeyWord(team_id, keyword)
+
+    override fun searchAllProjectByKeyWord(
+        user_id: String,
+        keyword: String
+    ) = projectDao.searchAllProjectByKeyWord(user_id, keyword)
 }
