@@ -11,7 +11,7 @@ class User {
     var username: String? = null
     var password: String? = null
     var realname: String? = null
-    var avatar: String? = null
+    @Column(columnDefinition = "TEXT") var avatar: String? = null
 
     @ManyToMany(
         targetEntity = Documentation::class,
