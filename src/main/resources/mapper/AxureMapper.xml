@@ -132,4 +132,22 @@
         FROM `axure_template`
         WHERE axure_template_id = #{axure_template_id}
     </select>
+    <select id="findByKeywordAndProjectId" resultType="Map">
+        SELECT *
+        FROM `axure` a
+                 INNER JOIN `project` p ON a.project_id = p.project_id
+                 INNER JOIN `team` t ON p.team_id = t.team_id
+        WHERE p.project_id = #{project_id}
+          AND (a.axure_name LIKE CONCAT('%', #{keyword}, '%') OR
+               a.axure_info LIKE CONCAT('%', #{keyword}, '%'))
+    </select>
+    <select id="findByKeywordAndTeamId" resultType="Map">
+        SELECT *
+        FROM `axure` a
+                 INNER JOIN `project` p ON a.project_id = p.project_id
+                 INNER JOIN `team` t ON p.team_id = t.team_id
+        WHERE t.team_id = #{team_id}
+          AND (a.axure_name LIKE CONCAT('%', #{keyword}, '%') OR
+               a.axure_info LIKE CONCAT('%', #{keyword}, '%'))
+    </select>
 </mapper>

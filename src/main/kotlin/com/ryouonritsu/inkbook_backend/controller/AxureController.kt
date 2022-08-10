@@ -4,6 +4,7 @@ import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Axure
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.service.UserService
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -28,6 +29,9 @@ class AxureController {
 
     @Autowired
     lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var teamService: TeamService
 
     @Autowired
     lateinit var userService: UserService
@@ -553,6 +557,36 @@ class AxureController {
                 "success" to false,
                 "message" to "查询收藏原型失败！"
             )
+        )
+    }
+
+    @GetMapping("/searchAxure")
+    @Tag(name = "原型接口")
+    @Operation(summary = "搜索原型", description = "根据关键字搜索原型, 可选择搜索指定团队或项目下的原型")
+    @Recycle
+    fun searchAxure(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
+        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: String,
+        @RequestParam("team_id", defaultValue = "-1") @Parameter(description = "要查询的团队Id") team_id: String
+    ): Map<String, Any> {
+        if (keyword.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "关键字不能为空"
+        )
+        val userId = TokenUtils.verify(token).second
+        val axures = mutableListOf<Map<String, Any>>()
+        if (project_id != "-1") axures.addAll(axureService.findByKeywordAndProjectId(keyword, project_id))
+        else if (team_id != "-1") axures.addAll(axureService.findByKeywordAndTeamId(keyword, team_id))
+        else {
+            val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
+            val tIds = teams.map { "${it["team_id"]}" }
+            tIds.forEach { axures.addAll(axureService.findByKeywordAndTeamId(keyword, it)) }
+        }
+        return mapOf(
+            "success" to true,
+            "message" to "搜索成功",
+            "data" to axures
         )
     }
 }

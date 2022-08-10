@@ -69,4 +69,10 @@ class AxureServiceImpl : AxureService {
 
     override fun getAxureTemplateByAxureId(axure_template_id: String) =
         axureDao.getAxureTemplateByAxureId(axure_template_id)
+
+    override fun findByKeywordAndProjectId(keyword: String, project_id: String) =
+        axureDao.findByKeywordAndProjectId(keyword, project_id)
+
+    override fun findByKeywordAndTeamId(keyword: String, team_id: String) =
+        axureDao.findByKeywordAndTeamId(keyword, team_id)
 }

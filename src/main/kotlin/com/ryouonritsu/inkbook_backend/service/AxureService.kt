@@ -25,4 +25,6 @@ interface AxureService {
     fun searchFavoriteAxure(user_id: String): List<Map<String, String>>?
     fun getAxureTemplateList(): List<Map<String, Any>>?
     fun getAxureTemplateByAxureId(axure_template_id: String): AxureTemplate?
+    fun findByKeywordAndProjectId(keyword: String, project_id: String): List<Map<String, Any>>
+    fun findByKeywordAndTeamId(keyword: String, team_id: String): List<Map<String, Any>>
 }
