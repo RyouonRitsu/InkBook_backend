@@ -144,6 +144,7 @@ class Data {
     // 原型
     lateinit var config: String
     lateinit var item: String
+
     // operation: add 增加组件, drag 拖拽组件, update 更新组件属性
     // copy 复制组件集合, replace 去除组件, bg 背景, syn 同步所有协作者, origin 只有一位编辑者
     lateinit var op: String
