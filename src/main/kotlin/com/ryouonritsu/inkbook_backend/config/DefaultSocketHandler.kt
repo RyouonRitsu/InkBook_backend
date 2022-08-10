@@ -54,6 +54,25 @@ class DefaultHandler : WebSocketHandler {
                 id += 0x3f3f3f3f
             }
             users.put(session, id)
+            val syn = Data()
+            syn.op = "send_syn"
+            var otherEditer = false
+            try {
+                users.forEach {
+                    if (id == it.value && session != it.key) { // 找到一个其他正在编辑当前原型的来同步所有人
+                        it.key.sendMessage(TextMessage(gson.toJson(syn)))
+                        throw Error()
+                    }
+                }
+            } catch (e: Error) {
+                otherEditer = true
+                println("强制同步所有人")
+            }
+            if (!otherEditer) {
+                println("初始化原型：" + res.id)
+                syn.op = "origin"
+                session.sendMessage(TextMessage(gson.toJson(syn)))
+            }
             println("用户喜加一：" + res.user_id)
             println("目前在线用户数：" + users.size)
             return
@@ -126,7 +145,7 @@ class Data {
     lateinit var config: String
     lateinit var item: String
     // operation: add 增加组件, drag 拖拽组件, update 更新组件属性
-    // copy 复制组件集合, replace 去除组件, bg 背景, syn 同步所有协作者
+    // copy 复制组件集合, replace 去除组件, bg 背景, syn 同步所有协作者, origin 只有一位编辑者
     lateinit var op: String
 
     // lateinit var config_id: String
