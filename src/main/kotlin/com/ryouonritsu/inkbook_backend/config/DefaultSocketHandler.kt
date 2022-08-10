@@ -58,6 +58,7 @@ class DefaultHandler : WebSocketHandler {
             println("目前在线用户数：" + users.size)
             return
         }
+        println(msg)
 
         val gson = Gson()
         val res = gson.fromJson(msg, Data::class.java)
@@ -123,7 +124,8 @@ class Data {
 
     // 原型
     lateinit var config: String
-    lateinit var items: String
+    lateinit var item: String
+    lateinit var op: String // operation: add, drag
 
     // lateinit var config_id: String
     // 文档
