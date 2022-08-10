@@ -411,7 +411,7 @@ class ProjectController {
             "success" to false,
             "message" to "关键字为空！"
         )
-        var projectList: List<Project>
+        var projectList: List<Any>
         return runCatching {
             if (team_id.isNullOrBlank()) {
                 projectList = projectService.searchAllProjectByKeyWord(user_id, keyword) ?: arrayListOf()

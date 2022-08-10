@@ -58,7 +58,7 @@
           AND (project_name LIKE CONCAT('%', #{keyword}, '%')
             OR project_info LIKE CONCAT('%', #{keyword}, '%'))
     </select>
-    <select id="searchAllProjectByKeyWord" resultType="Project">
+    <select id="searchAllProjectByKeyWord" resultType="Map">
         SELECT *
         FROM `project`
                  NATURAL JOIN `team`
