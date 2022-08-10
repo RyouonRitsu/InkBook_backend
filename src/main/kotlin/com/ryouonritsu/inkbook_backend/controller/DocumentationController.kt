@@ -928,7 +928,14 @@ class DocumentationController {
             val tail = "</body></html>"
             myFile.writeText(head + html_code + tail)
             val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
-            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
+                UserFile(
+                    fileUrl,
+                    filePath,
+                    fileName,
+                    userId
+                )
+            )
             mapOf(
                 "success" to true,
                 "message" to "开启预览成功！",
