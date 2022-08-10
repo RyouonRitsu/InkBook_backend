@@ -470,21 +470,27 @@ class DocumentationController {
 
     @GetMapping("searchDoc")
     @Tag(name = "文档接口")
-    @Operation(summary = "搜索文档", description = "根据关键字搜索文档")
+    @Operation(summary = "搜索文档", description = "根据关键字搜索文档, 可选择搜索指定团队或项目下的文档")
     @Recycle
     fun searchDoc(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?
+        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
+        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int,
+        @RequestParam("team_id", defaultValue = "-1") @Parameter(description = "要查询的团队Id") team_id: Int
     ): Map<String, Any> {
         if (keyword.isNullOrBlank()) return mapOf(
             "success" to false,
             "message" to "关键字不能为空"
         )
         val userId = TokenUtils.verify(token).second
-        val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
-        val tIds = teams.map { "${it["team_id"]}".toInt() }
         val docs = mutableListOf<Documentation>()
-        tIds.forEach { docs.addAll(docRepository.findByKeywordAndTeamId(keyword, it)) }
+        if (project_id != -1) docs.addAll(docRepository.findByKeywordAndProjectId(keyword, project_id))
+        else if (team_id != -1) docs.addAll(docRepository.findByKeywordAndTeamId(keyword, team_id))
+        else {
+            val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
+            val tIds = teams.map { "${it["team_id"]}".toInt() }
+            tIds.forEach { docs.addAll(docRepository.findByKeywordAndTeamId(keyword, it)) }
+        }
         return try {
             mapOf(
                 "success" to true,
@@ -570,7 +576,7 @@ class DocumentationController {
             )
         }
         docDictRepository.findByNameAndTid(dictName, dest.tid) ?: return try {
-            val dir = docDictRepository.save(
+            var dir = docDictRepository.save(
                 DocumentationDict(
                     name = dictName,
                     description = dictDescription,
@@ -581,10 +587,11 @@ class DocumentationController {
             dest.hasChildren = true
             dir.parent = dest
             docDictRepository.save(dest)
-            docDictRepository.save(dir)
+            dir = docDictRepository.save(dir)
             mapOf(
                 "success" to true,
-                "message" to "文档目录创建成功"
+                "message" to "文档目录创建成功",
+                "data" to listOf(mapOf("dict_id" to "${dir.id}"))
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -597,6 +604,51 @@ class DocumentationController {
             "success" to false,
             "message" to "同名目录已存在"
         )
+    }
+
+    fun del(dir: DocumentationDict) {
+        dir.documents.forEach { docRepository.delete(it) }
+        dir.children.forEach {
+            del(it)
+            docDictRepository.delete(it)
+        }
+        docDictRepository.delete(dir)
+    }
+
+    @PostMapping("/delDir")
+    @Tag(name = "文档接口")
+    @Operation(summary = "删除文档目录", description = "删除指定Id的文档目录及其内容")
+    fun delDir(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("folder_id") @Parameter(description = "文档目录Id") folder_id: Long?
+    ): Map<String, Any> {
+        if (folder_id == null) {
+            return mapOf(
+                "success" to false,
+                "message" to "文档目录Id不能为空"
+            )
+        }
+        val dir = try {
+            docDictRepository.findById(folder_id).get()
+        } catch (e: NoSuchElementException) {
+            return mapOf(
+                "success" to false,
+                "message" to "文档目录不存在"
+            )
+        }
+        return try {
+            del(dir)
+            mapOf(
+                "success" to true,
+                "message" to "文档目录删除成功"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "文档目录删除失败, 发生意外错误")
+            )
+        }
     }
 
     fun walkDir(dir: DocumentationDict): Map<String, Any?> {
@@ -928,7 +980,14 @@ class DocumentationController {
             val tail = "</body></html>"
             myFile.writeText(head + html_code + tail)
             val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
-            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
+                UserFile(
+                    fileUrl,
+                    filePath,
+                    fileName,
+                    userId
+                )
+            )
             mapOf(
                 "success" to true,
                 "message" to "开启预览成功！",

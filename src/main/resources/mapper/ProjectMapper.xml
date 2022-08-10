@@ -61,9 +61,10 @@
     <select id="searchAllProjectByKeyWord" resultType="Project">
         SELECT *
         FROM `project`
-            NATURAL JOIN `team`
-            NATURAL JOIN `team_member`
-        WHERE user_id = #{user_id} AND (project_name LIKE CONCAT('%', #{keyword}, '%')
+                 NATURAL JOIN `team`
+                 NATURAL JOIN `team_member`
+        WHERE user_id = #{user_id}
+          AND (project_name LIKE CONCAT('%', #{keyword}, '%')
             OR project_info LIKE CONCAT('%', #{keyword}, '%'))
     </select>
 </mapper>
