@@ -40,6 +40,7 @@ class Documentation {
     )
     var dict: DocumentationDict? = null
     var shared = false
+
     @Column(columnDefinition = "TEXT")
     var sharedUrl = ""
 
