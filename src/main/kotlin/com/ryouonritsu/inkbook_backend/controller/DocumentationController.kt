@@ -204,16 +204,14 @@ class DocumentationController {
                     "message" to "文档不存在"
                 )
             }
-            if (doc.deprecated) return mapOf(
-                "success" to false,
-                "message" to "文档已被删除"
-            )
+            // if (doc.deprecated) return mapOf(
+            //     "success" to false,
+            //     "message" to "文档已被删除"
+            // )
             if (recycle) {
                 doc.deprecated = true
                 docRepository.save(doc)
             } else {
-                val user = userRepository.findById(TokenUtils.verify(token).second).get()
-                user.favoritedocuments.removeAll { it.did == doc_id }
                 docRepository.deleteById(doc_id)
             }
             mapOf(

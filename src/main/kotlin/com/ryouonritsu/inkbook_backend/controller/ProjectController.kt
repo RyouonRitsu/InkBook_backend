@@ -297,8 +297,6 @@ class ProjectController {
             val docList = docRepository.findByPid(project_id.toInt())
             docList.forEach {
                 val doc_id = it.did ?: -1
-                val user = userRepository.findById(TokenUtils.verify(token).second).get()
-                user.favoritedocuments.removeAll { it.did == doc_id }
                 docRepository.deleteById(doc_id)
             }
             projectService.deleteProject(project_id)
