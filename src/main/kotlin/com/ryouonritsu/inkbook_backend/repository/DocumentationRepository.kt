@@ -33,4 +33,12 @@ interface DocumentationRepository : JpaRepository<Documentation, Long> {
     @Modifying
     @Query("DELETE FROM Documentation d WHERE d = ?1")
     override fun delete(entity: Documentation)
+
+    @Query(
+        "SELECT * " +
+                "FROM documentation d " +
+                "WHERE IF(?1 IS NOT NULL, d.did = ?1, true) " +
+                "AND d.dname LIKE CONCAT('%', ?2, '%')", nativeQuery = true
+    )
+    fun findByIdAndName(id: Long?, name: String): List<Documentation>
 }

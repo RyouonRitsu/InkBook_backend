@@ -55,4 +55,8 @@ class InkBookBackendApplicationTests {
         println(d1.children.map { it.id })
     }
 
+    @Test
+    fun test3() {
+        docRepository.findByIdAndName(id = null, name = "测试").forEach { println(it.toDict()) }
+    }
 }
