@@ -2,6 +2,8 @@ package com.ryouonritsu.inkbook_backend.controller
 
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.Axure
+import com.ryouonritsu.inkbook_backend.entity.UserFile
+import com.ryouonritsu.inkbook_backend.repository.UserFileRepository
 import com.ryouonritsu.inkbook_backend.service.AxureService
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
@@ -12,9 +14,12 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.io.path.Path
 
 /**
  *
@@ -35,6 +40,9 @@ class AxureController {
 
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var userFileRepository: UserFileRepository
 
     @PostMapping("/create")
     @Tag(name = "原型接口")
@@ -588,5 +596,74 @@ class AxureController {
             "message" to "搜索成功",
             "data" to axures
         )
+    }
+
+    @PostMapping("/uploadAxure")
+    @Tag(name = "原型接口")
+    @Operation(
+        summary = "开启原型预览",
+        description = "上传原型预览png图片，返回url"
+    )
+    fun uploadDoc(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("file") @Parameter(description = "页面预览图") file: MultipartFile
+    ): Map<String, Any> {
+        return runCatching {
+            val userId = TokenUtils.verify(token).second
+            val fileDir = "static/file/axure/"
+            val fileName = "axure_${file.originalFilename}"
+            val filePath = "$fileDir/$fileName"
+            if (!File(fileDir).exists()) File(fileDir).mkdirs()
+            file.transferTo(Path(filePath))
+            val fileUrl = "http://101.42.171.88:8090/file/axure/${fileName}"
+            userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
+                UserFile(
+                    fileUrl,
+                    filePath,
+                    fileName,
+                    userId
+                )
+            )
+            mapOf(
+                "success" to true,
+                "message" to "开启预览成功！",
+                "data" to listOf(
+                    mapOf(
+                        "url" to fileUrl
+                    )
+                )
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "开启预览失败！"
+            )
+        )
+    }
+
+    @PostMapping("/disableSharing")
+    @Tag(name = "原型接口")
+    @Operation(summary = "原型共享失效", description = "禁用指定原型的共享")
+    fun disableSharing(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("axure_id") @Parameter(description = "原型id") axure_id: String
+    ): Map<String, Any> {
+        return try {
+            val axure = userFileRepository.findByUrl("http://101.42.171.88:8090/file/axure/axure_${axure_id}.png")
+            if (axure != null) {
+                File(axure.filePath).delete()
+                userFileRepository.delete(axure)
+            }
+            mapOf(
+                "success" to true,
+                "message" to "关闭预览成功！"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to "关闭预览失败！"
+            )
+        }
     }
 }
