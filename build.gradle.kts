@@ -16,6 +16,7 @@ java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
     maven { url = uri("https://repo.spring.io/release") }
+    maven { url = uri("https://repo.e-iceblue.cn/repository/maven-public/") }
     mavenCentral()
 }
 
@@ -45,6 +46,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("com.google.code.gson:gson")
     implementation("com.alibaba.fastjson2:fastjson2:2.0.10")
+    implementation("io.github.furstenheim:copy_down:1.0")
+    implementation("e-iceblue:spire.doc.free:5.2.0")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

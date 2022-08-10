@@ -545,14 +545,14 @@ class UserController {
             )
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS_")
             val time = LocalDateTime.now().format(formatter)
-            val user_id = TokenUtils.verify(token).second
-            val fileDir = "static/file/${user_id}"
+            val userId = TokenUtils.verify(token).second
+            val fileDir = "static/file/${userId}"
             val fileName = time + file.originalFilename
             val filePath = "$fileDir/$fileName"
             if (!File(fileDir).exists()) File(fileDir).mkdirs()
             file.transferTo(Path(filePath))
-            val fileUrl = "http://101.42.171.88:8090/file/${user_id}/${fileName}"
-            userFileRepository.save(UserFile(fileUrl, filePath, fileName, user_id))
+            val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
+            userFileRepository.save(UserFile(fileUrl, filePath, fileName, userId))
             mapOf(
                 "success" to true,
                 "message" to "上传成功",
