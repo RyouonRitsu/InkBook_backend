@@ -64,6 +64,9 @@ class DocumentationController {
     @Autowired
     lateinit var redisUtils: RedisUtils
 
+    @Autowired
+    lateinit var userController: UserController
+
     fun check(doc_name: String?, project_id: Int, team_id: Int): Pair<Boolean, Map<String, Any>?> {
         if (doc_name.isNullOrBlank()) return Pair(
             false, mapOf(
@@ -980,6 +983,17 @@ class DocumentationController {
             val tail = "</body></html>"
             myFile.writeText(head + html_code + tail)
             val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
+            val doc = try {
+                docRepository.findById(doc_id).get()
+            } catch (e: NoSuchElementException) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "文档不存在"
+                )
+            }
+            doc.shared = true
+            doc.sharedUrl = fileUrl
+            docRepository.save(doc)
             userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
                 UserFile(
                     fileUrl,
@@ -1003,5 +1017,47 @@ class DocumentationController {
                 "message" to "开启预览失败！"
             )
         )
+    }
+
+    @PostMapping("/disableSharing")
+    @Tag(name = "文档接口")
+    @Operation(summary = "文档共享失效", description = "禁用指定文档的共享")
+    fun disableSharing(
+        @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
+        @RequestParam("doc_id") @Parameter(description = "文档id") doc_id: Long
+    ): Map<String, Any> {
+        return try {
+            val doc = docRepository.findById(doc_id).get()
+            if (!doc.shared) return mapOf(
+                "success" to false,
+                "message" to "文档未共享"
+            )
+            val result = userController.deleteFile(token, doc.sharedUrl)
+            if (result["success"] as Boolean) {
+                doc.shared = false
+                doc.sharedUrl = ""
+                docRepository.save(doc)
+                mapOf(
+                    "success" to true,
+                    "message" to "此文档的共享链接已失效"
+                )
+            } else {
+                mapOf(
+                    "success" to false,
+                    "message" to "操作失败, ${result["message"]}"
+                )
+            }
+        } catch (e: NoSuchElementException) {
+            mapOf(
+                "success" to false,
+                "message" to "文档不存在"
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            mapOf(
+                "success" to false,
+                "message" to "操作失败, 发生意外错误"
+            )
+        }
     }
 }

@@ -39,6 +39,10 @@ class Documentation {
         cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH]
     )
     var dict: DocumentationDict? = null
+    var shared = false
+
+    @Column(columnDefinition = "TEXT")
+    var sharedUrl = ""
 
     constructor(
         doc_name: String,
@@ -101,6 +105,8 @@ class Documentation {
         "team_id" to "${team?.teamId}",
         "team_name" to team?.teamName,
         "deprecated" to deprecated,
-        "dict_id" to "${dict?.id}"
+        "dict_id" to "${dict?.id}",
+        "shared" to shared,
+        "shared_url" to sharedUrl
     )
 }
