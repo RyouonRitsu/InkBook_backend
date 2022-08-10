@@ -125,7 +125,7 @@ class Data {
     // 原型
     lateinit var config: String
     lateinit var item: String
-    lateinit var op: String // operation: add, drag
+    lateinit var op: String // operation: add, drag, update, copy
 
     // lateinit var config_id: String
     // 文档
