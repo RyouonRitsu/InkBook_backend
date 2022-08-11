@@ -578,7 +578,7 @@ class DocumentationController {
                 "message" to "目标文档目录不存在"
             )
         }
-        docDictRepository.findByNameAndTid(dictName, dest.tid) ?: return try {
+        if (docDictRepository.findByNameAndTid(dictName, dest.tid).isEmpty()) return try {
             var dir = docDictRepository.save(
                 DocumentationDict(
                     name = dictName,
@@ -842,7 +842,7 @@ class DocumentationController {
             val file = File(filePath)
             val userId = TokenUtils.verify(token).second
             file.writeText(markdown)
-            val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
+            val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
             userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
                 UserFile(
                     fileUrl,
@@ -889,7 +889,7 @@ class DocumentationController {
             val fileName = f.fileName.replace(".html", ".docx")
             val userId = TokenUtils.verify(token).second
             doc.saveToFile(filePath, FileFormat.Docx_2013)
-            val fileUrl = "http://101.42.171.88:8090/file/${userId}/${fileName}"
+            val fileUrl = "http://101.42.171.88:8090/file/doc/${fileName}"
             userFileRepository.findByUrl(fileUrl) ?: userFileRepository.save(
                 UserFile(
                     fileUrl,
@@ -935,7 +935,7 @@ class DocumentationController {
             val filePath = f.filePath.replace(".html", "")
             val fileName = f.fileName.replace(".html", "")
             val userId = TokenUtils.verify(token).second
-            val prefix = "http://101.42.171.88:8090/file/${userId}/"
+            val prefix = "http://101.42.171.88:8090/file/doc/"
             var index = 0
             val fileUrls = mutableListOf<String>()
             doc.saveToImages(ImageType.Bitmap).forEach {

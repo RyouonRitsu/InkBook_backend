@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import javax.transaction.Transactional
 
 interface DocumentationDictRepository : JpaRepository<DocumentationDict, Long> {
-    fun findByNameAndTid(name: String, tid: Int): DocumentationDict?
+    fun findByNameAndTid(name: String, tid: Int): List<DocumentationDict>
 
     @Transactional
     @Modifying
