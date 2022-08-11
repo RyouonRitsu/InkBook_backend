@@ -122,20 +122,6 @@ class TeamController {
             "success" to false,
             "message" to "非团队创建者！"
         )
-        val projectList = projectService.searchProjectByTeamId(teamId)
-        if (projectList != null) {
-            projectList.forEach {
-                val project_id = it["project_id"].toString()
-                projectService.deleteProject(project_id)
-                val docList = documentationService.findByProjectId(project_id.toInt())
-                docList.forEach {
-                    val doc_id = it.did ?: -1
-                    val user = userRepository.findById(TokenUtils.verify(token).second).get()
-                    user.favoritedocuments.removeAll { it.did == doc_id }
-                    docRepository.deleteById(doc_id)
-                }
-            }
-        }
         teamService.deleteTeam(user_id, teamId)
         return mapOf(
             "success" to true,
