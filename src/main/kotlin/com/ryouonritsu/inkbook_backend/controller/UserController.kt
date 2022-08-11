@@ -795,7 +795,7 @@ class UserController {
             }
         } else return mapOf(
             "success" to false,
-            "message" to "请指定要收藏的文档或UML"
+            "message" to "请指定要操作的文档或UML"
         )
         return try {
             userRepository.save(user)
