@@ -123,4 +123,106 @@ class UMLController {
             )
         )
     }
+
+    @GetMapping("/getUMLList")
+    @Tag(name = "UML接口")
+    @Operation(
+        summary = "获得UML列表", description = "通过项目ID获取对应UML\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"查询项目UML列表成功！\",\n" +
+                "    \"data\": [\n" +
+                "        {\n" +
+                "            \"creator\": \"123\",\n" +
+                "            \"project_id\": 122,\n" +
+                "            \"uml_name\": \"test\",\n" +
+                "            \"last_modified\": \"2022-08-11T04:51:22.472Z\",\n" +
+                "            \"uml_id\": 1\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"creator\": \"123\",\n" +
+                "            \"project_id\": 122,\n" +
+                "            \"uml_name\": \"test\",\n" +
+                "            \"last_modified\": \"\",\n" +
+                "            \"uml_id\": 2\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}"
+    )
+    fun getUMLList(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("project_id") @Parameter(description = "project_id") project_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val umlList = umlService.searchUMLByProjectId(project_id)
+            if (umlList.isNullOrEmpty()) {
+                return mapOf(
+                    "success" to true,
+                    "message" to "项目UML为空！",
+                    "data" to arrayListOf<UML>()
+                )
+            }
+            return mapOf(
+                "success" to true,
+                "message" to "查询项目UML列表成功！",
+                "data" to umlList
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "查询项目UML列表失败！"
+            )
+        )
+    }
+
+    @PostMapping("/delete")
+    @Tag(name = "UML接口")
+    @Operation(
+        summary = "删除UML", description = "删除给定UMLid对应UML\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"删除原型成功！\"\n" +
+                "}"
+    )
+    fun deleteAxure(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("uml_id") @Parameter(description = "UMLid") uml_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            umlService.deleteUMLByUMLId(uml_id)
+            return mapOf(
+                "success" to true,
+                "message" to "删除UML成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "删除UML失败！"
+            )
+        )
+    }
+
+    @PostMapping("/updateInfo")
+    @Tag(name = "UML接口")
+    @Operation(
+        summary = "更新UML信息", description = "用于更改UML文件名\n" +
+                "不会更新最后编辑时间以及configID"
+    )
+    fun updateAxure(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("uml_id") @Parameter(description = "UMLid") uml_id: String,
+        @RequestParam("uml_name") @Parameter(description = "UML名字") uml_name: String,
+    ): Map<String, Any> {
+        return runCatching {
+            umlService.updateUMLInfo(uml_id, uml_name)
+            mapOf(
+                "success" to true,
+                "message" to "更新UML信息成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "更新UML信息失败！"
+            )
+        )
+    }
 }

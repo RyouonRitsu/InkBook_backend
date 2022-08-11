@@ -24,4 +24,10 @@ class UMLServiceImpl : UMLService {
         last_modified: String,
         xml: String
     ) = umlDao.updateUML(uml_id, last_modified, xml)
+
+    override fun searchUMLByProjectId(project_id: String) = umlDao.searchUMLByProjectId(project_id)
+
+    override fun updateUMLInfo(uml_id: String, uml_name: String) = umlDao.updateUMLInfo(uml_id, uml_name)
+
+    override fun deleteUMLByUMLId(uml_id: String) = umlDao.deleteUMLByUMLId(uml_id)
 }

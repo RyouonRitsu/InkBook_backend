@@ -16,4 +16,19 @@
         FROM `uml`
         WHERE uml_id = #{uml_id}
     </select>
+    <select id="searchUMLByProjectId" resultType="Map">
+        SELECT uml_id, creator, last_modified, project_id, uml_name
+        FROM `uml`
+        WHERE project_id = #{project_id}
+    </select>
+    <update id="updateUMLInfo" parameterType="String">
+        UPDATE `uml`
+        SET uml_name = #{uml_name}
+        WHERE uml_id = #{uml_id}
+    </update>
+    <delete id="deleteUMLByUMLId">
+        DELETE
+        FROM `uml`
+        WHERE uml_id = #{uml_id}
+    </delete>
 </mapper>
