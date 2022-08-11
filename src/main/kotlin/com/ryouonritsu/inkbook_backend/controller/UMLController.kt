@@ -174,40 +174,12 @@ class UMLController {
         )
     }
 
-    @PostMapping("/delete")
-    @Tag(name = "UML接口")
-    @Operation(
-        summary = "删除UML", description = "删除给定UMLid对应UML\n{\n" +
-                "    \"success\": true,\n" +
-                "    \"message\": \"删除原型成功！\"\n" +
-                "}"
-    )
-    fun deleteAxure(
-        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
-        @RequestParam("uml_id") @Parameter(description = "UMLid") uml_id: String,
-    ): Map<String, Any> {
-        return runCatching {
-            val user_id = TokenUtils.verify(token).second
-            umlService.deleteUMLByUMLId(uml_id)
-            return mapOf(
-                "success" to true,
-                "message" to "删除UML成功！"
-            )
-        }.onFailure { it.printStackTrace() }.getOrDefault(
-            mapOf(
-                "success" to false,
-                "message" to "删除UML失败！"
-            )
-        )
-    }
-
     @PostMapping("/updateInfo")
     @Tag(name = "UML接口")
     @Operation(
-        summary = "更新UML信息", description = "用于更改UML文件名\n" +
-                "不会更新最后编辑时间以及configID"
+        summary = "更新UML信息", description = "用于更改UML文件名，不会更新最后编辑时间"
     )
-    fun updateAxure(
+    fun updateUML(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("uml_id") @Parameter(description = "UMLid") uml_id: String,
         @RequestParam("uml_name") @Parameter(description = "UML名字") uml_name: String,
@@ -222,6 +194,33 @@ class UMLController {
             mapOf(
                 "success" to false,
                 "message" to "更新UML信息失败！"
+            )
+        )
+    }
+
+    @PostMapping("/delete")
+    @Tag(name = "UML接口")
+    @Operation(
+        summary = "删除UML", description = "删除给定UMLid对应UML\n{\n" +
+                "    \"success\": true,\n" +
+                "    \"message\": \"删除UML成功！\"\n" +
+                "}"
+    )
+    fun deleteUML(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("uml_id") @Parameter(description = "UMLid") uml_id: String,
+    ): Map<String, Any> {
+        return runCatching {
+            val user_id = TokenUtils.verify(token).second
+            umlService.deleteUMLByUMLId(uml_id)
+            return mapOf(
+                "success" to true,
+                "message" to "删除UML成功！"
+            )
+        }.onFailure { it.printStackTrace() }.getOrDefault(
+            mapOf(
+                "success" to false,
+                "message" to "删除UML失败！"
             )
         )
     }
