@@ -274,8 +274,10 @@ class UMLController {
                         this["is_favorite"] = it in userRepository.findById(userId).get().favoriteUMLs
                         val project = projectRepository.findById(it.project_id).get()
                         putAll(project.toDict())
-                        putAll(teamService.searchTeamByTeamId("${project.team_id}")
-                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
+                        putAll(
+                            teamService.searchTeamByTeamId("${project.team_id}")
+                                ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确")
+                        )
                     }
                 }
             )

@@ -8,7 +8,7 @@
     <update id="updateUML" parameterType="String">
         UPDATE `uml`
         SET last_modified = #{last_modified},
-            xml = #{xml}
+            xml           = #{xml}
         WHERE uml_id = #{uml_id}
     </update>
     <select id="selectUMLByUMLId" resultType="UML">
