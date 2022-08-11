@@ -75,11 +75,14 @@ class AxureController {
                 "success" to false,
                 "message" to "用户不存在！"
             )
+            /*
             val name = user.realname.let {
                 if (it.isNullOrBlank()) {
                     user.username
                 } else it
             }
+             */
+            val name = user.username
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val time = LocalDateTime.now(ZoneId.of("Asia/Shanghai")).format(formatter)
             val axure = Axure(axure_name ?: "", axure_info ?: "", project_id.toInt(), "", "", "", 0, time, name)
