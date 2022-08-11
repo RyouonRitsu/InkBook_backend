@@ -242,11 +242,11 @@ class UMLController {
         )
     }
 
-    @GetMapping("searchDoc")
+    @GetMapping("searchUML")
     @Tag(name = "UML接口")
     @Operation(summary = "搜索UML", description = "根据关键字搜索UML, 可选择搜索指定团队或项目下的UML")
     @Recycle
-    fun searchDoc(
+    fun searchUML(
         @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
         @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
         @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int,
