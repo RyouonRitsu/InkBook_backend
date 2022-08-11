@@ -45,6 +45,7 @@ class WebConfiguration : WebMvcConfigurer {
             "/forgot_password",
             "/registration_verification",
             "/file/**",
+            "/uml/**",
         )
         registry.addInterceptor(tokenInterceptor)
             .addPathPatterns("/**")

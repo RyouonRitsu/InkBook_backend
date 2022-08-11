@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ryouonritsu.inkbook_backend.dao.UMLDao">
-
+    <insert id="createNewUML" parameterType="UML" useGeneratedKeys="true" keyProperty="uml_id">
+        INSERT INTO `uml`(`uml_name`, `project_id`, `last_modified`, `creator`, `xml`)
+        VALUES (#{uml_name}, #{project_id}, #{last_modified}, #{creator}, #{xml})
+    </insert>
+    <update id="updateUML" parameterType="String">
+        UPDATE `uml`
+        SET last_modified = #{last_modified},
+            xml = #{xml}
+        WHERE uml_id = #{uml_id}
+    </update>
+    <select id="selectUMLByUMLId" resultType="UML">
+        SELECT *
+        FROM `uml`
+        WHERE uml_id = #{uml_id}
+    </select>
 </mapper>

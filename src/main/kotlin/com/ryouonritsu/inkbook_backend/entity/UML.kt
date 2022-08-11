@@ -10,11 +10,12 @@ import javax.persistence.Id
  * @author WuKunchao
  */
 @Entity
-class UMLDao (
+class UML (
     var uml_name: String,
-    var lastModified: String,
+    var last_modified: String,
     var xml: String,
-    var creator: String
+    var creator: String,
+    var project_id: Int,
     ) {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +24,9 @@ class UMLDao (
         fun toDict() = mapOf(
             "uml_id" to uml_id,
             "uml_name" to uml_name,
-            "lastModified" to lastModified,
+            "last_modified" to last_modified,
             "xml" to xml,
-            "creator" to creator
+            "creator" to creator,
+            "project_id" to project_id
         )
     }
