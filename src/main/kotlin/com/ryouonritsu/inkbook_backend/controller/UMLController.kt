@@ -107,8 +107,9 @@ class UMLController {
         return runCatching {
             val uml = umlService.selectUMLByUMLId(uml_id)
                 ?: return mapOf(
-                    "success" to false,
-                    "message" to "该原型ID对应UML不存在！"
+                    "success" to true,
+                    "message" to "新建UML画布！",
+                    "data" to arrayListOf<UML>()
                 )
             mapOf(
                 "success" to true,
