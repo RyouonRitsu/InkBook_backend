@@ -74,7 +74,7 @@ class TeamController {
             })
             team = teamRepository.save(team)
 
-            val root = docDictRepository.save(DocumentationDict(name = "团队文档根目录", tid = team.teamId))
+            val root = docDictRepository.save(DocumentationDict(name = "文档中心", tid = team.teamId))
             val prjRoot = docDictRepository.save(DocumentationDict(name = "项目文档区", tid = team.teamId))
             root.children.add(prjRoot)
             root.hasChildren = true
