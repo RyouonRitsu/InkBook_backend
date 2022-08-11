@@ -21,6 +21,12 @@ class User {
     )
     var favoritedocuments = mutableListOf<Documentation>()
 
+    @ManyToMany(
+        targetEntity = UML::class,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH]
+    )
+    var favoriteUMLs = mutableListOf<UML>()
+
     @OneToMany(targetEntity = User2Documentation::class, mappedBy = "user", cascade = [CascadeType.ALL])
     var user2documentations = mutableListOf<User2Documentation>()
 

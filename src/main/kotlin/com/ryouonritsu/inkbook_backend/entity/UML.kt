@@ -1,5 +1,6 @@
 package com.ryouonritsu.inkbook_backend.entity
 
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -13,7 +14,7 @@ import javax.persistence.Id
 class UML (
     var uml_name: String,
     var last_modified: String,
-    var xml: String,
+    @Column(columnDefinition = "LONGTEXT") var xml: String,
     var creator: String,
     var project_id: Int,
     ) {

@@ -3,10 +3,7 @@ package com.ryouonritsu.inkbook_backend.controller
 import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.User
 import com.ryouonritsu.inkbook_backend.entity.UserFile
-import com.ryouonritsu.inkbook_backend.repository.DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.User2DocumentationRepository
-import com.ryouonritsu.inkbook_backend.repository.UserFileRepository
-import com.ryouonritsu.inkbook_backend.repository.UserRepository
+import com.ryouonritsu.inkbook_backend.repository.*
 import com.ryouonritsu.inkbook_backend.service.ProjectService
 import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.utils.RedisUtils
@@ -50,13 +47,22 @@ class UserController {
     lateinit var projectService: ProjectService
 
     @Autowired
+    lateinit var projectRepository: ProjectRepository
+
+    @Autowired
     lateinit var teamService: TeamService
+
+    @Autowired
+    lateinit var teamRepository: TeamRepository
 
     @Autowired
     lateinit var redisUtils: RedisUtils
 
     @Autowired
     lateinit var userFileRepository: UserFileRepository
+
+    @Autowired
+    lateinit var umlRepository: UMLRepository
 
     fun getHtml(url: String): Pair<Int, String?> {
         val client = OkHttpClient()
@@ -728,7 +734,8 @@ class UserController {
     fun favorite(
         @RequestParam("token") @Parameter(description = "用户认证令牌") token: String,
         @RequestParam("undo", defaultValue = "false") @Parameter(description = "是否取消收藏") undo: Boolean,
-        @RequestParam("doc_id") @Parameter(description = "要收藏的文档id") docId: Long
+        @RequestParam("doc_id", defaultValue = "-1") @Parameter(description = "要收藏的文档id") docId: Long,
+        @RequestParam("uml_id", defaultValue = "-1") @Parameter(description = "要收藏的UMLId") umlId: Int
     ): Map<String, Any> {
         val userId = TokenUtils.verify(token).second
         val user = try {
@@ -740,30 +747,56 @@ class UserController {
                 "message" to "数据库中没有此用户或可能是token验证失败, 此会话已失效"
             )
         }
-        val doc = try {
-            docRepository.findById(docId).get()
-        } catch (e: NoSuchElementException) {
-            return mapOf(
+        if (docId != -1L) {
+            val doc = try {
+                docRepository.findById(docId).get()
+            } catch (e: NoSuchElementException) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此文档, 请检查文档Id是否正确"
+                )
+            }
+            if (doc.deprecated) return mapOf(
                 "success" to false,
-                "message" to "数据库中没有此文档, 请检查文档Id是否正确"
+                "message" to "文档已被删除, 请恢复后再进行此操作"
             )
-        }
-        if (doc.deprecated) return mapOf(
+            if (undo) {
+                if (!user.favoritedocuments.remove(doc)) return mapOf(
+                    "success" to false,
+                    "message" to "收藏夹中没有此文档, 取消收藏失败"
+                )
+            } else {
+                if (doc !in user.favoritedocuments) user.favoritedocuments.add(doc)
+                else return mapOf(
+                    "success" to false,
+                    "message" to "收藏夹中已有此文档, 收藏失败"
+                )
+            }
+        } else if (umlId != -1) {
+            val uml = try {
+                umlRepository.findById(umlId).get()
+            } catch (e: NoSuchElementException) {
+                return mapOf(
+                    "success" to false,
+                    "message" to "数据库中没有此UML, 请检查UMLId是否正确"
+                )
+            }
+            if (undo) {
+                if (!user.favoriteUMLs.remove(uml)) return mapOf(
+                    "success" to false,
+                    "message" to "收藏夹中没有此UML, 取消收藏失败"
+                )
+            } else {
+                if (uml !in user.favoriteUMLs) user.favoriteUMLs.add(uml)
+                else return mapOf(
+                    "success" to false,
+                    "message" to "收藏夹中已有此UML, 收藏失败"
+                )
+            }
+        } else return mapOf(
             "success" to false,
-            "message" to "文档已被删除, 请恢复后再进行此操作"
+            "message" to "请指定要收藏的文档或UML"
         )
-        if (undo) {
-            if (!user.favoritedocuments.remove(doc)) return mapOf(
-                "success" to false,
-                "message" to "收藏夹中没有此文档, 取消收藏失败"
-            )
-        } else {
-            if (doc !in user.favoritedocuments) user.favoritedocuments.add(doc)
-            else return mapOf(
-                "success" to false,
-                "message" to "收藏夹中已有此文档, 收藏失败"
-            )
-        }
         return try {
             userRepository.save(user)
             mapOf(
@@ -799,6 +832,14 @@ class UserController {
                             putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
                             putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                         }
+                    },
+                    "UMLData" to userRepository.findById(userId).get().favoriteUMLs.map {
+                        HashMap(it.toDict()).apply {
+                            val project = projectRepository.findById(it.project_id).get()
+                            putAll(project.toDict())
+                            putAll(teamService.searchTeamByTeamId("${project.team_id}")
+                                ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
+                        }
                     }
                 )
             } else {
@@ -810,6 +851,14 @@ class UserController {
                         HashMap(it.toDict()).apply {
                             putAll(it.project?.toDict() ?: mapOf("parent_dict_id" to it.dict?.id))
                             putAll(it.team?.toDict() ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
+                        }
+                    },
+                    "UMLData" to user.favoriteUMLs.map {
+                        HashMap(it.toDict()).apply {
+                            val project = projectRepository.findById(it.project_id).get()
+                            putAll(project.toDict())
+                            putAll(teamService.searchTeamByTeamId("${project.team_id}")
+                                ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
                         }
                     }
                 )

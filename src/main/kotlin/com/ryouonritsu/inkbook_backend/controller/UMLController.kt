@@ -1,8 +1,12 @@
 package com.ryouonritsu.inkbook_backend.controller
 
-import com.ryouonritsu.inkbook_backend.entity.Axure
+import com.ryouonritsu.inkbook_backend.annotation.Recycle
 import com.ryouonritsu.inkbook_backend.entity.UML
+import com.ryouonritsu.inkbook_backend.repository.ProjectRepository
+import com.ryouonritsu.inkbook_backend.repository.UMLRepository
+import com.ryouonritsu.inkbook_backend.repository.UserRepository
 import com.ryouonritsu.inkbook_backend.service.ProjectService
+import com.ryouonritsu.inkbook_backend.service.TeamService
 import com.ryouonritsu.inkbook_backend.service.UMLService
 import com.ryouonritsu.inkbook_backend.service.UserService
 import com.ryouonritsu.inkbook_backend.utils.TokenUtils
@@ -31,6 +35,18 @@ class UMLController {
 
     @Autowired
     lateinit var projectService: ProjectService
+
+    @Autowired
+    lateinit var umlRepository: UMLRepository
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var projectRepository: ProjectRepository
+
+    @Autowired
+    lateinit var teamService: TeamService
 
     @PostMapping("/create")
     @Tag(name = "UML接口")
@@ -212,6 +228,7 @@ class UMLController {
     ): Map<String, Any> {
         return runCatching {
             val user_id = TokenUtils.verify(token).second
+            userRepository.findById(user_id).get().favoriteUMLs.removeIf { it.uml_id == uml_id.toInt() }
             umlService.deleteUMLByUMLId(uml_id)
             return mapOf(
                 "success" to true,
@@ -223,5 +240,50 @@ class UMLController {
                 "message" to "删除UML失败！"
             )
         )
+    }
+
+    @GetMapping("searchDoc")
+    @Tag(name = "UML接口")
+    @Operation(summary = "搜索UML", description = "根据关键字搜索UML, 可选择搜索指定团队或项目下的UML")
+    @Recycle
+    fun searchDoc(
+        @RequestParam("token") @Parameter(description = "用户登陆后获取的token令牌") token: String,
+        @RequestParam("keyword") @Parameter(description = "关键字") keyword: String?,
+        @RequestParam("project_id", defaultValue = "-1") @Parameter(description = "要查询的项目Id") project_id: Int,
+        @RequestParam("team_id", defaultValue = "-1") @Parameter(description = "要查询的团队Id") team_id: Int
+    ): Map<String, Any> {
+        if (keyword.isNullOrBlank()) return mapOf(
+            "success" to false,
+            "message" to "关键字不能为空"
+        )
+        val userId = TokenUtils.verify(token).second
+        val UMLs = mutableListOf<UML>()
+        if (project_id != -1) UMLs.addAll(umlRepository.findByKeywordAndProjectId(keyword, project_id))
+        else if (team_id != -1) UMLs.addAll(umlRepository.findByKeywordAndTeamId(keyword, team_id))
+        else {
+            val teams = teamService.searchTeamByUserId("$userId") ?: listOf()
+            val tIds = teams.map { "${it["team_id"]}".toInt() }
+            tIds.forEach { UMLs.addAll(umlRepository.findByKeywordAndTeamId(keyword, it)) }
+        }
+        return try {
+            mapOf(
+                "success" to true,
+                "message" to "搜索成功",
+                "data" to UMLs.map {
+                    HashMap(it.toDict()).apply {
+                        this["is_favorite"] = it in userRepository.findById(userId).get().favoriteUMLs
+                        val project = projectRepository.findById(it.project_id).get()
+                        putAll(project.toDict())
+                        putAll(teamService.searchTeamByTeamId("${project.team_id}")
+                            ?: throw Exception("数据库中没有此团队, 请检查团队id是否正确"))
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "success" to false,
+                "message" to (e.message ?: "搜索失败, 发生意外错误")
+            )
+        }
     }
 }
