@@ -242,7 +242,7 @@ class UMLController {
         )
     }
 
-    @GetMapping("searchUML")
+    @GetMapping("/searchUML")
     @Tag(name = "UML接口")
     @Operation(summary = "搜索UML", description = "根据关键字搜索UML, 可选择搜索指定团队或项目下的UML")
     @Recycle
